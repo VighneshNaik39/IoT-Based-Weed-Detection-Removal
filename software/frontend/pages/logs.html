@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Detection Logs</title>
+    <link rel="stylesheet" href="/software/frontend/css/logs.css">
+</head>
+<body>
+
+<header class="navbar">
+    <h2>🌿 Weed Detection System</h2>
+    <nav>
+        <a href="/software/frontend/index.html">Dashboard</a>
+        <a class="active" href="#">Logs</a>
+        <a href="/software/frontend/pages/settings.html">Settings</a>
+    </nav>
+</header>
+
+<main class="container">
+    <div class="header">
+        <h1>📋 Detection Logs</h1>
+        <button class="refresh-btn" onclick="loadLogs()">⟳ Refresh</button>
+    </div>
+
+    <p class="subtitle">History of weed detection events</p>
+
+    <!-- Filter -->
+    <div class="filter">
+        <label>
+            <input type="checkbox" id="weedFilter" onchange="applyFilter()">
+            Show only Weed Detected
+        </label>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Time</th>
+                <th>Status</th>
+                <th>Source</th>
+            </tr>
+        </thead>
+        <tbody id="logTable">
+            <!-- Logs will be inserted here dynamically -->
+        </tbody>
+    </table>
+</main>
+
+<footer>
+    © 2024 IoT-Based Weed Detection & Removal System
+</footer>
+
+<script>
+// Sample data (Replace later with ESP32 / API data)
+let logs = [
+    {time: "11:45:32 AM", status: "No weed detected"},
+    {time: "11:42:10 AM", status: "Weed detected"},
+    {time: "11:40:05 AM", status: "No weed detected"},
+    {time: "11:37:22 AM", status: "Weed detected"},
+    {time: "11:35:18 AM", status: "No weed detected"}
+];
+
+// Load logs into table
+function loadLogs() {
+    const table = document.getElementById("logTable");
+    table.innerHTML = "";
+
+    let filterActive = document.getElementById("weedFilter").checked;
+
+    logs.forEach(log => {
+        if (filterActive && log.status !== "Weed detected") return;
+
+        let row = `
+            <tr>
+                <td>${log.time}</td>
+                <td>
+                    <span class="status ${log.status === "Weed detected" ? "danger" : "success"}">
+                        ${log.status === "Weed detected" ? "✖" : "✔"} ${log.status}
+                    </span>
+                </td>
+                <td>ESP32 Sensor</td>
+            </tr>
+        `;
+        table.innerHTML += row;
+    });
+}
+
+// Apply filter
+function applyFilter() {
+    loadLogs();
+}
+
+// 🔄 Real-time auto refresh (every 5 seconds)
+setInterval(() => {
+    // Simulate new log (for demo)
+    let newLog = Math.random() > 0.5
+        ? {time: new Date().toLocaleTimeString(), status: "Weed detected"}
+        : {time: new Date().toLocaleTimeString(), status: "No weed detected"};
+
+    logs.unshift(newLog); // add new log at top
+    loadLogs();
+}, 5000);
+
+// Initial load
+loadLogs();
+
+</script>
+
+</body>
+</html>
