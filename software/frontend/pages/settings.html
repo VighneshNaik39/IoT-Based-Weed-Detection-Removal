@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings - Weed Detection System</title>
+    <link rel="stylesheet" href="../css/settings.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<header class="navbar">
+    <div class="logo">🌿 Weed Detection System</div>
+    <nav>
+        <a href="../index.html">Dashboard</a>
+        <a href="logs.html">Logs</a>
+        <a class="active" href="#">Settings</a>
+    </nav>
+</header>
+
+<!-- Main Container -->
+<div class="container">
+
+    <h1>⚙️ Settings</h1>
+    <p class="subtitle">Configure your system preferences</p>
+
+    <!-- Detection & Control -->
+    <div class="card">
+        <h3>Detection & Control</h3>
+
+        <div class="setting">
+            <div class="setting-content">
+                <div class="setting-icon">⚙️</div>
+                <div class="setting-text">
+                    <strong>Automatic Weed Detection</strong>
+                    <p>Continuously monitor for weeds</p>
+                </div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="autoDetect" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="setting">
+            <div class="setting-content">
+                <div class="setting-icon">🔔</div>
+                <div class="setting-text">
+                    <strong>Alert Notifications</strong>
+                    <p>Show alerts when weeds are detected</p>
+                </div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="alerts" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+
+        <div class="setting">
+            <div class="setting-content">
+                <div class="setting-icon">🤖</div>
+                <div class="setting-text">
+                    <strong>Auto Weed Removal</strong>
+                    <p>Automatically activate removal mechanism</p>
+                </div>
+            </div>
+            <label class="switch">
+                <input type="checkbox" id="autoRemove">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- System Info -->
+    <div class="card">
+        <h3>System Information</h3>
+
+        <div class="info">
+            <div class="info-content">
+                <div class="info-icon">🖥️</div>
+                <span>Device</span>
+            </div>
+            <span id="deviceName">No device connected</span>
+        </div>
+
+        <div class="info">
+            <div class="info-content">
+                <div class="info-icon">📶</div>
+                <span>Status</span>
+            </div>
+            <span id="connectionStatus" class="status-badge">Disconnected</span>
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <button class="save-btn" onclick="saveSettings()">💾 Save Settings</button>
+
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+    <p> 2024 IoT-Based Weed Detection & Removal System</p>
+</footer>
+
+<script src="../js/settings.js"></script>
+</body>
+</html>
