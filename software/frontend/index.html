@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IoT Weed Detection System</title>
   <link rel="stylesheet" href="/software/frontend/css/style.css"/>
+      <script src="/software/frontend/js/api.js"></script>
+
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -223,33 +225,7 @@
   }
   tick(); setInterval(tick, 1000);
 
-  function simulateWeed() {
-    const panel = document.getElementById('status-panel');
-    panel.className = 'panel status-panel weed';
-    document.getElementById('status-chip').className  = 'panel-chip weed-chip';
-    document.getElementById('status-chip').textContent = 'WEED DETECTED';
-    document.getElementById('status-big-icon').textContent = '⚠';
-    document.getElementById('status-headline').textContent = 'Weed Detected!';
-    document.getElementById('status-desc').textContent = 'Weed identified in Zone C. Robotic arm removal in progress...';
-    const zc = document.getElementById('zone-c');
-    zc.className = 'zone-item danger'; zc.textContent = 'Zone C ⚠';
-    addLog('Zone C', '⚠ Weed detected — Removal triggered', 'warn');
-  }
-
-  function simulateClear() {
-    document.getElementById('status-panel').className = 'panel status-panel clear';
-    document.getElementById('status-chip').className  = 'panel-chip clear-chip';
-    document.getElementById('status-chip').textContent = 'CLEAR';
-    document.getElementById('status-big-icon').textContent = '✔';
-    document.getElementById('status-headline').textContent = 'No Weed Detected';
-    document.getElementById('status-desc').textContent = 'Your field is clear. Continuous monitoring active across all zones.';
-    ['a','b','c','d'].forEach(z => {
-      const el = document.getElementById('zone-' + z);
-      el.className = 'zone-item safe';
-      el.textContent = 'Zone ' + z.toUpperCase() + ' ✔';
-    });
-    addLog('All Zones', 'Field cleared — No weeds found', 'ok');
-  }
+  
 
   function refreshAll() {
     const b = document.getElementById('sys-badge');
@@ -270,6 +246,77 @@
     document.getElementById('log-list').innerHTML =
       '<li class="log-row"><span class="log-time">--</span><span class="log-zone">--</span><span class="log-msg ok">Log cleared</span></li>';
   }
+
+  // ======================
+// BACKEND CONNECTION
+// ======================
+
+async function loadStatusFromBackend() {
+  try {
+    const res = await fetch("http://localhost:5000/api/status");
+    const data = await res.json();
+
+    if (data.status === "Weed detected") {
+      showWeedUI();
+    } else {
+      showClearUI();
+    }
+
+  } catch (err) {
+    console.log("Backend not connected");
+  }
+}
+
+function simulateWeed() {
+  fetch("http://localhost:5000/api/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      status: "Weed detected"
+    })
+  })
+  .then(() => loadStatusFromBackend());
+}
+
+function simulateClear() {
+  fetch("http://localhost:5000/api/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      status: "No weed detected"
+    })
+  })
+  .then(() => loadStatusFromBackend());
+}
+
+function showWeedUI() {
+  const panel = document.getElementById('status-panel');
+  panel.className = 'panel status-panel weed';
+
+  document.getElementById('status-chip').className = 'panel-chip weed-chip';
+  document.getElementById('status-chip').textContent = 'WEED DETECTED';
+
+  document.getElementById('status-big-icon').textContent = '⚠';
+  document.getElementById('status-headline').textContent = 'Weed Detected!';
+}
+
+function showClearUI() {
+  document.getElementById('status-panel').className = 'panel status-panel clear';
+
+  document.getElementById('status-chip').className = 'panel-chip clear-chip';
+  document.getElementById('status-chip').textContent = 'CLEAR';
+
+  document.getElementById('status-big-icon').textContent = '✔';
+  document.getElementById('status-headline').textContent = 'No Weed Detected';
+}
+
+// Auto load
+loadStatusFromBackend();
+setInterval(loadStatusFromBackend, 3000);
 </script>
 </body>
 </html>

@@ -1,11 +1,16 @@
-async function fetchData() {
+async function loadStatus() {
     try {
-        const response = await fetch("http://localhost:5000/api/status");
-        const data = await response.json();
-        document.getElementById("status").innerText = data.message;
+        const res = await fetch("http://localhost:5000/api/status");
+        const data = await res.json();
+
+        document.getElementById("status").innerText = data.status;
     } catch (error) {
         document.getElementById("status").innerText = "Server not connected";
     }
 }
 
-fetchData();
+// load once
+loadStatus();
+
+// auto refresh every 3 sec
+setInterval(loadStatus, 3000);
