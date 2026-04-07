@@ -3,16 +3,18 @@ const cors = require("cors");
 
 const app = express();
 
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// Store latest status
+// Store latest data
 let latestData = {
     status: "No weed detected",
+    moisture: null,
     time: null
 };
 
-// Store history logs
+// Store logs
 let logs = [];
 
 // Test route
@@ -20,47 +22,50 @@ app.get("/", (req, res) => {
     res.send("IoT Weed Detection Backend Running 🚀");
 });
 
-// GET latest status (for frontend)
+// GET latest status
 app.get("/api/status", (req, res) => {
     res.json(latestData);
 });
 
-// GET logs/history
+// GET logs
 app.get("/api/logs", (req, res) => {
     res.json(logs);
 });
 
-// POST update (from ESP32)
+// 🔥 POST (ESP32 → Backend)
 app.post("/api/update", (req, res) => {
-    const { status } = req.body;
+    const { weed, moisture } = req.body;
 
-    // Validate input
-    if (!status) {
+    // Validation
+    if (typeof weed !== "boolean") {
         return res.status(400).json({
-            error: "Status is required"
+            error: "Invalid or missing 'weed' value (true/false required)"
         });
     }
 
     const data = {
-        status: status,
+        status: weed ? "Weed detected" : "No weed",
+        moisture: moisture ?? null,
         time: new Date()
     };
 
-    // Update latest data
+    // Update latest
     latestData = data;
 
-    // Store in logs
+    // Store logs (limit to last 100 entries)
     logs.push(data);
+    if (logs.length > 100) {
+        logs.shift();
+    }
 
-    console.log("Received data:", data);
+    console.log("DATA RECEIVED:", data);
 
-    // IMPORTANT: send response (you missed this earlier)
     res.json({
         message: "Data updated successfully"
     });
 });
 
-// Start server
-app.listen(3000, () => {
-    console.log("Server running at http://localhost:3000");
+// 🔥 IMPORTANT: allow ESP32 access
+app.listen(5000, "0.0.0.0", () => {
+    console.log("Server running on http://localhost:5000");
 });
