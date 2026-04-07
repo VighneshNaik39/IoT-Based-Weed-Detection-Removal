@@ -2,88 +2,96 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// 🧠 TEMP DATA STORAGE (Phase 1)
-let weedStatus = "No weed detected";
+// Store latest data
+let latestData = {
+    status: "No weed detected",
+    moisture: null,
+    time: null
+};
 
-let logs = [
-    { time: new Date().toLocaleString(), status: weedStatus }
-];
+// Store logs
+let logs = [];
 
+// Control system (optional - for later phases)
 let control = {
     autoMode: true,
     removal: false
 };
 
-// ✅ ROOT ROUTE
+// ROOT
 app.get("/", (req, res) => {
     res.send("🚀 IoT Weed Detection Backend Running");
 });
 
-
-// ✅ 1️⃣ GET STATUS (Dashboard)
+// ✅ GET STATUS (for frontend)
 app.get("/api/status", (req, res) => {
     res.json({
-        status: weedStatus,
-        time: new Date().toLocaleTimeString(),
+        ...latestData,
 
-        scansToday: 128,
+        // extra UI fields (optional)
+        scansToday: logs.length,
         weedsDetected: logs.filter(l => l.status === "Weed detected").length,
-        weedsRemoved: 3,
-        battery: 78,
-
-        sensors: {
-            moisture: 62,
-            temperature: 28,
-            humidity: 71,
-            light: 4320
-        }
+        weedsRemoved: 0,
+        battery: 80
     });
 });
 
-
-// ✅ 2️⃣ UPDATE STATUS (Simulate IoT)
-app.post("/api/update", (req, res) => {
-    const { status } = req.body;
-
-    weedStatus = status;
-
-    logs.unshift({
-        time: new Date().toLocaleString(),
-        status: status
-    });
-
-    console.log("Updated Status:", status);
-
-    res.json({
-        success: true,
-        current: weedStatus
-    });
-});
-
-
-// ✅ 3️⃣ GET LOGS (Logs Page)
+// ✅ GET LOGS
 app.get("/api/logs", (req, res) => {
     res.json(logs);
 });
 
+// 🔥 POST (ESP32 → Backend)
+app.post("/api/update", (req, res) => {
+    const { weed, moisture } = req.body;
 
-// ✅ 4️⃣ CONTROL SYSTEM (Settings Page)
-app.post("/api/control", (req, res) => {
-    control = req.body;
+    // Validation
+    if (typeof weed !== "boolean") {
+        return res.status(400).json({
+            error: "Invalid or missing 'weed' value"
+        });
+    }
 
-    console.log("Control Updated:", control);
+    const data = {
+        status: weed ? "Weed detected" : "No weed",
+        moisture: moisture ?? null,
+        time: new Date()
+    };
+
+    // Update latest
+    latestData = data;
+
+    // Store logs (limit 100)
+    logs.push(data);
+    if (logs.length > 100) {
+        logs.shift();
+    }
+
+    console.log("DATA RECEIVED:", data);
 
     res.json({
-        success: true,
-        control: control
+        success: true
     });
 });
 
+// ✅ CONTROL (optional - keep for future)
+app.post("/api/control", (req, res) => {
+    control = req.body;
 
-// 🚀 START SERVER
-app.listen(5000, () => {
+    console.log("CONTROL UPDATED:", control);
+
+    res.json({
+        success: true,
+        control
+    });
+});
+
+// 🚀 START SERVER (IMPORTANT FOR ESP32)
+app.listen(5000, "0.0.0.0", () => {
     console.log("Server running on http://localhost:5000");
 });
