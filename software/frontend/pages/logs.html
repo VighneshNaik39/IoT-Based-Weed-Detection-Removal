@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Detection Logs</title>
+    <title>Detection Logs — WeedGuard</title>
     <link rel="stylesheet" href="/software/frontend/css/logs.css">
-    <script src="../js/logs.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
 <header class="navbar">
-    <h2>🌿 Weed Detection System</h2>
+    <h2>🌿 WeedGuard</h2>
     <nav>
         <a href="/software/frontend/index.html">Dashboard</a>
         <a class="active" href="#">Logs</a>
@@ -20,15 +20,22 @@
 <main class="container">
     <div class="header">
         <h1>📋 Detection Logs</h1>
-        <button class="refresh-btn" onclick="loadLogs()">⟳ Refresh</button>
+        <div style="display:flex;gap:10px;align-items:center">
+            <span id="log-count" style="font-size:13px;color:#666">Loading...</span>
+            <button class="refresh-btn" onclick="loadLogs()">⟳ Refresh</button>
+        </div>
     </div>
 
-    <p class="subtitle">History of weed detection events</p>
+    <p class="subtitle">
+        Live history from ESP32 via backend at
+        <code style="background:#eee;padding:2px 6px;border-radius:4px;font-size:12px">http://192.168.99.135:5000/api/logs</code>
+        · Auto-refresh every 5s
+    </p>
 
     <!-- Filter -->
     <div class="filter">
         <label>
-            <input type="checkbox" id="weedFilter" onchange="applyFilter()">
+            <input type="checkbox" id="weedFilter" onchange="loadLogs()">
             Show only Weed Detected
         </label>
     </div>
@@ -36,15 +43,21 @@
     <table>
         <thead>
             <tr>
+                <th>#</th>
                 <th>Time</th>
                 <th>Status</th>
+                <th>Moisture</th>
                 <th>Source</th>
             </tr>
         </thead>
         <tbody id="logTable">
-            <!-- Logs will be inserted here dynamically -->
+            <tr><td colspan="5" style="text-align:center;color:#888;padding:30px">Loading logs from backend...</td></tr>
         </tbody>
     </table>
+
+    <div id="no-data" style="display:none;text-align:center;padding:40px;color:#888">
+        No logs yet. Waiting for ESP32 to send data...
+    </div>
 </main>
 
 <footer>
@@ -52,59 +65,81 @@
 </footer>
 
 <script>
-// Sample data (Replace later with ESP32 / API data)
-let logs = [
-    {time: "11:45:32 AM", status: "No weed detected"},
-    {time: "11:42:10 AM", status: "Weed detected"},
-    {time: "11:40:05 AM", status: "No weed detected"},
-    {time: "11:37:22 AM", status: "Weed detected"},
-    {time: "11:35:18 AM", status: "No weed detected"}
-];
+  const BASE_URL = "http://192.168.99.135:5000";
 
-// Load logs into table
-function loadLogs() {
-    const table = document.getElementById("logTable");
-    table.innerHTML = "";
+  async function loadLogs() {
+    try {
+      const response = await fetch(`${BASE_URL}/api/logs`);
+      const data = await response.json();
 
-    let filterActive = document.getElementById("weedFilter").checked;
+      const table = document.getElementById("logTable");
+      const noData = document.getElementById("no-data");
+      const countEl = document.getElementById("log-count");
 
-    logs.forEach(log => {
-        if (filterActive && log.status !== "Weed detected") return;
+      const filterActive = document.getElementById("weedFilter").checked;
 
-        let row = `
-            <tr>
-                <td>${log.time}</td>
-                <td>
-                    <span class="status ${log.status === "Weed detected" ? "danger" : "success"}">
-                        ${log.status === "Weed detected" ? "✖" : "✔"} ${log.status}
-                    </span>
-                </td>
-                <td>ESP32 Sensor</td>
-            </tr>
-        `;
+      const filtered = filterActive
+        ? data.filter(log => log.status === "Weed detected")
+        : data;
+
+      countEl.innerText = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
+
+      if (filtered.length === 0) {
+        table.innerHTML = "";
+        noData.style.display = "block";
+        return;
+      }
+
+      noData.style.display = "none";
+
+      // Show newest first
+      const reversed = [...filtered].reverse();
+      table.innerHTML = "";
+
+      reversed.forEach((log, i) => {
+        const timeStr = log.time
+          ? new Date(log.time).toLocaleString('en-IN', {
+              day: '2-digit', month: 'short',
+              hour: '2-digit', minute: '2-digit', second: '2-digit'
+            })
+          : "--";
+
+        const isWeed = log.status === "Weed detected";
+        const moisture = log.moisture != null ? log.moisture + "%" : "--";
+
+        const row = `
+          <tr>
+            <td style="color:#aaa;font-size:12px">${reversed.length - i}</td>
+            <td style="font-family:'Space Mono',monospace;font-size:12px">${timeStr}</td>
+            <td>
+              <span class="status ${isWeed ? 'danger' : 'success'}">
+                ${isWeed ? '⚠ Weed Detected' : '✔ Clear'}
+              </span>
+            </td>
+            <td style="font-weight:600;color:${log.moisture > 70 ? '#2d6a4f' : log.moisture < 30 ? '#c0392b' : '#555'}">
+              ${moisture}
+            </td>
+            <td style="color:#888;font-size:12px">ESP32 Sensor</td>
+          </tr>`;
         table.innerHTML += row;
-    });
-}
+      });
 
-// Apply filter
-function applyFilter() {
-    loadLogs();
-}
+    } catch (error) {
+      const table = document.getElementById("logTable");
+      table.innerHTML = `
+        <tr>
+          <td colspan="5" style="text-align:center;color:#c0392b;padding:30px">
+            ⚠ Cannot reach backend at 192.168.99.135:5000<br>
+            <small style="color:#aaa">Make sure server is running on the same network</small>
+          </td>
+        </tr>`;
+      document.getElementById("log-count").innerText = "Offline";
+    }
+  }
 
-// 🔄 Real-time auto refresh (every 5 seconds)
-setInterval(() => {
-    // Simulate new log (for demo)
-    let newLog = Math.random() > 0.5
-        ? {time: new Date().toLocaleTimeString(), status: "Weed detected"}
-        : {time: new Date().toLocaleTimeString(), status: "No weed detected"};
-
-    logs.unshift(newLog); // add new log at top
-    loadLogs();
-}, 5000);
-
-// Initial load
-loadLogs();
-
+  // Auto refresh every 5 seconds
+  loadLogs();
+  setInterval(loadLogs, 5000);
 </script>
 
 </body>

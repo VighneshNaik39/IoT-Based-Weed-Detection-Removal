@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IoT Weed Detection System</title>
   <link rel="stylesheet" href="/software/frontend/css/style.css"/>
-      <script src="/software/frontend/js/api.js"></script>
-
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -35,15 +33,15 @@
       <a href="/software/frontend/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
       <a href="#" class="nav-item">
         <span class="nav-item-icon">🔔</span> Alerts
-        <span class="nav-badge">3</span>
+        <span class="nav-badge" id="alert-badge">0</span>
       </a>
     </nav>
 
     <div class="sidebar-device">
-      <div class="device-dot"></div>
+      <div class="device-dot" id="device-dot"></div>
       <div>
         <p class="device-name">ESP32 Module</p>
-        <p class="device-status">Connected · 94ms ping</p>
+        <p class="device-status" id="device-status-text">Connecting...</p>
       </div>
     </div>
   </aside>
@@ -55,12 +53,12 @@
     <header class="topbar">
       <div>
         <h1 class="topbar-title">Dashboard</h1>
-        <p class="topbar-sub">Real-time overview · Field Station Alpha</p>
+        <p class="topbar-sub">Real-time overview · Field Station Alpha · <span id="last-updated">--</span></p>
       </div>
       <div class="topbar-right">
         <div class="topbar-time" id="clock">--:--:-- --</div>
         <span class="sys-badge online" id="sys-badge">● System Online</span>
-        <button class="topbar-btn" onclick="refreshAll()">↻ Refresh</button>
+        <button class="topbar-btn" onclick="manualRefresh()">↻ Refresh</button>
       </div>
     </header>
 
@@ -71,33 +69,33 @@
       <div class="kpi-row">
         <div class="kpi-card">
           <p class="kpi-label">Scans Today</p>
-          <p class="kpi-value">128</p>
-          <p class="kpi-delta positive">↑ 14 vs yesterday</p>
+          <p class="kpi-value" id="kpi-scans">--</p>
+          <p class="kpi-delta positive">Live from ESP32</p>
         </div>
         <div class="kpi-card">
           <p class="kpi-label">Weeds Detected</p>
-          <p class="kpi-value red">3</p>
-          <p class="kpi-delta negative">↑ 1 vs yesterday</p>
+          <p class="kpi-value red" id="kpi-weeds">--</p>
+          <p class="kpi-delta negative" id="kpi-weeds-label">Total this session</p>
         </div>
         <div class="kpi-card">
           <p class="kpi-label">Weeds Removed</p>
-          <p class="kpi-value">3</p>
-          <p class="kpi-delta positive">100% removal rate</p>
+          <p class="kpi-value" id="kpi-removed">0</p>
+          <p class="kpi-delta positive">Auto removal</p>
         </div>
         <div class="kpi-card">
-          <p class="kpi-label">Field Coverage</p>
-          <p class="kpi-value">94%</p>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:94%"></div></div>
+          <p class="kpi-label">Soil Moisture</p>
+          <p class="kpi-value" id="kpi-moisture">--%</p>
+          <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-moisture-bar" style="width:0%"></div></div>
         </div>
         <div class="kpi-card">
           <p class="kpi-label">Battery Level</p>
-          <p class="kpi-value amber">78%</p>
-          <div class="kpi-bar"><div class="kpi-bar-fill amber-fill" style="width:78%"></div></div>
+          <p class="kpi-value amber" id="kpi-battery">80%</p>
+          <div class="kpi-bar"><div class="kpi-bar-fill amber-fill" id="kpi-battery-bar" style="width:80%"></div></div>
         </div>
         <div class="kpi-card">
-          <p class="kpi-label">Uptime</p>
-          <p class="kpi-value">6h 32m</p>
-          <p class="kpi-delta positive">Since 5:13 AM</p>
+          <p class="kpi-label">Backend</p>
+          <p class="kpi-value" id="kpi-backend" style="font-size:13px;color:var(--gray-400)">192.168.99.135</p>
+          <p class="kpi-delta positive" id="kpi-backend-status">Polling every 3s</p>
         </div>
       </div>
 
@@ -128,7 +126,7 @@
           <div class="action-row">
             <button class="btn-primary" onclick="simulateWeed()">⚠ Simulate Weed</button>
             <button class="btn-outline" onclick="simulateClear()">✔ Simulate Clear</button>
-            <button class="btn-ghost-sm" onclick="refreshAll()">↻ Refresh</button>
+            <button class="btn-ghost-sm" onclick="manualRefresh()">↻ Refresh</button>
           </div>
         </div>
 
@@ -140,9 +138,9 @@
             <p class="panel-title">Sensor Readings</p>
             <div class="sensor-grid">
               <div class="sensor-item">
-                <p class="sensor-label">Soil Moisture</p>
-                <p class="sensor-value">62%</p>
-                <div class="sensor-bar"><div class="sensor-fill" style="width:62%"></div></div>
+                <p class="sensor-label">Soil Moisture (ESP32)</p>
+                <p class="sensor-value" id="sensor-moisture">--%</p>
+                <div class="sensor-bar"><div class="sensor-fill" id="sensor-moisture-bar" style="width:0%"></div></div>
               </div>
               <div class="sensor-item">
                 <p class="sensor-label">Temperature</p>
@@ -172,7 +170,7 @@
               <div class="bar-wrap"><div class="bar" style="height:45%"></div><span class="bar-label">Thu</span></div>
               <div class="bar-wrap"><div class="bar" style="height:20%"></div><span class="bar-label">Fri</span></div>
               <div class="bar-wrap"><div class="bar" style="height:55%"></div><span class="bar-label">Sat</span></div>
-              <div class="bar-wrap"><div class="bar active" style="height:15%"></div><span class="bar-label">Today</span></div>
+              <div class="bar-wrap"><div class="bar active" id="bar-today" style="height:5%"></div><span class="bar-label">Today</span></div>
             </div>
           </div>
 
@@ -185,16 +183,15 @@
         <!-- ACTIVITY LOG -->
         <div class="panel log-panel">
           <div class="panel-header">
-            <p class="panel-title">Activity Log</p>
-            <button class="btn-ghost-sm" onclick="clearLogs()">Clear</button>
+            <p class="panel-title">Activity Log <span style="font-size:11px;color:var(--gray-400);font-weight:400">(live from backend)</span></p>
+            <button class="btn-ghost-sm" onclick="clearLocalLogs()">Clear View</button>
           </div>
           <ul class="log-list" id="log-list">
-            <li class="log-row"><span class="log-time">11:45:32 AM</span><span class="log-zone">Zone A</span><span class="log-msg ok">Scan complete — No weeds found</span></li>
-            <li class="log-row"><span class="log-time">11:30:10 AM</span><span class="log-zone">Zone B</span><span class="log-msg warn">⚠ Weed detected — Removal triggered</span></li>
-            <li class="log-row"><span class="log-time">11:15:44 AM</span><span class="log-zone">Zone C</span><span class="log-msg ok">Scan complete — No weeds found</span></li>
-            <li class="log-row"><span class="log-time">11:00:05 AM</span><span class="log-zone">Zone A</span><span class="log-msg warn">⚠ Weed detected — Removal triggered</span></li>
-            <li class="log-row"><span class="log-time">10:45:00 AM</span><span class="log-zone">Zone D</span><span class="log-msg ok">Scan complete — No weeds found</span></li>
-            <li class="log-row"><span class="log-time">10:30:22 AM</span><span class="log-zone">Zone B</span><span class="log-msg warn">⚠ Weed detected — Removal triggered</span></li>
+            <li class="log-row">
+              <span class="log-time">--</span>
+              <span class="log-zone">--</span>
+              <span class="log-msg ok">Waiting for ESP32 data...</span>
+            </li>
           </ul>
         </div>
 
@@ -204,11 +201,11 @@
           <div class="device-rows">
             <div class="device-row"><span class="dr-label">Module</span><span class="dr-val">ESP32-WROOM-32</span></div>
             <div class="device-row"><span class="dr-label">Firmware</span><span class="dr-val">v2.4.1</span></div>
-            <div class="device-row"><span class="dr-label">IP Address</span><span class="dr-val mono">192.168.1.42</span></div>
-            <div class="device-row"><span class="dr-label">Signal</span><span class="dr-val">–62 dBm (Good)</span></div>
-            <div class="device-row"><span class="dr-label">Last Ping</span><span class="dr-val">94 ms</span></div>
-            <div class="device-row"><span class="dr-label">Camera</span><span class="dr-val ok-text">Active · 30 FPS</span></div>
-            <div class="device-row"><span class="dr-label">Motor</span><span class="dr-val ok-text">Standby</span></div>
+            <div class="device-row"><span class="dr-label">Backend IP</span><span class="dr-val mono">192.168.99.135:5000</span></div>
+            <div class="device-row"><span class="dr-label">Update Rate</span><span class="dr-val">Every 5s (ESP32)</span></div>
+            <div class="device-row"><span class="dr-label">Poll Rate</span><span class="dr-val">Every 3s (Frontend)</span></div>
+            <div class="device-row"><span class="dr-label">Last Data</span><span class="dr-val ok-text" id="device-last-data">Waiting...</span></div>
+            <div class="device-row"><span class="dr-label">Backend</span><span class="dr-val ok-text" id="device-backend-status">Connecting...</span></div>
             <div class="device-row"><span class="dr-label">GPS</span><span class="dr-val mono">12.9716°N 77.5946°E</span></div>
           </div>
         </div>
@@ -218,105 +215,149 @@
   </div>
 </div>
 
+<!-- Load api.js first -->
+<script src="/software/frontend/js/api.js"></script>
+
 <script>
+  // ==============================
+  // CLOCK
+  // ==============================
   function tick() {
     document.getElementById('clock').textContent =
       new Date().toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
   }
-  tick(); setInterval(tick, 1000);
+  tick();
+  setInterval(tick, 1000);
 
-  
-
-  function refreshAll() {
+  // ==============================
+  // MANUAL REFRESH
+  // ==============================
+  async function manualRefresh() {
     const b = document.getElementById('sys-badge');
-    b.textContent = '↻ Refreshing...'; b.className = 'sys-badge refreshing';
-    setTimeout(() => { b.textContent = '● System Online'; b.className = 'sys-badge online'; addLog('System','Manual refresh triggered','ok'); }, 1200);
+    b.textContent = '↻ Refreshing...';
+    b.className = 'sys-badge refreshing';
+    await loadStatusFromBackend();
+    await loadLogsFromBackend();
   }
 
-  function addLog(zone, msg, type) {
-    const list = document.getElementById('log-list');
-    const time = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    const li = document.createElement('li');
-    li.className = 'log-row new-entry';
-    li.innerHTML = `<span class="log-time">${time}</span><span class="log-zone">${zone}</span><span class="log-msg ${type}">${msg}</span>`;
-    list.prepend(li);
-  }
-
-  function clearLogs() {
+  // ==============================
+  // CLEAR LOG VIEW (local only)
+  // ==============================
+  function clearLocalLogs() {
     document.getElementById('log-list').innerHTML =
-      '<li class="log-row"><span class="log-time">--</span><span class="log-zone">--</span><span class="log-msg ok">Log cleared</span></li>';
+      '<li class="log-row"><span class="log-time">--</span><span class="log-zone">--</span><span class="log-msg ok">Log view cleared — backend still running</span></li>';
   }
 
-  // ======================
-// BACKEND CONNECTION
-// ======================
+  // ==============================
+  // OVERRIDE: Update extra UI elements from api.js
+  // ==============================
+  const _origLoad = loadStatusFromBackend;
 
-async function loadStatusFromBackend() {
-  try {
-    const res = await fetch("http://localhost:5000/api/status");
-    const data = await res.json();
+  // Patch extra KPI updates not in api.js
+  async function fullRefresh() {
+    try {
+      const res = await fetch("http://192.168.99.135:5000/api/status");
+      const data = await res.json();
 
-    if (data.status === "Weed detected") {
-      showWeedUI();
-    } else {
-      showClearUI();
+      // KPI - Scans Today
+      const scansEl = document.getElementById("kpi-scans");
+      if (scansEl) scansEl.innerText = data.scansToday ?? "--";
+
+      // KPI - Weeds Detected
+      const weedsEl = document.getElementById("kpi-weeds");
+      if (weedsEl) weedsEl.innerText = data.weedsDetected ?? "--";
+
+      // Alert badge
+      const alertBadge = document.getElementById("alert-badge");
+      if (alertBadge) alertBadge.innerText = data.weedsDetected ?? "0";
+
+      // KPI - Moisture
+      const moistureKpi = document.getElementById("kpi-moisture");
+      const moistureBar = document.getElementById("kpi-moisture-bar");
+      if (data.moisture != null) {
+        if (moistureKpi) moistureKpi.innerText = data.moisture + "%";
+        if (moistureBar) moistureBar.style.width = data.moisture + "%";
+      }
+
+      // KPI - Battery
+      const battEl = document.getElementById("kpi-battery");
+      const battBar = document.getElementById("kpi-battery-bar");
+      if (battEl) battEl.innerText = (data.battery ?? 80) + "%";
+      if (battBar) battBar.style.width = (data.battery ?? 80) + "%";
+
+      // Sensor moisture
+      const sMoist = document.getElementById("sensor-moisture");
+      const sMoistBar = document.getElementById("sensor-moisture-bar");
+      if (data.moisture != null) {
+        if (sMoist) sMoist.innerText = data.moisture + "%";
+        if (sMoistBar) sMoistBar.style.width = data.moisture + "%";
+      }
+
+      // Status panel
+      if (data.status === "Weed detected") {
+        showWeedUI();
+      } else {
+        showClearUI();
+      }
+
+      // Last updated
+      if (data.time) {
+        const t = new Date(data.time).toLocaleTimeString('en-US', {
+          hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+        const lu = document.getElementById("last-updated");
+        if (lu) lu.innerText = "Last update: " + t;
+
+        const dla = document.getElementById("device-last-data");
+        if (dla) { dla.innerText = t; dla.style.color = "var(--green-500)"; }
+      }
+
+      // Today's bar chart height
+      const barToday = document.getElementById("bar-today");
+      if (barToday && data.weedsDetected != null) {
+        const pct = Math.min(100, (data.weedsDetected / 10) * 100);
+        barToday.style.height = Math.max(5, pct) + "%";
+      }
+
+      // System badge & device status
+      const badge = document.getElementById("sys-badge");
+      if (badge) { badge.textContent = "● System Online"; badge.className = "sys-badge online"; }
+
+      const devStatus = document.getElementById("device-backend-status");
+      if (devStatus) { devStatus.innerText = "Connected ✔"; devStatus.style.color = "var(--green-500)"; }
+
+      const devDot = document.getElementById("device-dot");
+      if (devDot) devDot.style.background = "var(--green-400)";
+
+      const devStatusText = document.getElementById("device-status-text");
+      if (devStatusText) devStatusText.innerText = "Connected · Live";
+
+    } catch (err) {
+      console.warn("Backend unreachable:", err.message);
+
+      const badge = document.getElementById("sys-badge");
+      if (badge) { badge.textContent = "● Offline"; badge.className = "sys-badge refreshing"; }
+
+      const devStatus = document.getElementById("device-backend-status");
+      if (devStatus) { devStatus.innerText = "Unreachable ✖"; devStatus.style.color = "var(--red-600)"; }
+
+      const devDot = document.getElementById("device-dot");
+      if (devDot) devDot.style.background = "var(--red-600)";
+
+      const devStatusText = document.getElementById("device-status-text");
+      if (devStatusText) devStatusText.innerText = "Offline";
     }
 
-  } catch (err) {
-    console.log("Backend not connected");
+    // Load logs
+    await loadLogsFromBackend();
   }
-}
 
-function simulateWeed() {
-  fetch("http://localhost:5000/api/update", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      status: "Weed detected"
-    })
-  })
-  .then(() => loadStatusFromBackend());
-}
-
-function simulateClear() {
-  fetch("http://localhost:5000/api/update", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      status: "No weed detected"
-    })
-  })
-  .then(() => loadStatusFromBackend());
-}
-
-function showWeedUI() {
-  const panel = document.getElementById('status-panel');
-  panel.className = 'panel status-panel weed';
-
-  document.getElementById('status-chip').className = 'panel-chip weed-chip';
-  document.getElementById('status-chip').textContent = 'WEED DETECTED';
-
-  document.getElementById('status-big-icon').textContent = '⚠';
-  document.getElementById('status-headline').textContent = 'Weed Detected!';
-}
-
-function showClearUI() {
-  document.getElementById('status-panel').className = 'panel status-panel clear';
-
-  document.getElementById('status-chip').className = 'panel-chip clear-chip';
-  document.getElementById('status-chip').textContent = 'CLEAR';
-
-  document.getElementById('status-big-icon').textContent = '✔';
-  document.getElementById('status-headline').textContent = 'No Weed Detected';
-}
-
-// Auto load
-loadStatusFromBackend();
-setInterval(loadStatusFromBackend, 3000);
+  // ==============================
+  // AUTO REFRESH every 3 seconds
+  // ==============================
+  fullRefresh();
+  setInterval(fullRefresh, 3000);
 </script>
+
 </body>
 </html>

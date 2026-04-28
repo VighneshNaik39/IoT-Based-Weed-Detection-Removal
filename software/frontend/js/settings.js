@@ -1,3 +1,5 @@
+const BASE_URL = "http://192.168.99.135:5000";
+
 function saveSettings() {
     const settings = {
         autoDetect: document.getElementById("autoDetect").checked,
@@ -5,17 +7,14 @@ function saveSettings() {
         autoRemove: document.getElementById("autoRemove").checked
     };
 
-    // Save locally (for demo)
     localStorage.setItem("weedSettings", JSON.stringify(settings));
-
-    alert("Settings saved successfully!");
+    alert("✅ Settings saved successfully!");
 }
 
-// Function to update connection status
-function updateConnectionStatus(isConnected, deviceName = null) {
+function updateConnectionStatus(isConnected) {
     const statusBadge = document.getElementById('connectionStatus');
     const deviceInfo = document.getElementById('deviceName');
-    
+
     if (statusBadge) {
         if (isConnected) {
             statusBadge.textContent = 'Connected';
@@ -25,37 +24,34 @@ function updateConnectionStatus(isConnected, deviceName = null) {
             statusBadge.classList.add('disconnected');
         }
     }
-    
-    // Update device name
+
     if (deviceInfo) {
-        if (deviceName) {
-            deviceInfo.textContent = deviceName;
-        } else {
-            deviceInfo.textContent = 'No device connected';
-        }
+        deviceInfo.textContent = isConnected ? 'ESP32-WROOM-32 @ 192.168.99.135' : 'No device connected';
     }
 }
 
-// Simulate connection status check (in real app, this would check actual device connection)
-function checkConnectionStatus() {
-    // For demo purposes, we'll keep it disconnected until you manually connect
-    // In real implementation, this would check actual device status via API/WebSocket
-    updateConnectionStatus(false, null);
+async function checkConnectionStatus() {
+    try {
+        const res = await fetch(`${BASE_URL}/api/status`);
+        if (res.ok) {
+            updateConnectionStatus(true);
+        } else {
+            updateConnectionStatus(false);
+        }
+    } catch (err) {
+        updateConnectionStatus(false);
+    }
 }
 
-// Load settings on page load
 window.onload = function () {
     const saved = JSON.parse(localStorage.getItem("weedSettings"));
-
     if (saved) {
         document.getElementById("autoDetect").checked = saved.autoDetect;
         document.getElementById("alerts").checked = saved.alerts;
         document.getElementById("autoRemove").checked = saved.autoRemove;
     }
 
-    // Start with disconnected state (no device) and keep it that way
-    updateConnectionStatus(false, null);
-    
-    // Remove automatic checking to prevent fluctuation
-    // You can manually call updateConnectionStatus() when device actually connects
+    checkConnectionStatus();
+    // Re-check every 5 seconds
+    setInterval(checkConnectionStatus, 5000);
 };

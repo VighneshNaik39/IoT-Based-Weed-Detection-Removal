@@ -2,24 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Settings - Weed Detection System</title>
-    <link rel="stylesheet" href="../css/settings.css">
-        <script src="/software/frontend/js/api.js"></script>
-
+    <title>Settings - WeedGuard</title>
+    <link rel="stylesheet" href="/software/frontend/css/settings.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<!-- Navbar -->
 <header class="navbar">
-    <div class="logo">🌿 Weed Detection System</div>
+    <div class="logo">🌿 WeedGuard</div>
     <nav>
-        <a href="../index.html">Dashboard</a>
-        <a href="logs.html">Logs</a>
+        <a href="/software/frontend/index.html">Dashboard</a>
+        <a href="/software/frontend/pages/logs.html">Logs</a>
         <a class="active" href="#">Settings</a>
     </nav>
 </header>
 
-<!-- Main Container -->
 <div class="container">
 
     <h1>⚙️ Settings</h1>
@@ -81,28 +78,34 @@
                 <div class="info-icon">🖥️</div>
                 <span>Device</span>
             </div>
-            <span id="deviceName">No device connected</span>
+            <span id="deviceName">Checking...</span>
         </div>
 
         <div class="info">
             <div class="info-content">
                 <div class="info-icon">📶</div>
-                <span>Status</span>
+                <span>Backend Status</span>
             </div>
-            <span id="connectionStatus" class="status-badge">Disconnected</span>
+            <span id="connectionStatus" class="status-badge disconnected">Checking...</span>
+        </div>
+
+        <div class="info">
+            <div class="info-content">
+                <div class="info-icon">🌐</div>
+                <span>Backend URL</span>
+            </div>
+            <span style="font-family:'Space Mono',monospace;font-size:13px">192.168.99.135:5000</span>
         </div>
     </div>
 
-    <!-- Save Button -->
     <button class="save-btn" onclick="saveSettings()">💾 Save Settings</button>
 
 </div>
 
-<!-- Footer -->
 <footer class="footer">
-    <p> 2024 IoT-Based Weed Detection & Removal System</p>
+    <p>© 2024 IoT-Based Weed Detection & Removal System</p>
 </footer>
 
-<script src="../js/settings.js"></script>
+<script src="/software/frontend/js/settings.js"></script>
 </body>
 </html>
