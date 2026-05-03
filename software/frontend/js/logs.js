@@ -1,4 +1,4 @@
-const BASE_URL = "http://192.168.99.135:5000";
+const BASE_URL = "http://192.168.12.135:5000";
 
 async function loadLogs() {
     try {

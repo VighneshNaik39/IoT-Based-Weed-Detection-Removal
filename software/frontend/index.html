@@ -4,7 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>IoT Weed Detection System</title>
-  <link rel="stylesheet" href="/software/frontend/css/style.css"/>
+  <link rel="stylesheet" href="/css/style.css"/>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
@@ -24,13 +24,13 @@
     <nav class="sidebar-nav">
       <p class="nav-section-label">MAIN</p>
       <a href="#" class="nav-item active"><span class="nav-item-icon">⊞</span> Dashboard</a>
-      <a href="/software/frontend/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
+      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
       <a href="#" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
       <a href="#" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
 
       <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
       <a href="#" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
-      <a href="/software/frontend/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
+      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
       <a href="#" class="nav-item">
         <span class="nav-item-icon">🔔</span> Alerts
         <span class="nav-badge" id="alert-badge">0</span>
@@ -215,8 +215,8 @@
   </div>
 </div>
 
-<!-- Load api.js first -->
-<script src="/software/frontend/js/api.js"></script>
+<!-- ✅ Load api.js — path relative to /software/frontend/ static root -->
+<script src="/js/api.js"></script>
 
 <script>
   // ==============================
@@ -236,8 +236,7 @@
     const b = document.getElementById('sys-badge');
     b.textContent = '↻ Refreshing...';
     b.className = 'sys-badge refreshing';
-    await loadStatusFromBackend();
-    await loadLogsFromBackend();
+    await fullRefresh();
   }
 
   // ==============================
@@ -249,77 +248,66 @@
   }
 
   // ==============================
-  // OVERRIDE: Update extra UI elements from api.js
+  // FULL REFRESH — fetches status + updates all UI
   // ==============================
-  const _origLoad = loadStatusFromBackend;
-
-  // Patch extra KPI updates not in api.js
   async function fullRefresh() {
     try {
-      const res = await fetch("http://192.168.99.135:5000/api/status");
+      const res = await fetch("http://192.168.12.135:5000/api/status");
       const data = await res.json();
 
-      // KPI - Scans Today
-      const scansEl = document.getElementById("kpi-scans");
-      if (scansEl) scansEl.innerText = data.scansToday ?? "--";
-
-      // KPI - Weeds Detected
-      const weedsEl = document.getElementById("kpi-weeds");
-      if (weedsEl) weedsEl.innerText = data.weedsDetected ?? "--";
-
-      // Alert badge
-      const alertBadge = document.getElementById("alert-badge");
-      if (alertBadge) alertBadge.innerText = data.weedsDetected ?? "0";
-
-      // KPI - Moisture
-      const moistureKpi = document.getElementById("kpi-moisture");
-      const moistureBar = document.getElementById("kpi-moisture-bar");
-      if (data.moisture != null) {
-        if (moistureKpi) moistureKpi.innerText = data.moisture + "%";
-        if (moistureBar) moistureBar.style.width = data.moisture + "%";
-      }
-
-      // KPI - Battery
-      const battEl = document.getElementById("kpi-battery");
-      const battBar = document.getElementById("kpi-battery-bar");
-      if (battEl) battEl.innerText = (data.battery ?? 80) + "%";
-      if (battBar) battBar.style.width = (data.battery ?? 80) + "%";
-
-      // Sensor moisture
-      const sMoist = document.getElementById("sensor-moisture");
-      const sMoistBar = document.getElementById("sensor-moisture-bar");
-      if (data.moisture != null) {
-        if (sMoist) sMoist.innerText = data.moisture + "%";
-        if (sMoistBar) sMoistBar.style.width = data.moisture + "%";
-      }
-
-      // Status panel
+      // --- Status Panel ---
       if (data.status === "Weed detected") {
         showWeedUI();
       } else {
         showClearUI();
       }
 
-      // Last updated
+      // --- KPI Cards ---
+      const scansEl = document.getElementById("kpi-scans");
+      if (scansEl) scansEl.innerText = data.scansToday ?? "--";
+
+      const weedsEl = document.getElementById("kpi-weeds");
+      if (weedsEl) weedsEl.innerText = data.weedsDetected ?? "--";
+
+      const alertBadge = document.getElementById("alert-badge");
+      if (alertBadge) alertBadge.innerText = data.weedsDetected ?? "0";
+
+      const battEl = document.getElementById("kpi-battery");
+      const battBar = document.getElementById("kpi-battery-bar");
+      if (battEl) battEl.innerText = (data.battery ?? 80) + "%";
+      if (battBar) battBar.style.width = (data.battery ?? 80) + "%";
+
+      // --- Moisture ---
+      if (data.moisture != null) {
+        const kpiM = document.getElementById("kpi-moisture");
+        const kpiMBar = document.getElementById("kpi-moisture-bar");
+        const sM = document.getElementById("sensor-moisture");
+        const sMBar = document.getElementById("sensor-moisture-bar");
+        if (kpiM) kpiM.innerText = data.moisture + "%";
+        if (kpiMBar) kpiMBar.style.width = data.moisture + "%";
+        if (sM) sM.innerText = data.moisture + "%";
+        if (sMBar) sMBar.style.width = data.moisture + "%";
+      }
+
+      // --- Last Updated ---
       if (data.time) {
         const t = new Date(data.time).toLocaleTimeString('en-US', {
           hour: '2-digit', minute: '2-digit', second: '2-digit'
         });
         const lu = document.getElementById("last-updated");
         if (lu) lu.innerText = "Last update: " + t;
-
         const dla = document.getElementById("device-last-data");
         if (dla) { dla.innerText = t; dla.style.color = "var(--green-500)"; }
       }
 
-      // Today's bar chart height
+      // --- Today's bar chart ---
       const barToday = document.getElementById("bar-today");
       if (barToday && data.weedsDetected != null) {
         const pct = Math.min(100, (data.weedsDetected / 10) * 100);
         barToday.style.height = Math.max(5, pct) + "%";
       }
 
-      // System badge & device status
+      // --- System Online ---
       const badge = document.getElementById("sys-badge");
       if (badge) { badge.textContent = "● System Online"; badge.className = "sys-badge online"; }
 
@@ -348,7 +336,7 @@
       if (devStatusText) devStatusText.innerText = "Offline";
     }
 
-    // Load logs
+    // Always load logs too
     await loadLogsFromBackend();
   }
 

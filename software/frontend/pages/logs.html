@@ -2,18 +2,18 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Detection Logs — WeedGuard</title>
-    <link rel="stylesheet" href="/software/frontend/css/logs.css">
+    <title>Detection Logs</title>
+    <link rel="stylesheet" href="/css/logs.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
 <header class="navbar">
-    <h2>🌿 WeedGuard</h2>
+    <h2>🌿 Weed Detection System</h2>
     <nav>
-        <a href="/software/frontend/index.html">Dashboard</a>
+        <a href="/">Dashboard</a>
         <a class="active" href="#">Logs</a>
-        <a href="/software/frontend/pages/settings.html">Settings</a>
+        <a href="/pages/settings.html">Settings</a>
     </nav>
 </header>
 
@@ -28,14 +28,14 @@
 
     <p class="subtitle">
         Live history from ESP32 via backend at
-        <code style="background:#eee;padding:2px 6px;border-radius:4px;font-size:12px">http://192.168.99.135:5000/api/logs</code>
+        <code style="background:#eee;padding:2px 6px;border-radius:4px;font-size:12px">192.168.99.135:5000/api/logs</code>
         · Auto-refresh every 5s
     </p>
 
     <!-- Filter -->
     <div class="filter">
         <label>
-            <input type="checkbox" id="weedFilter" onchange="loadLogs()">
+            <input type="checkbox" id="weedFilter" onchange="applyFilter()">
             Show only Weed Detected
         </label>
     </div>
@@ -54,93 +54,14 @@
             <tr><td colspan="5" style="text-align:center;color:#888;padding:30px">Loading logs from backend...</td></tr>
         </tbody>
     </table>
-
-    <div id="no-data" style="display:none;text-align:center;padding:40px;color:#888">
-        No logs yet. Waiting for ESP32 to send data...
-    </div>
 </main>
 
 <footer>
     © 2024 IoT-Based Weed Detection & Removal System
 </footer>
 
-<script>
-  const BASE_URL = "http://192.168.99.135:5000";
-
-  async function loadLogs() {
-    try {
-      const response = await fetch(`${BASE_URL}/api/logs`);
-      const data = await response.json();
-
-      const table = document.getElementById("logTable");
-      const noData = document.getElementById("no-data");
-      const countEl = document.getElementById("log-count");
-
-      const filterActive = document.getElementById("weedFilter").checked;
-
-      const filtered = filterActive
-        ? data.filter(log => log.status === "Weed detected")
-        : data;
-
-      countEl.innerText = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
-
-      if (filtered.length === 0) {
-        table.innerHTML = "";
-        noData.style.display = "block";
-        return;
-      }
-
-      noData.style.display = "none";
-
-      // Show newest first
-      const reversed = [...filtered].reverse();
-      table.innerHTML = "";
-
-      reversed.forEach((log, i) => {
-        const timeStr = log.time
-          ? new Date(log.time).toLocaleString('en-IN', {
-              day: '2-digit', month: 'short',
-              hour: '2-digit', minute: '2-digit', second: '2-digit'
-            })
-          : "--";
-
-        const isWeed = log.status === "Weed detected";
-        const moisture = log.moisture != null ? log.moisture + "%" : "--";
-
-        const row = `
-          <tr>
-            <td style="color:#aaa;font-size:12px">${reversed.length - i}</td>
-            <td style="font-family:'Space Mono',monospace;font-size:12px">${timeStr}</td>
-            <td>
-              <span class="status ${isWeed ? 'danger' : 'success'}">
-                ${isWeed ? '⚠ Weed Detected' : '✔ Clear'}
-              </span>
-            </td>
-            <td style="font-weight:600;color:${log.moisture > 70 ? '#2d6a4f' : log.moisture < 30 ? '#c0392b' : '#555'}">
-              ${moisture}
-            </td>
-            <td style="color:#888;font-size:12px">ESP32 Sensor</td>
-          </tr>`;
-        table.innerHTML += row;
-      });
-
-    } catch (error) {
-      const table = document.getElementById("logTable");
-      table.innerHTML = `
-        <tr>
-          <td colspan="5" style="text-align:center;color:#c0392b;padding:30px">
-            ⚠ Cannot reach backend at 192.168.99.135:5000<br>
-            <small style="color:#aaa">Make sure server is running on the same network</small>
-          </td>
-        </tr>`;
-      document.getElementById("log-count").innerText = "Offline";
-    }
-  }
-
-  // Auto refresh every 5 seconds
-  loadLogs();
-  setInterval(loadLogs, 5000);
-</script>
+<!-- ✅ ONLY this script — fetches real data from backend -->
+<script src="/js/logs.js"></script>
 
 </body>
 </html>
