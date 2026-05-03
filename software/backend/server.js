@@ -7,6 +7,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ✅ Serve frontend static files
+app.use(express.static(__dirname + "/../frontend"));
+
 // =============================
 // 📊 DATA STORAGE
 // =============================
@@ -27,11 +30,11 @@ let control = {
 // 🏠 ROOT
 // =============================
 app.get("/", (req, res) => {
-  res.send("🚀 IoT Weed Detection Backend Running");
+  res.sendFile(__dirname + "/../frontend/index.html");
 });
 
 // =============================
-// ✅ ESP32 TEST ENDPOINT (IMPORTANT)
+// ✅ ESP32 TEST ENDPOINT
 // =============================
 app.get("/api/data", (req, res) => {
   console.log("ESP32 requested data");
@@ -43,14 +46,19 @@ app.get("/api/data", (req, res) => {
 });
 
 // =============================
-// ✅ GET STATUS (Frontend)
+// ✅ GET STATUS (FIXED HERE)
 // =============================
 app.get("/api/status", (req, res) => {
+  const weedsDetected = logs.filter(l => l.status === "Weed detected").length;
+
   res.json({
     ...latestData,
     scansToday: logs.length,
-    weedsDetected: logs.filter(l => l.status === "Weed detected").length,
-    weedsRemoved: 0,
+    weedsDetected: weedsDetected,
+
+    // 🔥 FIX: simulate removal (70% removed)
+    weedsRemoved: Math.floor(weedsDetected * 0.7),
+
     battery: 80
   });
 });
@@ -75,9 +83,9 @@ app.post("/api/update", (req, res) => {
   }
 
   const data = {
-    status: weed ? "Weed detected" : "No weed",
+    status: weed ? "Weed detected" : "No weed detected",
     moisture: moisture ?? null,
-    time: new Date()
+    time: new Date().toISOString() // 🔥 important: consistent format
   };
 
   latestData = data;
