@@ -1,4 +1,4 @@
-const BASE_URL = "http://192.168.12.135:5000";
+const BASE_URL = "";
 
 async function loadLogs() {
     try {
@@ -52,7 +52,7 @@ async function loadLogs() {
     } catch (error) {
         const table = document.getElementById("logTable");
         table.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#c0392b;padding:30px">
-            ⚠ Cannot reach backend at 192.168.99.135:5000<br>
+            ⚠ Cannot reach backend<br>
             <small style="color:#aaa">Make sure server is running on the same network</small>
         </td></tr>`;
     }

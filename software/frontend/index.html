@@ -94,7 +94,7 @@
         </div>
         <div class="kpi-card">
           <p class="kpi-label">Backend</p>
-          <p class="kpi-value" id="kpi-backend" style="font-size:13px;color:var(--gray-400)">192.168.99.135</p>
+         <p class="kpi-value" id="kpi-backend" style="font-size:13px;color:var(--gray-400)">Loading...</p>
           <p class="kpi-delta positive" id="kpi-backend-status">Polling every 3s</p>
         </div>
       </div>
@@ -201,7 +201,10 @@
           <div class="device-rows">
             <div class="device-row"><span class="dr-label">Module</span><span class="dr-val">ESP32-WROOM-32</span></div>
             <div class="device-row"><span class="dr-label">Firmware</span><span class="dr-val">v2.4.1</span></div>
-            <div class="device-row"><span class="dr-label">Backend IP</span><span class="dr-val mono">192.168.99.135:5000</span></div>
+            <div class="device-row">
+  <span class="dr-label">Backend IP</span>
+  <span class="dr-val mono" id="device-backend-ip">Loading...</span>
+</div>
             <div class="device-row"><span class="dr-label">Update Rate</span><span class="dr-val">Every 5s (ESP32)</span></div>
             <div class="device-row"><span class="dr-label">Poll Rate</span><span class="dr-val">Every 3s (Frontend)</span></div>
             <div class="device-row"><span class="dr-label">Last Data</span><span class="dr-val ok-text" id="device-last-data">Waiting...</span></div>
@@ -252,8 +255,19 @@
   // ==============================
   async function fullRefresh() {
     try {
-      const res = await fetch("http://192.168.12.135:5000/api/status");
+      const res = await fetch("/api/status");
       const data = await res.json();
+
+      // Backend IP
+const backendIp = document.getElementById("kpi-backend");
+if (backendIp) {
+    backendIp.innerText = window.location.host;
+}
+
+const backendIp2 = document.getElementById("device-backend-ip");
+if (backendIp2) {
+    backendIp2.innerText = window.location.host;
+}
 
       // --- Status Panel ---
       if (data.status === "Weed detected") {

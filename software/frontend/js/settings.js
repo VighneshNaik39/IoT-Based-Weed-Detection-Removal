@@ -1,5 +1,4 @@
-const BASE_URL = "http://192.168.12.135:5000";
-
+const BASE_URL = "";
 function saveSettings() {
     const settings = {
         autoDetect: document.getElementById("autoDetect").checked,
@@ -26,19 +25,23 @@ function updateConnectionStatus(isConnected) {
     }
 
     if (deviceInfo) {
-        deviceInfo.textContent = isConnected ? 'ESP32-WROOM-32 @ 192.168.99.135' : 'No device connected';
-    }
+deviceInfo.textContent = isConnected ? 'ESP32-WROOM-32 Connected' : 'No device connected';    }
 }
 
 async function checkConnectionStatus() {
     try {
-        const res = await fetch(`${BASE_URL}/api/status`);
-        if (res.ok) {
-            updateConnectionStatus(true);
-        } else {
-            updateConnectionStatus(false);
-        }
+        const res = await fetch("/api/status");
+
+        if (!res.ok) throw new Error();
+
+        const data = await res.json();
+
+        console.log("Backend Status:", data);
+
+        updateConnectionStatus(true);
+
     } catch (err) {
+        console.error(err);
         updateConnectionStatus(false);
     }
 }
