@@ -683,3 +683,95 @@ html, body {
   .bot-row  { grid-template-columns: 1fr; }
   :root { --sidebar-w: 200px; }
 }
+
+/* ==============================
+   OVERALL STATS PANEL
+============================== */
+
+.overall-panel {
+  min-width: 320px;
+}
+
+.overall-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.overall-box {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.overall-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.overall-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--green-700);
+}
+
+.overall-value.red {
+  color: var(--red-600);
+}
+
+.panel-subtitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-700);
+  margin-bottom: 10px;
+}
+
+.history-wrap {
+  margin-top: 12px;
+}
+
+.history-item {
+  background: var(--gray-50);
+  border-left: 4px solid var(--red-600);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--gray-700);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.history-item:last-child {
+  margin-bottom: 0;
+}
+
+/* ==============================
+   UPDATED BOTTOM ROW
+============================== */
+
+.bot-row {
+  display: grid;
+  grid-template-columns: 1fr 340px 320px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ==============================
+   RESPONSIVE
+============================== */
+
+@media (max-width: 1400px) {
+
+  .bot-row {
+    grid-template-columns: 1fr;
+  }
+
+}

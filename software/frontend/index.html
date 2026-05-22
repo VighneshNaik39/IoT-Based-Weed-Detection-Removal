@@ -178,45 +178,255 @@
       </div>
 
       <!-- BOTTOM ROW -->
-      <div class="bot-row">
+<div class="bot-row">
 
-        <!-- ACTIVITY LOG -->
-        <div class="panel log-panel">
-          <div class="panel-header">
-            <p class="panel-title">Activity Log <span style="font-size:11px;color:var(--gray-400);font-weight:400">(live from backend)</span></p>
-            <button class="btn-ghost-sm" onclick="clearLocalLogs()">Clear View</button>
-          </div>
-          <ul class="log-list" id="log-list">
-            <li class="log-row">
-              <span class="log-time">--</span>
-              <span class="log-zone">--</span>
-              <span class="log-msg ok">Waiting for ESP32 data...</span>
-            </li>
-          </ul>
-        </div>
+  <!-- ACTIVITY LOG -->
+  <div class="panel log-panel">
 
-        <!-- DEVICE INFO -->
-        <div class="panel device-panel">
-          <p class="panel-title">Device Info</p>
-          <div class="device-rows">
-            <div class="device-row"><span class="dr-label">Module</span><span class="dr-val">ESP32-WROOM-32</span></div>
-            <div class="device-row"><span class="dr-label">Firmware</span><span class="dr-val">v2.4.1</span></div>
-            <div class="device-row">
-  <span class="dr-label">Backend IP</span>
-  <span class="dr-val mono" id="device-backend-ip">Loading...</span>
-</div>
-            <div class="device-row"><span class="dr-label">Update Rate</span><span class="dr-val">Every 5s (ESP32)</span></div>
-            <div class="device-row"><span class="dr-label">Poll Rate</span><span class="dr-val">Every 3s (Frontend)</span></div>
-            <div class="device-row"><span class="dr-label">Last Data</span><span class="dr-val ok-text" id="device-last-data">Waiting...</span></div>
-            <div class="device-row"><span class="dr-label">Backend</span><span class="dr-val ok-text" id="device-backend-status">Connecting...</span></div>
-            <div class="device-row"><span class="dr-label">GPS</span><span class="dr-val mono">12.9716°N 77.5946°E</span></div>
-          </div>
-        </div>
+    <div class="panel-header">
+
+      <p class="panel-title">
+        Activity Log
+        <span style="font-size:11px;color:var(--gray-400);font-weight:400">
+          (live from backend)
+        </span>
+      </p>
+
+      <button
+        class="btn-ghost-sm"
+        onclick="clearLocalLogs()"
+      >
+        Clear View
+      </button>
+
+    </div>
+
+    <ul class="log-list" id="log-list">
+
+      <li class="log-row">
+
+        <span class="log-time">
+          --
+        </span>
+
+        <span class="log-zone">
+          --
+        </span>
+
+        <span class="log-msg ok">
+          Waiting for ESP32 data...
+        </span>
+
+      </li>
+
+    </ul>
+
+  </div>
+
+  <!-- OVERALL STATS PANEL -->
+  <div class="panel overall-panel">
+
+    <p class="panel-title">
+      Overall Detection Statistics
+    </p>
+
+    <div class="overall-grid">
+
+      <!-- CURRENT SESSION -->
+      <div class="overall-box">
+
+        <span class="overall-label">
+          Current Session
+        </span>
+
+        <span
+          class="overall-value red"
+          id="current-session-detections"
+        >
+          0
+        </span>
 
       </div>
+
+      <!-- TOTAL DETECTIONS -->
+      <div class="overall-box">
+
+        <span class="overall-label">
+          Total Detections
+        </span>
+
+        <span
+          class="overall-value red"
+          id="overall-total-detections"
+        >
+          0
+        </span>
+
+      </div>
+
+      <!-- AVG MOISTURE -->
+      <div class="overall-box">
+
+        <span class="overall-label">
+          Avg Moisture
+        </span>
+
+        <span
+          class="overall-value"
+          id="overall-avg-moisture"
+        >
+          0%
+        </span>
+
+      </div>
+
     </div>
+
+    <p class="panel-subtitle">
+  Last 5 Detection Statistics
+</p>
+
+<div class="history-stats">
+
+  <div class="history-item">
+    <strong>Detection Count:</strong>
+    <span id="last5-count">0</span>
   </div>
+
+  <div class="history-item">
+    <strong>Avg Moisture:</strong>
+    <span id="last5-moisture">0%</span>
+  </div>
+
+  <div class="history-item">
+    <strong>Latest Detection:</strong>
+    <span id="last5-latest">--</span>
+  </div>
+
 </div>
+</div>
+
+  <!-- DEVICE INFO -->
+  <div class="panel device-panel">
+
+    <p class="panel-title">
+      Device Info
+    </p>
+
+    <div class="device-rows">
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          Module
+        </span>
+
+        <span class="dr-val">
+          ESP32-WROOM-32
+        </span>
+
+      </div>
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          Firmware
+        </span>
+
+        <span class="dr-val">
+          v2.4.1
+        </span>
+
+      </div>
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          Backend IP
+        </span>
+
+        <span
+          class="dr-val mono"
+          id="device-backend-ip"
+        >
+          Loading...
+        </span>
+
+      </div>
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          Update Rate
+        </span>
+
+        <span class="dr-val">
+          Every 5s (ESP32)
+        </span>
+
+      </div>
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          Poll Rate
+        </span>
+
+        <span class="dr-val">
+          Every 3s (Frontend)
+        </span>
+
+      </div>
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          Last Data
+        </span>
+
+        <span
+          class="dr-val ok-text"
+          id="device-last-data"
+        >
+          Waiting...
+        </span>
+
+      </div>
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          Backend
+        </span>
+
+        <span
+          class="dr-val ok-text"
+          id="device-backend-status"
+        >
+          Connecting...
+        </span>
+
+      </div>
+
+      <div class="device-row">
+
+        <span class="dr-label">
+          GPS
+        </span>
+
+        <span class="dr-val mono">
+          12.9716°N 77.5946°E
+        </span>
+
+      
+
+    </div>
+
+  </div>
+
+</div>
+
+       
 
 <!-- ✅ Load api.js — path relative to /software/frontend/ static root -->
 <script src="/js/api.js"></script>
@@ -257,6 +467,8 @@
     try {
       const res = await fetch("/api/status");
       const data = await res.json();
+
+
 
       // Backend IP
 const backendIp = document.getElementById("kpi-backend");
@@ -352,8 +564,196 @@ if (backendIp2) {
 
     // Always load logs too
     await loadLogsFromBackend();
+
+    // ==============================
+
   }
 
+  // ==============================
+// LOAD LOGS FROM BACKEND
+// ==============================
+async function loadLogsFromBackend() {
+
+  try {
+
+    const res =
+      await fetch("/api/logs");
+
+    const logs =
+      await res.json();
+
+      // =================================
+// OVERALL DETECTION STATS
+// =================================
+const weedLogs = logs.filter(
+  log => log.status === "Weed detected"
+);
+
+// =================================
+// CURRENT SESSION DETECTIONS
+// =================================
+const currentSession =
+  document.getElementById(
+    "current-session-detections"
+  );
+
+if (currentSession) {
+
+  currentSession.innerText =
+    weedLogs.length;
+}
+
+// =================================
+// TOTAL DETECTIONS
+// =================================
+const totalEl =
+  document.getElementById(
+    "overall-total-detections"
+  );
+
+if (totalEl) {
+
+  totalEl.innerText =
+    weedLogs.length;
+}
+
+// =================================
+// AVERAGE MOISTURE
+// =================================
+const avgEl =
+  document.getElementById(
+    "overall-avg-moisture"
+  );
+
+if (avgEl) {
+
+  const avg =
+    weedLogs.length > 0
+      ? Math.round(
+          weedLogs.reduce(
+            (sum, log) =>
+              sum + (log.moisture || 0),
+            0
+          ) / weedLogs.length
+        )
+      : 0;
+
+  avgEl.innerText =
+    avg + "%";
+}
+
+// =================================
+// PREVIOUS 5 DETECTIONS
+// =================================
+const historyEl =
+  document.getElementById(
+    "overall-history"
+  );
+
+if (historyEl) {
+
+  historyEl.innerHTML = "";
+
+  const latestFive =
+    weedLogs.slice(0, 5);
+
+  if (latestFive.length === 0) {
+
+    historyEl.innerHTML =
+      `<div class="history-item">
+        No detections yet.
+      </div>`;
+
+  } else {
+
+    latestFive.forEach(log => {
+
+      historyEl.innerHTML += `
+        <div class="history-item">
+
+          🌿 Weed detected
+
+          <br>
+
+          Moisture:
+          ${log.moisture ?? "--"}%
+
+          <br>
+
+          ${new Date(
+            log.time
+          ).toLocaleString()}
+
+        </div>
+      `;
+    });
+  }
+}
+
+    const logList =
+      document.getElementById(
+        "log-list"
+      );
+
+    if (!logList) return;
+
+    // Clear old UI logs
+    logList.innerHTML = "";
+
+    // Show latest 10 logs
+    const latestLogs =
+      logs.slice(0, 10);
+
+    latestLogs.forEach(log => {
+
+      const time =
+        new Date(log.time)
+          .toLocaleTimeString();
+
+      const isWeed =
+        log.status ===
+        "Weed detected";
+
+      logList.innerHTML += `
+        <li class="log-row">
+
+          <span class="log-time">
+            ${time}
+          </span>
+
+          <span class="log-zone">
+            ESP32
+          </span>
+
+          <span class="log-msg ${
+            isWeed
+              ? "danger"
+              : "ok"
+          }">
+
+            ${
+              isWeed
+                ? "⚠ Weed detected"
+                : "✔ No weed"
+            }
+
+            — Moisture:
+            ${log.moisture ?? "--"}%
+
+          </span>
+
+        </li>
+      `;
+    });
+
+  } catch (err) {
+
+    console.error(
+      "LOG LOAD ERROR:",
+      err
+    );
+  }
+}
   // ==============================
   // AUTO REFRESH every 3 seconds
   // ==============================
