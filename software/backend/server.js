@@ -5,298 +5,318 @@ const path = require("path");
 
 const app = express();
 
-// =============================
-// 🔧 MIDDLEWARE
-// =============================
 app.use(cors());
 app.use(express.json());
-
-// Serve frontend
 app.use(express.static(__dirname + "/../frontend"));
 
 // =============================
-// 📁 LOG FILE SETUP
+// 📁 FILE PATHS
 // =============================
-const logFilePath = path.join(__dirname, "data", "logs.json");
+const logFilePath     = path.join(__dirname, "data", "logs.json");
+const sessionFilePath = path.join(__dirname, "data", "sessions.json");
 
-// Create logs.json if missing
-if (!fs.existsSync(logFilePath)) {
-  fs.writeFileSync(logFilePath, "[]");
-}
+// =============================
+// 📁 FILE INIT
+// =============================
+if (!fs.existsSync(logFilePath))     fs.writeFileSync(logFilePath,     "[]");
+if (!fs.existsSync(sessionFilePath)) fs.writeFileSync(sessionFilePath, "[]");
 
-// Read logs
+// =============================
+// 📁 READ / WRITE HELPERS
+// =============================
 function readLogs() {
-  try {
-    const data = fs.readFileSync(logFilePath, "utf8");
-    return JSON.parse(data);
-  } catch (err) {
-    console.error("❌ Error reading logs:", err);
-    return [];
-  }
+  try { return JSON.parse(fs.readFileSync(logFilePath, "utf8")); }
+  catch { return []; }
 }
 
-// Write logs
 function writeLogs(logs) {
-  try {
-    fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2));
-  } catch (err) {
-    console.error("❌ Error writing logs:", err);
-  }
+  try { fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2)); }
+  catch (err) { console.error("❌ Error writing logs:", err); }
+}
+
+function readSessions() {
+  try { return JSON.parse(fs.readFileSync(sessionFilePath, "utf8")); }
+  catch { return []; }
+}
+
+function writeSessions(sessions) {
+  try { fs.writeFileSync(sessionFilePath, JSON.stringify(sessions, null, 2)); }
+  catch (err) { console.error("❌ Error writing sessions:", err); }
 }
 
 // =============================
-// 📊 SESSION GROUPING
-// Sessions are derived on the fly from logs.json.
-// A new session starts whenever the gap between two
-// consecutive log entries exceeds SESSION_GAP_MINUTES.
-// No extra state is persisted — this just reorganizes
-// the existing flat log into runs.
+// 📊 LIVE STATE
 // =============================
-const SESSION_GAP_MINUTES = 5;
+let latestData         = { status: "No weed detected", moisture: null, time: null };
+let lastDataReceivedAt = null;
+const ESP32_TIMEOUT_MS = 15000;
 
-function groupIntoSessions(logs, gapMinutes = SESSION_GAP_MINUTES) {
-  if (!logs || logs.length === 0) return [];
+function isESP32Connected() {
+  if (!lastDataReceivedAt) return false;
+  return (Date.now() - lastDataReceivedAt) < ESP32_TIMEOUT_MS;
+}
 
-  // logs.json is stored newest-first; work oldest-first to build sessions in order
-  const chronological = [...logs].reverse();
+let sessionStats = { scansToday: 0, weedsDetected: 0, weedsRemoved: 0 };
+let control      = { autoMode: true, removal: false };
 
-  const gapMs = gapMinutes * 60 * 1000;
-  const sessions = [];
-  let current = [];
+// =============================
+// 🌿 CURRENT SESSION (in-memory)
+// =============================
+let currentSession = null;
 
-  for (let i = 0; i < chronological.length; i++) {
-    const entry = chronological[i];
-    if (current.length === 0) {
-      current.push(entry);
-      continue;
-    }
+function startNewSession() {
+  const sessions      = readSessions();
+  const sessionNumber = sessions.length + 1;
 
-    const prevTime = new Date(current[current.length - 1].time).getTime();
-    const thisTime = new Date(entry.time).getTime();
+  currentSession = {
+    sessionNumber,
+    startTime:       new Date().toISOString(),
+    endTime:         null,
+    durationMs:      0,
+    totalDetections: 0,
+    executions:      0,
+    avgMoisture:     null,
+    completed:       false,
+    _moistureSum:    0,
+    _moistureCount:  0
+  };
 
-    if (thisTime - prevTime > gapMs) {
-      sessions.push(current);
-      current = [entry];
-    } else {
-      current.push(entry);
-    }
-  }
-  if (current.length > 0) sessions.push(current);
-
-  // Build summary objects, newest session first
-  const summaries = sessions.map((entries, idx) => {
-    const start = new Date(entries[0].time);
-    const end = new Date(entries[entries.length - 1].time);
-    const durationMs = end.getTime() - start.getTime();
-
-    const weedEntries = entries.filter(e => e.status === "Weed detected");
-
-    const moistureValues = entries
-      .map(e => e.moisture)
-      .filter(m => m != null);
-
-    const avgMoisture =
-      moistureValues.length > 0
-        ? Math.round(
-            moistureValues.reduce((sum, m) => sum + m, 0) / moistureValues.length
-          )
-        : null;
-
-    return {
-      // Will be re-numbered after reversing to newest-first
-      startTime: entries[0].time,
-      endTime: entries[entries.length - 1].time,
-      durationMs,
-      totalDetections: weedEntries.length,
-      executions: entries.length,
-      avgMoisture,
-      isLatest: false // set below
-    };
-  });
-
-  // Newest session first, mark the most recent one as still in-progress
-  summaries.reverse();
-  if (summaries.length > 0) summaries[0].isLatest = true;
-
-  return summaries.map((s, idx) => ({
-    sessionNumber: summaries.length - idx,
-    startTime: s.startTime,
-    endTime: s.endTime,
-    durationMs: s.durationMs,
-    totalDetections: s.totalDetections,
-    executions: s.executions,
-    avgMoisture: s.avgMoisture,
-    // The most recent session is only "completed" once a newer one has
-    // started (i.e. there's been a gap since it last reported in).
-    completed: !s.isLatest
-  }));
+  // Immediately persist so startup can always find it
+  saveCurrentSessionToDisk();
+  console.log(`🌿 Session ${sessionNumber} started.`);
 }
 
 // =============================
-// 📊 LIVE DATA
+// 💾 SAVE CURRENT SESSION TO DISK (as incomplete)
+// Called on every ESP32 update AND on session start
+// so disk always reflects the latest state even after force-kill
 // =============================
-let latestData = {
-  status: "No weed detected",
-  moisture: null,
-  time: null
-};
+function saveCurrentSessionToDisk() {
+  if (!currentSession) return;
+
+  const sessions = readSessions();
+
+  const liveAvg = currentSession._moistureCount > 0
+    ? Math.round(currentSession._moistureSum / currentSession._moistureCount)
+    : null;
+
+  const snapshot = {
+    sessionNumber:   currentSession.sessionNumber,
+    startTime:       currentSession.startTime,
+    endTime:         new Date().toISOString(),
+    durationMs:      Date.now() - new Date(currentSession.startTime).getTime(),
+    totalDetections: currentSession.totalDetections,
+    executions:      currentSession.executions,
+    avgMoisture:     liveAvg,
+    completed:       false  // onStartup() flips this to true on next restart
+  };
+
+  const existingIdx = sessions.findIndex(
+    s => s.sessionNumber === currentSession.sessionNumber
+  );
+
+  if (existingIdx >= 0) {
+    sessions[existingIdx] = snapshot;
+  } else {
+    sessions.push(snapshot);
+  }
+
+  writeSessions(sessions);
+}
+
+function completeCurrentSession() {
+  if (!currentSession) return;
+
+  const endTime   = new Date().toISOString();
+  const durationMs = Date.now() - new Date(currentSession.startTime).getTime();
+
+  const liveAvg = currentSession._moistureCount > 0
+    ? Math.round(currentSession._moistureSum / currentSession._moistureCount)
+    : null;
+
+  const toSave = {
+    sessionNumber:   currentSession.sessionNumber,
+    startTime:       currentSession.startTime,
+    endTime,
+    durationMs,
+    totalDetections: currentSession.totalDetections,
+    executions:      currentSession.executions,
+    avgMoisture:     liveAvg,
+    completed:       true
+  };
+
+  const sessions   = readSessions();
+  const existingIdx = sessions.findIndex(
+    s => s.sessionNumber === currentSession.sessionNumber
+  );
+
+  if (existingIdx >= 0) {
+    sessions[existingIdx] = toSave;
+  } else {
+    sessions.push(toSave);
+  }
+
+  writeSessions(sessions);
+  console.log(`✅ Session ${currentSession.sessionNumber} completed.`);
+  currentSession = null;
+}
 
 // =============================
-// 📊 SESSION STATS
-// Resets when server restarts
+// 🚀 ON STARTUP
+// Always mark the last incomplete session as completed,
+// then start a brand new session
 // =============================
-let sessionStats = {
-  scansToday: 0,
-  weedsDetected: 0,
-  weedsRemoved: 0
-};
+function onStartup() {
+  const sessions = readSessions();
+
+  if (sessions.length > 0) {
+    const last = sessions[sessions.length - 1];
+    if (!last.completed) {
+      last.completed  = true;
+      last.endTime    = last.endTime || new Date().toISOString();
+      last.durationMs = new Date(last.endTime).getTime()
+                      - new Date(last.startTime).getTime();
+      writeSessions(sessions);
+      console.log(`✅ Previous session ${last.sessionNumber} marked complete on startup.`);
+    }
+  }
+
+  startNewSession();
+}
 
 // =============================
-// ⚙️ CONTROL DATA
+// 🛑 ON SHUTDOWN — graceful complete
 // =============================
-let control = {
-  autoMode: true,
-  removal: false
-};
+function onShutdown(signal) {
+  console.log(`\n🛑 ${signal} received — completing session before exit...`);
+  completeCurrentSession();
+  process.exit(0);
+}
+
+process.on("SIGINT",  () => onShutdown("SIGINT"));
+process.on("SIGTERM", () => onShutdown("SIGTERM"));
 
 // =============================
-// 🏠 ROOT
+// 🏠 ROUTES
 // =============================
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/../frontend/index.html");
 });
 
-// =============================
-// ✅ TEST ENDPOINT
-// =============================
 app.get("/api/data", (req, res) => {
-  res.json({
-    message: "Hello ESP32 👋",
-    status: "Server running"
-  });
+  res.json({ message: "Hello ESP32 👋", status: "Server running" });
 });
 
-// =============================
-// ✅ GET STATUS
-// =============================
 app.get("/api/status", (req, res) => {
-
-  const logs = readLogs();
-
-  const currentData =
-    logs.length > 0
-      ? logs[0]
-      : latestData;
+  const logs        = readLogs();
+  const currentData = logs.length > 0 ? logs[0] : latestData;
 
   res.json({
     ...currentData,
-
-    scansToday: sessionStats.scansToday,
-
-    weedsDetected: sessionStats.weedsDetected,
-
-    weedsRemoved: sessionStats.weedsRemoved,
-
-    battery: 80
+    scansToday:     sessionStats.scansToday,
+    weedsDetected:  sessionStats.weedsDetected,
+    weedsRemoved:   sessionStats.weedsRemoved,
+    battery:        80,
+    esp32Connected: isESP32Connected()
   });
 });
 
-// =============================
-// ✅ GET LOGS
-// =============================
 app.get("/api/logs", (req, res) => {
-  const logs = readLogs();
-  res.json(logs);
+  res.json(readLogs());
 });
 
 // =============================
-// ✅ GET SESSIONS (last 5, newest first)
-// Derived from logs.json — see groupIntoSessions()
+// ✅ GET SESSIONS
+// Returns saved sessions + live in-progress session, newest 5 first
 // =============================
 app.get("/api/sessions", (req, res) => {
-  const logs = readLogs();
-  const sessions = groupIntoSessions(logs);
-  res.json(sessions.slice(0, 5));
+  const saved = readSessions();
+
+  // Replace the saved snapshot of currentSession with a live version
+  const all = saved.filter(
+    s => !currentSession || s.sessionNumber !== currentSession.sessionNumber
+  );
+
+  if (currentSession) {
+    const liveDuration = Date.now() - new Date(currentSession.startTime).getTime();
+    const liveAvg = currentSession._moistureCount > 0
+      ? Math.round(currentSession._moistureSum / currentSession._moistureCount)
+      : null;
+
+    all.push({
+      sessionNumber:   currentSession.sessionNumber,
+      startTime:       currentSession.startTime,
+      endTime:         null,
+      durationMs:      liveDuration,
+      totalDetections: currentSession.totalDetections,
+      executions:      currentSession.executions,
+      avgMoisture:     liveAvg,
+      completed:       false
+    });
+  }
+
+  const newest5 = all.slice(-5).reverse();
+  res.json(newest5);
 });
 
 // =============================
 // 🔥 UPDATE FROM ESP32
 // =============================
 app.post("/api/update", (req, res) => {
-
   const { weed, moisture } = req.body;
 
-  // Validate
   if (typeof weed !== "boolean") {
-    return res.status(400).json({
-      error: "Invalid or missing 'weed' value"
-    });
+    return res.status(400).json({ error: "Invalid or missing 'weed' value" });
   }
 
-  // Create new log
+  lastDataReceivedAt = Date.now();
+
   const data = {
-    status: weed
-      ? "Weed detected"
-      : "No weed detected",
-
+    status:   weed ? "Weed detected" : "No weed detected",
     moisture: moisture ?? null,
-
-    time: new Date().toISOString()
+    time:     new Date().toISOString()
   };
 
-  // Update live data
   latestData = data;
-  // Update current session stats
-sessionStats.scansToday++;
 
-if (weed) {
-  sessionStats.weedsDetected++;
-
-  // Simulated removal
-  sessionStats.weedsRemoved = Math.floor(
-    sessionStats.weedsDetected * 0.7
-  );
-}
-
-  // Read existing logs
-  const logs = readLogs();
-
-  // Add newest log at top
-  logs.unshift(data);
-
-  // Keep latest 100 logs only
-  if (logs.length > 100) {
-    logs.pop();
+  sessionStats.scansToday++;
+  if (weed) {
+    sessionStats.weedsDetected++;
+    sessionStats.weedsRemoved = Math.floor(sessionStats.weedsDetected * 0.7);
   }
 
-  // Save logs
+  if (currentSession) {
+    currentSession.executions++;
+    if (weed) currentSession.totalDetections++;
+    if (moisture != null) {
+      currentSession._moistureSum   += moisture;
+      currentSession._moistureCount += 1;
+    }
+
+    // Persist latest session state to disk on every update
+    saveCurrentSessionToDisk();
+  }
+
+  const logs = readLogs();
+  logs.unshift(data);
+  if (logs.length > 100) logs.pop();
   writeLogs(logs);
 
   console.log("📥 DATA RECEIVED:", data);
-
-  res.json({
-    success: true
-  });
+  res.json({ success: true });
 });
 
-// =============================
-// ⚙️ CONTROL API
-// =============================
 app.post("/api/control", (req, res) => {
-
   control = req.body;
-
   console.log("⚙️ CONTROL UPDATED:", control);
-
-  res.json({
-    success: true,
-    control
-  });
+  res.json({ success: true, control });
 });
 
 // =============================
-// 🚀 START SERVER
+// 🚀 START
 // =============================
+onStartup();
+
 app.listen(5000, "0.0.0.0", () => {
   console.log("🚀 Server running on http://localhost:5000");
 });
