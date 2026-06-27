@@ -388,14 +388,10 @@
 
   // ==============================
   // SIMULATE WEED / CLEAR
-  // Posts a fake reading to /api/update, same endpoint
-  // the real ESP32 uses, then refreshes the UI.
   // ==============================
   async function postSimulatedReading(weed) {
     const moistureEl = document.getElementById('kpi-moisture');
-    const currentMoisture = moistureEl
-      ? parseInt(moistureEl.innerText, 10)
-      : NaN;
+    const currentMoisture = moistureEl ? parseInt(moistureEl.innerText, 10) : NaN;
     const moisture = Number.isFinite(currentMoisture) ? currentMoisture : 45;
 
     try {
@@ -411,43 +407,66 @@
     await fullRefresh();
   }
 
-  function simulateWeed() {
-    postSimulatedReading(true);
+  function simulateWeed()  { postSimulatedReading(true);  }
+  function simulateClear() { postSimulatedReading(false); }
+
+  // ==============================
+  // SHOW WEED / CLEAR UI
+  // ==============================
+  function showWeedUI() {
+    const panel = document.getElementById('status-panel');
+    const chip  = document.getElementById('status-chip');
+    const icon  = document.getElementById('status-big-icon');
+    const wrap  = document.getElementById('status-icon-wrap');
+    const head  = document.getElementById('status-headline');
+    const desc  = document.getElementById('status-desc');
+    if (panel) { panel.className = 'panel status-panel weed'; }
+    if (chip)  { chip.textContent = 'WEED'; chip.className = 'panel-chip weed-chip'; }
+    if (icon)  { icon.textContent = '⚠'; }
+    if (head)  { head.textContent = 'Weed Detected!'; }
+    if (desc)  { desc.textContent = 'A weed has been detected. Robot is moving to remove it.'; }
+    ['zone-a','zone-b','zone-c','zone-d'].forEach(id => {
+      const z = document.getElementById(id);
+      if (z) { z.className = 'zone-item danger'; z.textContent = id.replace('zone-','Zone ').toUpperCase() + ' ⚠'; }
+    });
   }
 
-  function simulateClear() {
-    postSimulatedReading(false);
+  function showClearUI() {
+    const panel = document.getElementById('status-panel');
+    const chip  = document.getElementById('status-chip');
+    const icon  = document.getElementById('status-big-icon');
+    const head  = document.getElementById('status-headline');
+    const desc  = document.getElementById('status-desc');
+    if (panel) { panel.className = 'panel status-panel clear'; }
+    if (chip)  { chip.textContent = 'CLEAR'; chip.className = 'panel-chip clear-chip'; }
+    if (icon)  { icon.textContent = '✔'; }
+    if (head)  { head.textContent = 'No Weed Detected'; }
+    if (desc)  { desc.textContent = 'Your field is clear. Continuous monitoring active across all zones.'; }
+    ['zone-a','zone-b','zone-c','zone-d'].forEach(id => {
+      const z = document.getElementById(id);
+      if (z) { z.className = 'zone-item safe'; z.textContent = id.replace('zone-','Zone ').toUpperCase() + ' ✔'; }
+    });
   }
 
   // ==============================
-  // FULL REFRESH — fetches status + updates all UI
+  // FULL REFRESH
   // ==============================
   async function fullRefresh() {
     try {
-      const res = await fetch("/api/status");
+      const res  = await fetch("/api/status");
       const data = await res.json();
 
-
-
       // Backend IP
-const backendIp = document.getElementById("kpi-backend");
-if (backendIp) {
-    backendIp.innerText = window.location.host;
-}
+      const backendIp = document.getElementById("kpi-backend");
+      if (backendIp) backendIp.innerText = window.location.host;
 
-const backendIp2 = document.getElementById("device-backend-ip");
-if (backendIp2) {
-    backendIp2.innerText = window.location.host;
-}
+      const backendIp2 = document.getElementById("device-backend-ip");
+      if (backendIp2) backendIp2.innerText = window.location.host;
 
-      // --- Status Panel ---
-      if (data.status === "Weed detected") {
-        showWeedUI();
-      } else {
-        showClearUI();
-      }
+      // Status Panel
+      if (data.status === "Weed detected") { showWeedUI(); } else { showClearUI(); }
 
-      // --- KPI Cards ---
+      // KPI Cards
       const scansEl = document.getElementById("kpi-scans");
       if (scansEl) scansEl.innerText = data.scansToday ?? "--";
 
@@ -457,59 +476,65 @@ if (backendIp2) {
       const alertBadge = document.getElementById("alert-badge");
       if (alertBadge) alertBadge.innerText = data.weedsDetected ?? "0";
 
-      const battEl = document.getElementById("kpi-battery");
+      const battEl  = document.getElementById("kpi-battery");
       const battBar = document.getElementById("kpi-battery-bar");
-      if (battEl) battEl.innerText = (data.battery ?? 80) + "%";
-      if (battBar) battBar.style.width = (data.battery ?? 80) + "%";
+      if (battEl)  battEl.innerText     = (data.battery ?? 80) + "%";
+      if (battBar) battBar.style.width  = (data.battery ?? 80) + "%";
 
-      // --- Moisture ---
+      // Moisture
       if (data.moisture != null) {
-        const kpiM = document.getElementById("kpi-moisture");
+        const kpiM    = document.getElementById("kpi-moisture");
         const kpiMBar = document.getElementById("kpi-moisture-bar");
-        const sM = document.getElementById("sensor-moisture");
-        const sMBar = document.getElementById("sensor-moisture-bar");
-        if (kpiM) kpiM.innerText = data.moisture + "%";
-        if (kpiMBar) kpiMBar.style.width = data.moisture + "%";
-        if (sM) sM.innerText = data.moisture + "%";
-        if (sMBar) sMBar.style.width = data.moisture + "%";
+        const sM      = document.getElementById("sensor-moisture");
+        const sMBar   = document.getElementById("sensor-moisture-bar");
+        if (kpiM)    kpiM.innerText        = data.moisture + "%";
+        if (kpiMBar) kpiMBar.style.width   = data.moisture + "%";
+        if (sM)      sM.innerText          = data.moisture + "%";
+        if (sMBar)   sMBar.style.width     = data.moisture + "%";
       }
 
-      // --- Last Updated ---
+      // Last Updated
       if (data.time) {
-        const t = new Date(data.time).toLocaleTimeString('en-US', {
-          hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
+        const t  = new Date(data.time).toLocaleTimeString('en-US', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
         const lu = document.getElementById("last-updated");
         if (lu) lu.innerText = "Last update: " + t;
         const dla = document.getElementById("device-last-data");
         if (dla) { dla.innerText = t; dla.style.color = "var(--green-500)"; }
       }
 
-      // --- Today's bar chart ---
+      // Bar chart
       const barToday = document.getElementById("bar-today");
       if (barToday && data.weedsDetected != null) {
         const pct = Math.min(100, (data.weedsDetected / 10) * 100);
         barToday.style.height = Math.max(5, pct) + "%";
       }
 
-      // --- System Online ---
-      const badge = document.getElementById("sys-badge");
-      if (badge) { badge.textContent = "● System Online"; badge.className = "sys-badge online"; }
+      // ESP32 connection status
+      const connected = data.esp32Connected;
 
-      const devStatus = document.getElementById("device-backend-status");
-      if (devStatus) { devStatus.innerText = "Connected ✔"; devStatus.style.color = "var(--green-500)"; }
+      const badge = document.getElementById("sys-badge");
+      if (badge) {
+        badge.textContent = connected ? "● System Online" : "● ESP32 Offline";
+        badge.className   = connected ? "sys-badge online" : "sys-badge refreshing";
+      }
 
       const devDot = document.getElementById("device-dot");
-      if (devDot) devDot.style.background = "var(--green-400)";
+      if (devDot) devDot.style.background = connected ? "var(--green-400)" : "var(--red-600)";
 
       const devStatusText = document.getElementById("device-status-text");
-      if (devStatusText) devStatusText.innerText = "Connected · Live";
+      if (devStatusText) devStatusText.innerText = connected ? "Connected · Live" : "Disconnected";
+
+      const devStatus = document.getElementById("device-backend-status");
+      if (devStatus) {
+        devStatus.innerText   = connected ? "Connected ✔" : "No signal ✖";
+        devStatus.style.color = connected ? "var(--green-500)" : "var(--red-600)";
+      }
 
     } catch (err) {
       console.warn("Backend unreachable:", err.message);
 
       const badge = document.getElementById("sys-badge");
-      if (badge) { badge.textContent = "● Offline"; badge.className = "sys-badge refreshing"; }
+      if (badge) { badge.textContent = "● Server Offline"; badge.className = "sys-badge refreshing"; }
 
       const devStatus = document.getElementById("device-backend-status");
       if (devStatus) { devStatus.innerText = "Unreachable ✖"; devStatus.style.color = "var(--red-600)"; }
@@ -519,213 +544,90 @@ if (backendIp2) {
 
       const devStatusText = document.getElementById("device-status-text");
       if (devStatusText) devStatusText.innerText = "Offline";
+
+      // Flip In Progress → Server Stopped on all session cards
+      document.querySelectorAll(".session-card-status.active").forEach(el => {
+        el.className = "session-card-status stopped";
+        el.innerHTML = "■ Server Stopped";
+      });
     }
 
-    // Always load logs too
     await loadLogsFromBackend();
-
-    // Always load session history cards too
     await loadSessionsFromBackend();
-
-    // ==============================
-
   }
 
   // ==============================
-// LOAD LOGS FROM BACKEND
-// ==============================
-async function loadLogsFromBackend() {
+  // LOAD LOGS FROM BACKEND
+  // ==============================
+  async function loadLogsFromBackend() {
+    try {
+      const res  = await fetch("/api/logs");
+      const logs = await res.json();
 
-  try {
+      const weedLogs = logs.filter(log => log.status === "Weed detected");
 
-    const res =
-      await fetch("/api/logs");
+      const currentSessionEl = document.getElementById("current-session-detections");
+      if (currentSessionEl) currentSessionEl.innerText = weedLogs.length;
 
-    const logs =
-      await res.json();
+      const totalEl = document.getElementById("overall-total-detections");
+      if (totalEl) totalEl.innerText = weedLogs.length;
 
-      // =================================
-// OVERALL DETECTION STATS
-// =================================
-const weedLogs = logs.filter(
-  log => log.status === "Weed detected"
-);
+      const avgEl = document.getElementById("overall-avg-moisture");
+      if (avgEl) {
+        const avg = weedLogs.length > 0
+          ? Math.round(weedLogs.reduce((sum, log) => sum + (log.moisture || 0), 0) / weedLogs.length)
+          : 0;
+        avgEl.innerText = avg + "%";
+      }
 
-// =================================
-// CURRENT SESSION DETECTIONS
-// =================================
-const currentSession =
-  document.getElementById(
-    "current-session-detections"
-  );
+      const historyEl = document.getElementById("overall-history");
+      if (historyEl) {
+        historyEl.innerHTML = "";
+        const latestFive = weedLogs.slice(0, 5);
+        if (latestFive.length === 0) {
+          historyEl.innerHTML = `<div class="history-item">No detections yet.</div>`;
+        } else {
+          latestFive.forEach(log => {
+            historyEl.innerHTML += `
+              <div class="history-item">
+                🌿 Weed detected<br>
+                Moisture: ${log.moisture ?? "--"}%<br>
+                ${new Date(log.time).toLocaleString()}
+              </div>`;
+          });
+        }
+      }
 
-if (currentSession) {
+      const logList = document.getElementById("log-list");
+      if (!logList) return;
 
-  currentSession.innerText =
-    weedLogs.length;
-}
+      logList.innerHTML = "";
+      logs.slice(0, 10).forEach(log => {
+        const time   = new Date(log.time).toLocaleTimeString();
+        const isWeed = log.status === "Weed detected";
+        logList.innerHTML += `
+          <li class="log-row">
+            <span class="log-time">${time}</span>
+            <span class="log-zone">ESP32</span>
+            <span class="log-msg ${isWeed ? 'danger' : 'ok'}">
+              ${isWeed ? '⚠ Weed detected' : '✔ No weed'} — Moisture: ${log.moisture ?? "--"}%
+            </span>
+          </li>`;
+      });
 
-// =================================
-// TOTAL DETECTIONS
-// =================================
-const totalEl =
-  document.getElementById(
-    "overall-total-detections"
-  );
-
-if (totalEl) {
-
-  totalEl.innerText =
-    weedLogs.length;
-}
-
-// =================================
-// AVERAGE MOISTURE
-// =================================
-const avgEl =
-  document.getElementById(
-    "overall-avg-moisture"
-  );
-
-if (avgEl) {
-
-  const avg =
-    weedLogs.length > 0
-      ? Math.round(
-          weedLogs.reduce(
-            (sum, log) =>
-              sum + (log.moisture || 0),
-            0
-          ) / weedLogs.length
-        )
-      : 0;
-
-  avgEl.innerText =
-    avg + "%";
-}
-
-// =================================
-// PREVIOUS 5 DETECTIONS
-// =================================
-const historyEl =
-  document.getElementById(
-    "overall-history"
-  );
-
-if (historyEl) {
-
-  historyEl.innerHTML = "";
-
-  const latestFive =
-    weedLogs.slice(0, 5);
-
-  if (latestFive.length === 0) {
-
-    historyEl.innerHTML =
-      `<div class="history-item">
-        No detections yet.
-      </div>`;
-
-  } else {
-
-    latestFive.forEach(log => {
-
-      historyEl.innerHTML += `
-        <div class="history-item">
-
-          🌿 Weed detected
-
-          <br>
-
-          Moisture:
-          ${log.moisture ?? "--"}%
-
-          <br>
-
-          ${new Date(
-            log.time
-          ).toLocaleString()}
-
-        </div>
-      `;
-    });
+    } catch (err) {
+      console.error("LOG LOAD ERROR:", err);
+    }
   }
-}
-
-    const logList =
-      document.getElementById(
-        "log-list"
-      );
-
-    if (!logList) return;
-
-    // Clear old UI logs
-    logList.innerHTML = "";
-
-    // Show latest 10 logs
-    const latestLogs =
-      logs.slice(0, 10);
-
-    latestLogs.forEach(log => {
-
-      const time =
-        new Date(log.time)
-          .toLocaleTimeString();
-
-      const isWeed =
-        log.status ===
-        "Weed detected";
-
-      logList.innerHTML += `
-        <li class="log-row">
-
-          <span class="log-time">
-            ${time}
-          </span>
-
-          <span class="log-zone">
-            ESP32
-          </span>
-
-          <span class="log-msg ${
-            isWeed
-              ? "danger"
-              : "ok"
-          }">
-
-            ${
-              isWeed
-                ? "⚠ Weed detected"
-                : "✔ No weed"
-            }
-
-            — Moisture:
-            ${log.moisture ?? "--"}%
-
-          </span>
-
-        </li>
-      `;
-    });
-
-  } catch (err) {
-
-    console.error(
-      "LOG LOAD ERROR:",
-      err
-    );
-  }
-}
 
   // ==============================
   // LOAD SESSIONS FROM BACKEND
-  // Renders the "Previous 5 Sessions" card grid
   // ==============================
   function formatSessionDate(iso) {
     if (!iso) return "--";
     const d = new Date(iso);
-    return d.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' }) +
-      ", " + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    return d.toLocaleDateString('en-US', { month:'numeric', day:'numeric', year:'numeric' }) +
+      ", " + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
   }
 
   function formatDuration(ms) {
@@ -738,7 +640,7 @@ if (historyEl) {
 
   async function loadSessionsFromBackend() {
     try {
-      const res = await fetch("/api/sessions");
+      const res      = await fetch("/api/sessions");
       const sessions = await res.json();
 
       const grid = document.getElementById("sessions-grid");
@@ -756,31 +658,34 @@ if (historyEl) {
         grid.innerHTML += `
           <div class="session-card">
             <div class="session-card-title">
-              <span class="session-card-icon">🌿</span>
+              <span class="session-leaf-icon">🌿</span>
               Session ${s.sessionNumber}
             </div>
-            <div class="session-card-date">📅 ${formatSessionDate(s.startTime)}</div>
-            <div class="session-stat-row">
-              <span class="session-stat-icon">🌾</span>
-              Total Detections: <span class="session-stat-value">${s.totalDetections}</span>
+            <div class="session-card-date">
+              <span style="font-size:13px">📅</span>
+              ${formatSessionDate(s.startTime)}
             </div>
             <div class="session-stat-row">
-              <span class="session-stat-icon">⏱</span>
-              Executions: <span class="session-stat-value">${s.executions}</span>
+              <span class="session-stat-icon">🌱</span>
+              <span class="session-stat-value">${s.totalDetections}</span>
+              <span style="color:var(--gray-500);font-size:12px">weeds</span>
             </div>
             <div class="session-stat-row">
-              <span class="session-stat-icon">💧</span>
-              ${s.avgMoisture != null ? s.avgMoisture : "--"}% moisture
+              <span class="session-stat-icon">🕐</span>
+              <span class="session-stat-value">${formatDuration(s.durationMs)}</span>
             </div>
             <div class="session-card-status ${completed ? 'completed' : 'active'}">
               ${completed ? '✔ Completed' : '● In Progress'}
             </div>
-          </div>
-        `;
+          </div>`;
       });
 
     } catch (err) {
       console.error("SESSIONS LOAD ERROR:", err);
+      document.querySelectorAll(".session-card-status.active").forEach(el => {
+        el.className = "session-card-status stopped";
+        el.innerHTML = "■ Server Stopped";
+      });
     }
   }
 
@@ -790,6 +695,3 @@ if (historyEl) {
   fullRefresh();
   setInterval(fullRefresh, 3000);
 </script>
-
-</body>
-</html>

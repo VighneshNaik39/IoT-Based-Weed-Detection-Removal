@@ -20,10 +20,9 @@ async function loadLogs() {
             return;
         }
 
-        const reversed = [...filtered].reverse();
         table.innerHTML = "";
 
-        reversed.forEach((log, i) => {
+        filtered.forEach((log, i) => {
             const timeStr = log.time
                 ? new Date(log.time).toLocaleString('en-IN', {
                     day: '2-digit', month: 'short',
@@ -33,10 +32,11 @@ async function loadLogs() {
 
             const isWeed = log.status === "Weed detected";
             const moisture = log.moisture != null ? log.moisture + "%" : "--";
+            const rowNumber = filtered.length - i;
 
             let row = `
                 <tr>
-                    <td style="color:#aaa;font-size:12px">${reversed.length - i}</td>
+                    <td style="color:#aaa;font-size:12px">${rowNumber}</td>
                     <td>${timeStr}</td>
                     <td>
                         <span class="status ${isWeed ? 'danger' : 'success'}">
@@ -62,6 +62,5 @@ function applyFilter() {
     loadLogs();
 }
 
-// Auto refresh every 5 seconds
 loadLogs();
 setInterval(loadLogs, 5000);
