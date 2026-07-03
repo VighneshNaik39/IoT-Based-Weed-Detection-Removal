@@ -30,8 +30,11 @@ function readLogs() {
 }
 
 function writeLogs(logs) {
+
   try { fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2)); }
   catch (err) { console.error("❌ Error writing logs:", err); }
+
+ 
 }
 
 function readSessions() {
@@ -58,7 +61,14 @@ function isESP32Connected() {
 
 let sessionStats = { scansToday: 0, weedsDetected: 0, weedsRemoved: 0 };
 let control      = { autoMode: true, removal: false };
-
+// =============================
+// 🤖 ROBOT STATE
+// =============================
+let robotState = {
+  movement: "STOP",
+  mode: "AUTO",
+  cutter: false
+};
 // =============================
 // 🌿 CURRENT SESSION (in-memory)
 // =============================
@@ -220,6 +230,35 @@ app.get("/api/status", (req, res) => {
     esp32Connected: isESP32Connected()
   });
 });
+// =============================
+// 🤖 COMPLETE ROBOT STATUS
+// =============================
+app.get("/api/robot/status", (req, res) => {
+
+  const logs = readLogs();
+  const currentData = logs.length > 0 ? logs[0] : latestData;
+
+  res.json({
+
+    movement: robotState.movement,
+    mode: robotState.mode,
+    cutter: robotState.cutter,
+
+    weedStatus: currentData.status,
+    moisture: currentData.moisture,
+    time: currentData.time,
+
+    scansToday: sessionStats.scansToday,
+    weedsDetected: sessionStats.weedsDetected,
+    weedsRemoved: sessionStats.weedsRemoved,
+
+    battery: 80,
+
+    esp32Connected: isESP32Connected()
+
+  });
+
+});
 
 app.get("/api/logs", (req, res) => {
   res.json(readLogs());
@@ -311,7 +350,153 @@ app.post("/api/control", (req, res) => {
   console.log("⚙️ CONTROL UPDATED:", control);
   res.json({ success: true, control });
 });
+// =============================
+// 🚗 MOVE FORWARD
+// =============================
+app.post("/api/movement/forward", (req, res) => {
 
+  robotState.movement = "FORWARD";
+ 
+
+
+  console.log("⬆ Robot moving FORWARD");
+
+  res.json({
+    success: true,
+    movement: robotState.movement,
+    message: "Robot moving forward"
+  });
+
+});
+// =============================
+// 🚗 MOVE BACKWARD
+// =============================
+app.post("/api/movement/backward", (req, res) => {
+
+  robotState.movement = "BACKWARD";
+  
+
+  console.log("⬇ Robot moving BACKWARD");
+
+  res.json({
+    success: true,
+    movement: robotState.movement,
+    message: "Robot moving backward"
+  });
+
+});
+// =============================
+// ⬅ MOVE LEFT
+// =============================
+app.post("/api/movement/left", (req, res) => {
+
+  robotState.movement = "LEFT";
+ 
+
+  console.log("⬅ Robot moving LEFT");
+
+  res.json({
+    success: true,
+    movement: robotState.movement,
+    message: "Robot moving left"
+  });
+
+});
+// =============================
+// ➡ MOVE RIGHT
+// =============================
+app.post("/api/movement/right", (req, res) => {
+
+  robotState.movement = "RIGHT";
+ 
+  console.log("➡ Robot moving RIGHT");
+
+  res.json({
+    success: true,
+    movement: robotState.movement,
+    message: "Robot moving right"
+  });
+
+});
+// =============================
+// 🛑 STOP ROBOT
+// =============================
+app.post("/api/movement/stop", (req, res) => {
+
+  robotState.movement = "STOP";
+  
+
+  console.log("🛑 Robot STOPPED");
+
+  res.json({
+    success: true,
+    movement: robotState.movement,
+    message: "Robot stopped"
+  });
+
+});
+// =============================
+// 🤖 ROBOT MODE
+// =============================
+app.post("/api/robot/mode", (req, res) => {
+if (!req.body) {
+  return res.status(400).json({
+    success: false,
+    message: "Request body missing"
+  });
+}
+
+const { mode } = req.body;
+
+  if (mode !== "AUTO" && mode !== "MANUAL") {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid mode"
+    });
+  }
+
+  robotState.mode = mode;
+
+  console.log(`🤖 Robot mode changed to ${mode}`);
+
+  res.json({
+    success: true,
+    mode: robotState.mode
+  });
+
+});
+// =============================
+// ✂️ START CUTTER
+// =============================
+app.post("/api/cutter/start", (req, res) => {
+
+  robotState.cutter = true;
+
+  console.log("✂️ Cutter STARTED");
+
+  res.json({
+    success: true,
+    cutter: robotState.cutter,
+    message: "Cutter started"
+  });
+
+});
+// =============================
+// 🛑 STOP CUTTER
+// =============================
+app.post("/api/cutter/stop", (req, res) => {
+
+  robotState.cutter = false;
+
+  console.log("🛑 Cutter STOPPED");
+
+  res.json({
+    success: true,
+    cutter: robotState.cutter,
+    message: "Cutter stopped"
+  });
+
+});
 // =============================
 // 🚀 START
 // =============================
