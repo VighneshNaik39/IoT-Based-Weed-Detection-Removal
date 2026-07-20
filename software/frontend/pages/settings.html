@@ -1,111 +1,171 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <title>Settings - WeedGuard</title>
-    <link rel="stylesheet" href="/css/settings.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard Settings</title>
+
+    <link rel="stylesheet" href="../css/settings.css">
+
+    <script defer src="../js/settings.js"></script>
+
 </head>
+
 <body>
 
-<header class="navbar">
-    <div class="logo">🌿 WeedGuard</div>
+<header>
+
+    <h1>⚙ Dashboard Settings</h1>
+
     <nav>
-        <a href="/index.html">Dashboard</a>
-        <a href="/pages/logs.html">Logs</a>
-        <a class="active" href="#">Settings</a>
+
+        <a href="../index.html">Dashboard</a>
+
+        <a href="logs.html">Logs</a>
+
+        <a href="settings.html">Settings</a>
+
     </nav>
+
 </header>
 
 <div class="container">
 
-    <h1>⚙️ Settings</h1>
-    <p class="subtitle">Configure your system preferences</p>
+    <!-- Backend Settings -->
 
-    <!-- Detection & Control -->
     <div class="card">
-        <h3>Detection & Control</h3>
 
-        <div class="setting">
-            <div class="setting-content">
-                <div class="setting-icon">⚙️</div>
-                <div class="setting-text">
-                    <strong>Automatic Weed Detection</strong>
-                    <p>Continuously monitor for weeds</p>
-                </div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="autoDetect" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
+        <h2>Backend Configuration</h2>
 
-        <div class="setting">
-            <div class="setting-content">
-                <div class="setting-icon">🔔</div>
-                <div class="setting-text">
-                    <strong>Alert Notifications</strong>
-                    <p>Show alerts when weeds are detected</p>
-                </div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="alerts" checked>
-                <span class="slider"></span>
-            </label>
-        </div>
+        <label>Backend API URL</label>
 
-        <div class="setting">
-            <div class="setting-content">
-                <div class="setting-icon">🤖</div>
-                <div class="setting-text">
-                    <strong>Auto Weed Removal</strong>
-                    <p>Automatically activate removal mechanism</p>
-                </div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="autoRemove">
-                <span class="slider"></span>
-            </label>
-        </div>
+        <input
+            type="text"
+            id="backendURL"
+            placeholder="http://localhost:3000">
+
     </div>
 
-    <!-- System Info -->
+    <!-- Robot Settings -->
+
     <div class="card">
-        <h3>System Information</h3>
 
-        <div class="info">
-            <div class="info-content">
-                <div class="info-icon">🖥️</div>
-                <span>Device</span>
-            </div>
-            <span id="deviceName">Checking...</span>
-        </div>
+        <h2>Robot Settings</h2>
 
-        <div class="info">
-            <div class="info-content">
-                <div class="info-icon">📶</div>
-                <span>Backend Status</span>
-            </div>
-            <span id="connectionStatus" class="status-badge disconnected">Checking...</span>
-        </div>
+        <label>Robot Name</label>
 
-        <div class="info">
-            <div class="info-content">
-                <div class="info-icon">🌐</div>
-                <span>Backend URL</span>
-            </div>
-            <span style="font-family:'Space Mono',monospace;font-size:13px">192.168.99.135:5000</span>
-        </div>
+        <input
+            type="text"
+            id="robotName"
+            placeholder="IoT Weed Robot">
+
+        <label>Auto Refresh (seconds)</label>
+
+        <select id="refreshInterval">
+
+            <option value="2">2 Seconds</option>
+
+            <option value="5">5 Seconds</option>
+
+            <option value="10">10 Seconds</option>
+
+            <option value="15">15 Seconds</option>
+
+        </select>
+
     </div>
 
-    <button class="save-btn" onclick="saveSettings()">💾 Save Settings</button>
+    <!-- Theme -->
+
+    <div class="card">
+
+        <h2>Theme</h2>
+
+        <select id="theme">
+
+            <option value="dark">
+
+                Dark Theme
+
+            </option>
+
+            <option value="light">
+
+                Light Theme
+
+            </option>
+
+        </select>
+
+    </div>
+
+    <!-- Buttons -->
+
+    <div class="buttons">
+
+        <button id="saveBtn">
+
+            💾 Save Settings
+
+        </button>
+
+        <button id="resetBtn">
+
+            🔄 Reset
+
+        </button>
+
+    </div>
+
+    <!-- About -->
+
+    <div class="card">
+
+        <h2>About Project</h2>
+
+        <p>
+
+            IoT-Based Weed Detection &
+            Robotic Weed Removal System
+
+        </p>
+
+        <hr>
+
+        <p>
+
+            Version : 1.0
+
+        </p>
+
+        <p>
+
+            Frontend Developer :
+            Member 2
+
+        </p>
+
+        <p>
+
+            Final Year BE Project
+
+        </p>
+
+    </div>
 
 </div>
 
-<footer class="footer">
-    <p>© 2024 IoT-Based Weed Detection & Removal System</p>
+<footer>
+
+IoT Weed Detection & Removal Robot
+
 </footer>
 
-<script src="/software/frontend/js/settings.js"></script>
 </body>
+
 </html>

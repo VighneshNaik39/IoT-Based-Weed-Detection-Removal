@@ -1,214 +1,190 @@
-// ==============================
-// BACKEND CONFIG
-// ==============================
-const BASE_URL = "";
+// ===========================================
+// API CONFIGURATION
+// ===========================================
 
-// ==============================
-// LOAD STATUS + KPIs
-// ==============================
-async function loadStatusFromBackend() {
-  try {
-    const res = await fetch(`${BASE_URL}/api/status`);
-    const data = await res.json();
+// Change this to your backend server address
+const BASE_URL = "http://localhost:3000";
 
-    console.log("API DATA:", data);
+// ===========================================
+// COMMON API FUNCTION
+// ===========================================
 
-    const isWeed = data.status === "Weed detected";
+async function sendCommand(endpoint, method = "POST") {
+    try {
 
-    // ==============================
-    // STATUS UI
-    // ==============================
-    if (isWeed) {
-      showWeedUI();
-    } else {
-      showClearUI();
+        const response = await fetch(`${BASE_URL}${endpoint}`, {
+            method: method,
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        return await response.json();
+
+    } catch (error) {
+
+        console.error("API Error:", error);
+
+        return {
+            success: false,
+            message: error.message
+        };
     }
-
-    // ==============================
-    // KPI CARDS
-    // ==============================
-    const kpiCards = document.querySelectorAll(".kpi-card .kpi-value");
-
-    if (kpiCards[0]) kpiCards[0].innerText = data.scansToday ?? "--";
-    if (kpiCards[1]) kpiCards[1].innerText = data.weedsDetected ?? "--";
-    if (kpiCards[2]) kpiCards[2].innerText = data.weedsRemoved ?? 0;
-
-    // ==============================
-    // BATTERY
-    // ==============================
-    const batteryEl = document.querySelector(".kpi-card:nth-child(5) .kpi-value");
-    const batteryBar = document.querySelector(".kpi-card:nth-child(5) .kpi-bar-fill");
-
-    if (batteryEl) batteryEl.innerText = (data.battery ?? 80) + "%";
-    if (batteryBar) batteryBar.style.width = (data.battery ?? 80) + "%";
-
-    // ==============================
-    // MOISTURE
-    // ==============================
-    const moistureVal = document.querySelectorAll(".sensor-value")[0];
-    const moistureFill = document.querySelectorAll(".sensor-fill")[0];
-
-    if (moistureVal && data.moisture != null) {
-      moistureVal.innerText = data.moisture + "%";
-      if (moistureFill) moistureFill.style.width = data.moisture + "%";
-    }
-
-    // ==============================
-    // LAST UPDATED
-    // ==============================
-    if (data.time) {
-      const t = new Date(data.time).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
-
-      const lastSeen = document.getElementById("last-updated");
-      if (lastSeen) lastSeen.innerText = "Last update: " + t;
-    }
-
-    // ==============================
-    // SYSTEM STATUS
-    // ==============================
-    const badge = document.getElementById("sys-badge");
-    if (badge) {
-      badge.textContent = "● System Online";
-      badge.className = "sys-badge online";
-    }
-
-  } catch (err) {
-    console.warn("Backend not reachable:", err.message);
-
-    const badge = document.getElementById("sys-badge");
-    if (badge) {
-      badge.textContent = "● Offline";
-      badge.className = "sys-badge refreshing";
-    }
-  }
 }
 
-// ==============================
-// LOAD LOGS
-// ==============================
-async function loadLogsFromBackend() {
-  try {
-    const res = await fetch(`${BASE_URL}/api/logs`);
-    const logs = await res.json();
+// ===========================================
+// MOVEMENT APIs
+// ===========================================
 
-    const list = document.getElementById("log-list");
-    if (!list) return;
-
-    if (logs.length === 0) {
-      list.innerHTML = `
-        <li class="log-row">
-          <span class="log-time">--</span>
-          <span class="log-zone">--</span>
-          <span class="log-msg ok">No logs yet</span>
-        </li>`;
-      return;
-    }
-
-    const recent = [...logs].reverse().slice(0, 10);
-    list.innerHTML = "";
-
-    recent.forEach(log => {
-      const t = log.time
-        ? new Date(log.time).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-          })
-        : "--";
-
-      const isWeed = log.status === "Weed detected";
-
-      const li = document.createElement("li");
-      li.className = "log-row";
-
-      li.innerHTML = `
-        <span class="log-time">${t}</span>
-        <span class="log-zone">ESP32</span>
-        <span class="log-msg ${isWeed ? 'warn' : 'ok'}">
-          ${isWeed ? '⚠ Weed detected' : '✔ No weed — Field clear'}
-          ${log.moisture != null ? ' · Moisture: ' + log.moisture + '%' : ''}
-        </span>`;
-
-      list.appendChild(li);
-    });
-
-  } catch (err) {
-    console.warn("Could not load logs:", err.message);
-  }
+async function moveForward() {
+    return await sendCommand("/forward");
 }
 
-// ==============================
-// AUTO RUN
-// ==============================
-loadStatusFromBackend();
-loadLogsFromBackend();
-
-setInterval(() => {
-  loadStatusFromBackend();
-  loadLogsFromBackend();
-}, 3000);
-
-// ==============================
-// UI STATE (🔥 FULL FIXED)
-// ==============================
-function showWeedUI() {
-  const panel = document.getElementById('status-panel');
-  if (panel) panel.className = 'panel status-panel weed';
-
-  const chip = document.getElementById('status-chip');
-  if (chip) {
-    chip.textContent = 'WEED DETECTED';
-    chip.className = 'panel-chip weed-chip';
-  }
-
-  const icon = document.getElementById('status-big-icon');
-  if (icon) icon.textContent = '⚠';
-
-  const headline = document.getElementById('status-headline');
-  if (headline) headline.textContent = 'Weed Detected!';
-
-  const desc = document.getElementById('status-desc');
-  if (desc) desc.textContent = 'Weed has been detected in the field.';
-
-  // 🔴 Zones danger
-  ['zone-a','zone-b','zone-c','zone-d'].forEach(id => {
-    const z = document.getElementById(id);
-    if (z) {
-      z.className = 'zone-item danger';
-      z.textContent = id.replace('zone-','Zone ').toUpperCase() + ' ⚠';
-    }
-  });
+async function moveBackward() {
+    return await sendCommand("/backward");
 }
 
-function showClearUI() {
-  const panel = document.getElementById('status-panel');
-  if (panel) panel.className = 'panel status-panel clear';
-
-  const chip = document.getElementById('status-chip');
-  if (chip) {
-    chip.textContent = 'CLEAR';
-    chip.className = 'panel-chip clear-chip';
-  }
-
-  const icon = document.getElementById('status-big-icon');
-  if (icon) icon.textContent = '✔';
-
-  const headline = document.getElementById('status-headline');
-  if (headline) headline.textContent = 'No Weed Detected';
-
-  const desc = document.getElementById('status-desc');
-  if (desc) desc.textContent = 'Your field is clear. Continuous monitoring active.';
-
-  // 🟢 Zones safe (FIXED)
-  ['zone-a','zone-b','zone-c','zone-d'].forEach(id => {
-    const z = document.getElementById(id);
-    if (z) {
-      z.className = 'zone-item safe';
-      z.textContent = id.replace('zone-','Zone ').toUpperCase() + ' ✔';
-    }
-  });
+async function moveLeft() {
+    return await sendCommand("/left");
 }
+
+async function moveRight() {
+    return await sendCommand("/right");
+}
+
+async function stopRobot() {
+    return await sendCommand("/stop");
+}
+
+// ===========================================
+// CUTTER APIs
+// ===========================================
+
+async function cutterOn() {
+    return await sendCommand("/cutter/on");
+}
+
+async function cutterOff() {
+    return await sendCommand("/cutter/off");
+}
+
+// ===========================================
+// STATUS API
+// ===========================================
+
+async function getRobotStatus() {
+
+    try {
+
+        const response = await fetch(`${BASE_URL}/status`);
+
+        if (!response.ok) {
+            throw new Error("Unable to fetch robot status");
+        }
+
+        return await response.json();
+
+    } catch (error) {
+
+        console.error(error);
+
+        return {
+            success: false,
+            status: "OFFLINE",
+            battery: "--",
+            obstacle: "UNKNOWN"
+        };
+    }
+}
+
+// ===========================================
+// LOGS API
+// ===========================================
+
+async function getLogs() {
+
+    try {
+
+        const response = await fetch(`${BASE_URL}/logs`);
+
+        if (!response.ok) {
+            throw new Error("Unable to fetch logs");
+        }
+
+        return await response.json();
+
+    } catch (error) {
+
+        console.error(error);
+
+        return [];
+    }
+}
+
+// ===========================================
+// CLEAR LOGS
+// ===========================================
+
+async function clearLogs() {
+
+    return await sendCommand("/logs/clear", "DELETE");
+
+}
+
+// ===========================================
+// CONNECTION CHECK
+// ===========================================
+
+async function checkConnection() {
+
+    try {
+
+        const response = await fetch(`${BASE_URL}/status`);
+
+        return response.ok;
+
+    } catch {
+
+        return false;
+
+    }
+
+}
+
+// ===========================================
+// EMERGENCY STOP
+// ===========================================
+
+async function emergencyStop() {
+
+    return await stopRobot();
+
+}
+
+// ===========================================
+// EXPORT (Optional)
+// ===========================================
+
+window.robotAPI = {
+
+    moveForward,
+    moveBackward,
+    moveLeft,
+    moveRight,
+    stopRobot,
+
+    cutterOn,
+    cutterOff,
+
+    getRobotStatus,
+    getLogs,
+    clearLogs,
+
+    emergencyStop,
+    checkConnection
+
+};

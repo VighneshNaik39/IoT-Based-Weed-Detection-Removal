@@ -1,67 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <title>Detection Logs</title>
-    <link rel="stylesheet" href="/css/logs.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Robot Activity Logs</title>
+
+    <link rel="stylesheet" href="../css/logs.css">
+
+    <script defer src="../js/api.js"></script>
+    <script defer src="../js/logs.js"></script>
+
 </head>
+
 <body>
 
-<header class="navbar">
-    <h2>🌿 Weed Detection System</h2>
+<header>
+
+    <h1>📋 Robot Activity Logs</h1>
+
     <nav>
-        <a href="/">Dashboard</a>
-        <a class="active" href="#">Logs</a>
-        <a href="/pages/settings.html">Settings</a>
+
+        <a href="../index.html">Dashboard</a>
+
+        <a href="logs.html">Logs</a>
+
+        <a href="settings.html">Settings</a>
+
     </nav>
+
 </header>
 
-<main class="container">
-    <div class="header">
-        <h1>📋 Detection Logs</h1>
-        <div style="display:flex;gap:10px;align-items:center">
-            <span id="log-count" style="font-size:13px;color:#666">Loading...</span>
-            <button class="refresh-btn" onclick="loadLogs()">⟳ Refresh</button>
+<div class="container">
+
+    <!-- Search -->
+
+    <section class="toolbar">
+
+        <input
+            type="text"
+            id="searchInput"
+            placeholder="Search command...">
+
+        <button id="refreshBtn">
+
+            🔄 Refresh
+
+        </button>
+
+        <button id="clearBtn">
+
+            🗑 Clear Logs
+
+        </button>
+
+        <button id="exportBtn">
+
+            📥 Export CSV
+
+        </button>
+
+    </section>
+
+    <!-- Statistics -->
+
+    <section class="stats">
+
+        <div class="card">
+
+            <h3>Total Logs</h3>
+
+            <h2 id="totalLogs">0</h2>
+
         </div>
-    </div>
 
-    <p class="subtitle">
-        Live history from ESP32 via backend at
-        <code style="background:#eee;padding:2px 6px;border-radius:4px;font-size:12px">192.168.99.135:5000/api/logs</code>
-        · Auto-refresh every 5s
-    </p>
+        <div class="card">
 
-    <!-- Filter -->
-    <div class="filter">
-        <label>
-            <input type="checkbox" id="weedFilter" onchange="applyFilter()">
-            Show only Weed Detected
-        </label>
-    </div>
+            <h3>Today's Commands</h3>
 
-    <table>
-        <thead>
-            <tr>
-                <th>#</th>
-                <th>Time</th>
-                <th>Status</th>
-                <th>Moisture</th>
-                <th>Source</th>
-            </tr>
-        </thead>
-        <tbody id="logTable">
-            <tr><td colspan="5" style="text-align:center;color:#888;padding:30px">Loading logs from backend...</td></tr>
-        </tbody>
-    </table>
-</main>
+            <h2 id="todayLogs">0</h2>
+
+        </div>
+
+        <div class="card">
+
+            <h3>Last Command</h3>
+
+            <h2 id="lastCommand">None</h2>
+
+        </div>
+
+    </section>
+
+    <!-- Table -->
+
+    <section class="table-container">
+
+        <table id="logsTable">
+
+            <thead>
+
+                <tr>
+
+                    <th>#</th>
+
+                    <th>Time</th>
+
+                    <th>Command</th>
+
+                    <th>Status</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="logsBody">
+
+                <tr>
+
+                    <td colspan="4">
+
+                        No logs available
+
+                    </td>
+
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+</div>
 
 <footer>
-    © 2024 IoT-Based Weed Detection & Removal System
+
+    IoT Weed Detection & Removal Robot
+
 </footer>
 
-<!-- ✅ ONLY this script — fetches real data from backend -->
-<script src="/js/logs.js"></script>
-
 </body>
+
 </html>
