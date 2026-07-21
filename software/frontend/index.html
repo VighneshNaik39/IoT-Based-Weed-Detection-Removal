@@ -1,200 +1,347 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>IoT Weed Detection Robot Dashboard</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <link rel="stylesheet" href="css/style.css">
+<title>IoT Weed Detection Dashboard</title>
 
-    <script defer src="js/api.js"></script>
-    <script defer src="js/script.js"></script>
+<link rel="stylesheet" href="css/style.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+<script defer src="js/api.js"></script>
+<script defer src="js/script.js"></script>
+
 </head>
 
 <body>
 
-<!-- ================= NAVBAR ================= -->
-
 <header>
 
-    <h1>🌿 IoT Weed Detection & Removal Robot</h1>
+<div class="logo">
 
-    <nav>
+<i class="fa-solid fa-leaf"></i>
 
-        <a href="index.html">Dashboard</a>
-
-        <a href="pages/logs.html">Logs</a>
-
-        <a href="pages/settings.html">Settings</a>
-
-    </nav>
-
-</header>
-
-<!-- ================= MAIN ================= -->
-
-<div class="container">
-
-    <!-- STATUS -->
-
-    <section class="status-section">
-
-        <div class="card">
-
-            <h2>Robot Status</h2>
-
-            <h3 id="robotStatus">STOPPED</h3>
-
-        </div>
-
-        <div class="card">
-
-            <h2>Connection</h2>
-
-            <h3 id="connectionStatus">Checking...</h3>
-
-        </div>
-
-        <div class="card">
-
-            <h2>Battery</h2>
-
-            <h3 id="batteryStatus">100%</h3>
-
-        </div>
-
-        <div class="card">
-
-            <h2>Obstacle</h2>
-
-            <h3 id="obstacleStatus">CLEAR</h3>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- CONTROL PANEL -->
-
-    <section class="control-panel">
-
-        <h2>Robot Movement</h2>
-
-        <div class="movement-grid">
-
-            <button
-                id="forwardBtn"
-                class="move-btn forward">
-                ⬆
-            </button>
-
-            <button
-                id="leftBtn"
-                class="move-btn left">
-                ⬅
-            </button>
-
-            <button
-                id="stopBtn"
-                class="move-btn stop">
-                ■
-            </button>
-
-            <button
-                id="rightBtn"
-                class="move-btn right">
-                ➡
-            </button>
-
-            <button
-                id="backwardBtn"
-                class="move-btn backward">
-                ⬇
-            </button>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- CUTTER -->
-
-    <section class="cutter-panel">
-
-        <h2>Cutter Control</h2>
-
-        <div class="cutter-buttons">
-
-            <button
-                id="cutterOnBtn"
-                class="on">
-
-                START CUTTER
-
-            </button>
-
-            <button
-                id="cutterOffBtn"
-                class="off">
-
-                STOP CUTTER
-
-            </button>
-
-        </div>
-
-    </section>
-
-
-
-    <!-- EMERGENCY -->
-
-    <section class="emergency">
-
-        <button id="emergencyBtn">
-
-            🚨 EMERGENCY STOP
-
-        </button>
-
-    </section>
-
-
-
-    <!-- LIVE ACTIVITY -->
-
-    <section class="activity">
-
-        <h2>Recent Activity</h2>
-
-        <ul id="activityList">
-
-            <li>No Activity Yet</li>
-
-        </ul>
-
-    </section>
+<h2>Weed Detection Robot</h2>
 
 </div>
 
+<nav>
 
+<a class="active" href="index.html">
 
-<!-- FOOTER -->
+<i class="fa-solid fa-house"></i>
+
+Dashboard
+
+</a>
+
+<a href="pages/robot-control.html">
+
+<i class="fa-solid fa-gamepad"></i>
+
+Robot Control
+
+</a>
+
+<a href="pages/field-map.html">
+
+<i class="fa-solid fa-map-location-dot"></i>
+
+Field Map
+
+</a>
+
+<a href="pages/analytics.html">
+
+<i class="fa-solid fa-chart-line"></i>
+
+Analytics
+
+</a>
+
+<a href="pages/logs.html">
+
+<i class="fa-solid fa-file-lines"></i>
+
+Logs
+
+</a>
+
+<a href="pages/alerts.html">
+
+<i class="fa-solid fa-triangle-exclamation"></i>
+
+Alerts
+
+</a>
+
+<a href="pages/settings.html">
+
+<i class="fa-solid fa-gear"></i>
+
+Settings
+
+</a>
+
+</nav>
+
+<div id="connectionStatus">
+
+🟢 Online
+
+</div>
+
+</header>
+
+<!-- Dashboard -->
+
+<div class="dashboard">
+
+<!-- Status Cards -->
+
+<div class="cards">
+
+<div class="card">
+
+<i class="fa-solid fa-battery-three-quarters"></i>
+
+<h3>Battery</h3>
+
+<h1 id="batteryStatus">
+
+95%
+
+</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-robot"></i>
+
+<h3>Robot Status</h3>
+
+<h1 id="robotStatus">
+
+STOPPED
+
+</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-route"></i>
+
+<h3>Distance</h3>
+
+<h1 id="distanceStatus">
+
+0 m
+
+</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-seedling"></i>
+
+<h3>Weeds Removed</h3>
+
+<h1 id="weedCount">
+
+0
+
+</h1>
+
+</div>
+
+</div>
+
+<!-- Main -->
+
+<div class="main">
+
+<div class="robot-panel">
+
+<h2>
+
+🤖 Robot
+
+</h2>
+
+<div class="robot">
+
+🤖
+
+</div>
+
+<p id="currentAction">
+
+Idle
+
+</p>
+
+</div>
+
+<div class="quick-control">
+
+<h2>
+
+Quick Controls
+
+</h2>
+
+<div class="controls">
+
+<button id="forwardBtn">
+
+⬆
+
+</button>
+
+<div>
+
+<button id="leftBtn">
+
+⬅
+
+</button>
+
+<button id="stopBtn">
+
+■
+
+</button>
+
+<button id="rightBtn">
+
+➡
+
+</button>
+
+</div>
+
+<button id="backwardBtn">
+
+⬇
+
+</button>
+
+</div>
+
+<div class="cutter">
+
+<button id="cutterOnBtn">
+
+Cutter ON
+
+</button>
+
+<button id="cutterOffBtn">
+
+Cutter OFF
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- System Status -->
+
+<div class="system">
+
+<div class="card">
+
+<h3>ESP32</h3>
+
+<p id="espStatus">
+
+🟢 Connected
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>WiFi</h3>
+
+<p>
+
+🟢 Connected
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Obstacle</h3>
+
+<p id="obstacleStatus">
+
+CLEAR
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Mode</h3>
+
+<p>
+
+Manual
+
+</p>
+
+</div>
+
+</div>
+
+<!-- Recent Activity -->
+
+<div class="activity">
+
+<h2>
+
+Recent Activity
+
+</h2>
+
+<ul id="activityList">
+
+<li>
+
+System Started
+
+</li>
+
+</ul>
+
+</div>
+
+</div>
 
 <footer>
 
-    <p>
-
-        Final Year Project |
-        IoT Weed Detection &
-        Removal Robot
-
-    </p>
+IoT-Based Weed Detection & Robotic Weed Removal System
 
 </footer>
 
 </body>
+
 </html>
