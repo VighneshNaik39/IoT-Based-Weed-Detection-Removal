@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Robot Control</title>
+
+<link rel="stylesheet" href="../css/robot-control.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+<script defer src="../js/api.js"></script>
+<script defer src="../js/robot-control.js"></script>
+
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+
+<header>
+
+<div class="logo">
+
+<i class="fa-solid fa-leaf"></i>
+
+<span>Weed Detection Robot</span>
+
+</div>
+
+<nav>
+
+<a href="../index.html">Dashboard</a>
+
+<a class="active" href="robot-control.html">Robot Control</a>
+
+<a href="field-map.html">Field Map</a>
+
+<a href="analytics.html">Analytics</a>
+
+<a href="logs.html">Logs</a>
+
+<a href="alerts.html">Alerts</a>
+
+<a href="settings.html">Settings</a>
+
+</nav>
+
+<div id="connectionStatus">
+
+🟢 Online
+
+</div>
+
+</header>
+
+<!-- MAIN -->
+
+<div class="container">
+
+<!-- LEFT -->
+
+<div class="left-panel">
+
+<div class="robot-card">
+
+<h2>
+
+<i class="fa-solid fa-robot"></i>
+
+Robot Status
+
+</h2>
+
+<div id="robotAnimation">
+
+🤖
+
+</div>
+
+<h1 id="robotState">
+
+STOPPED
+
+</h1>
+
+</div>
+
+<div class="mode-card">
+
+<h2>
+
+Operating Mode
+
+</h2>
+
+<label class="switch">
+
+<input type="checkbox" id="modeSwitch">
+
+<span class="slider"></span>
+
+</label>
+
+<p id="modeText">
+
+Manual Mode
+
+</p>
+
+</div>
+
+</div>
+
+<!-- CENTER -->
+
+<div class="center-panel">
+
+<h2>
+
+Movement Controls
+
+</h2>
+
+<div class="controls">
+
+<button id="forwardBtn">
+
+<i class="fa-solid fa-arrow-up"></i>
+
+</button>
+
+<div class="middle">
+
+<button id="leftBtn">
+
+<i class="fa-solid fa-arrow-left"></i>
+
+</button>
+
+<button id="stopBtn" class="stop">
+
+<i class="fa-solid fa-stop"></i>
+
+</button>
+
+<button id="rightBtn">
+
+<i class="fa-solid fa-arrow-right"></i>
+
+</button>
+
+</div>
+
+<button id="backwardBtn">
+
+<i class="fa-solid fa-arrow-down"></i>
+
+</button>
+
+</div>
+
+<div class="cutter">
+
+<button id="cutterOn">
+
+<i class="fa-solid fa-power-off"></i>
+
+Cutter ON
+
+</button>
+
+<button id="cutterOff">
+
+<i class="fa-solid fa-ban"></i>
+
+Cutter OFF
+
+</button>
+
+</div>
+
+<button id="emergency">
+
+🚨 Emergency Stop
+
+</button>
+
+</div>
+
+<!-- RIGHT -->
+
+<div class="right-panel">
+
+<div class="status-card">
+
+<h3>
+
+Battery
+
+</h3>
+
+<div class="progress">
+
+<div id="batteryBar"></div>
+
+</div>
+
+<p id="batteryText">
+
+95%
+
+</p>
+
+</div>
+
+<div class="status-card">
+
+<h3>
+
+Distance
+
+</h3>
+
+<p id="distance">
+
+0.00 m
+
+</p>
+
+</div>
+
+<div class="status-card">
+
+<h3>
+
+Obstacle
+
+</h3>
+
+<p id="obstacle">
+
+CLEAR
+
+</p>
+
+</div>
+
+<div class="status-card">
+
+<h3>
+
+Current Action
+
+</h3>
+
+<p id="currentAction">
+
+Idle
+
+</p>
+
+</div>
+
+<div class="status-card">
+
+<h3>
+
+ESP32
+
+</h3>
+
+<p id="espStatus">
+
+🟢 Connected
+
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- FOOTER -->
+
+<footer>
+
+<p>
+
+IoT Weed Detection & Robotic Weed Removal System
+
+</p>
+
+</footer>
+
+</body>
+
+</html>

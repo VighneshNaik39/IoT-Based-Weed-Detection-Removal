@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Analytics Dashboard</title>
+
+<link rel="stylesheet" href="../css/analytics.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script defer src="../js/analytics.js"></script>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+<i class="fa-solid fa-chart-line"></i>
+
+<span>Analytics Dashboard</span>
+
+</div>
+
+<nav>
+
+<a href="../index.html">Dashboard</a>
+
+<a href="robot-control.html">Robot Control</a>
+
+<a href="field-map.html">Field Map</a>
+
+<a class="active" href="analytics.html">Analytics</a>
+
+<a href="logs.html">Logs</a>
+
+<a href="alerts.html">Alerts</a>
+
+<a href="settings.html">Settings</a>
+
+</nav>
+
+</header>
+
+<div class="container">
+
+<div class="cards">
+
+<div class="card">
+
+<i class="fa-solid fa-seedling"></i>
+
+<h3>Total Weeds Detected</h3>
+
+<h1 id="weedDetected">0</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-scissors"></i>
+
+<h3>Total Weeds Removed</h3>
+
+<h1 id="weedRemoved">0</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-route"></i>
+
+<h3>Distance Travelled</h3>
+
+<h1 id="distanceTravelled">0 m</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-battery-three-quarters"></i>
+
+<h3>Battery</h3>
+
+<h1 id="battery">100%</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-stopwatch"></i>
+
+<h3>Motor Runtime</h3>
+
+<h1 id="runtime">0 min</h1>
+
+</div>
+
+<div class="card">
+
+<i class="fa-solid fa-triangle-exclamation"></i>
+
+<h3>Obstacles</h3>
+
+<h1 id="obstacles">0</h1>
+
+</div>
+
+</div>
+
+<div class="charts">
+
+<div class="chart">
+
+<h2>Movement Statistics</h2>
+
+<canvas id="movementChart"></canvas>
+
+</div>
+
+<div class="chart">
+
+<h2>Battery Usage</h2>
+
+<canvas id="batteryChart"></canvas>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+
+IoT Weed Detection & Robotic Weed Removal System
+
+</footer>
+
+</body>
+
+</html>

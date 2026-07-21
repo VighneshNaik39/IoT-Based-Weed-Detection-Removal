@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Alerts Dashboard</title>
+
+<link rel="stylesheet" href="../css/alerts.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+
+<script defer src="../js/alerts.js"></script>
+
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+
+<i class="fa-solid fa-triangle-exclamation"></i>
+
+<span>Robot Alerts</span>
+
+</div>
+
+<nav>
+
+<a href="../index.html">Dashboard</a>
+
+<a href="robot-control.html">Robot Control</a>
+
+<a href="field-map.html">Field Map</a>
+
+<a href="analytics.html">Analytics</a>
+
+<a href="logs.html">Logs</a>
+
+<a class="active" href="alerts.html">Alerts</a>
+
+<a href="settings.html">Settings</a>
+
+</nav>
+
+</header>
+
+<div class="container">
+
+<div class="summary">
+
+<div class="card danger">
+
+<h2>Critical Alerts</h2>
+
+<h1 id="criticalCount">0</h1>
+
+</div>
+
+<div class="card warning">
+
+<h2>Warnings</h2>
+
+<h1 id="warningCount">0</h1>
+
+</div>
+
+<div class="card success">
+
+<h2>System Status</h2>
+
+<h1 id="systemStatus">Healthy</h1>
+
+</div>
+
+</div>
+
+<div class="alerts-section">
+
+<h2>Live Alerts</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Time</th>
+
+<th>Type</th>
+
+<th>Message</th>
+
+<th>Status</th>
+
+</tr>
+
+</thead>
+
+<tbody id="alertTable">
+
+<tr>
+
+<td colspan="4">
+
+No Alerts
+
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<div class="buttons">
+
+<button id="clearAlerts">
+
+<i class="fa-solid fa-trash"></i>
+
+Clear Alerts
+
+</button>
+
+<button id="refreshAlerts">
+
+<i class="fa-solid fa-rotate"></i>
+
+Refresh
+
+</button>
+
+</div>
+
+</div>
+
+<footer>
+
+IoT Weed Detection & Robotic Weed Removal System
+
+</footer>
+
+</body>
+
+</html>

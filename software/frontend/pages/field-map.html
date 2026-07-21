@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Field Map</title>
+
+<link rel="stylesheet" href="../css/field-map.css">
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+<script defer src="../js/field-map.js"></script>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>🌾 Smart Field Map</h1>
+
+<nav>
+
+<a href="../index.html">Dashboard</a>
+
+<a href="robot-control.html">Robot Control</a>
+
+<a href="field-map.html" class="active">Field Map</a>
+
+<a href="analytics.html">Analytics</a>
+
+<a href="logs.html">Logs</a>
+
+<a href="alerts.html">Alerts</a>
+
+<a href="settings.html">Settings</a>
+
+</nav>
+
+</header>
+
+<div class="container">
+
+<div class="left">
+
+<h2>Live Farm Grid</h2>
+
+<div id="fieldGrid">
+
+</div>
+
+</div>
+
+<div class="right">
+
+<div class="card">
+
+<h3>Robot Position</h3>
+
+<p id="robotPosition">
+
+X:0 Y:0
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Current Direction</h3>
+
+<p id="direction">
+
+STOP
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Distance Covered</h3>
+
+<p id="distance">
+
+0.00 m
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Detected Weeds</h3>
+
+<p id="weedCount">
+
+0
+
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Legend</h3>
+
+<ul>
+
+<li>🤖 Robot</li>
+
+<li>🌱 Weed</li>
+
+<li>⬜ Empty</li>
+
+<li>🟦 Path</li>
+
+</ul>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+
+IoT Weed Detection & Robotic Weed Removal
+
+</footer>
+
+</body>
+
+</html>

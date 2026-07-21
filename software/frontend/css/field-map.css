@@ -1,0 +1,402 @@
+/* ==========================================
+   GLOBAL
+========================================== */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    background:#0B1220;
+    color:#fff;
+}
+
+/* ==========================================
+   HEADER
+========================================== */
+
+header{
+
+    background:#161B22;
+
+    padding:20px 40px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    box-shadow:0 4px 15px rgba(0,0,0,.4);
+
+}
+
+header h1{
+
+    color:#00E676;
+
+}
+
+nav{
+
+    display:flex;
+
+    gap:15px;
+
+}
+
+nav a{
+
+    text-decoration:none;
+
+    color:white;
+
+    padding:10px 18px;
+
+    border-radius:8px;
+
+    transition:.3s;
+
+}
+
+nav a:hover,
+nav .active{
+
+    background:#00E676;
+
+    color:black;
+
+}
+
+/* ==========================================
+   MAIN CONTAINER
+========================================== */
+
+.container{
+
+    width:95%;
+
+    margin:30px auto;
+
+    display:grid;
+
+    grid-template-columns:2fr 1fr;
+
+    gap:25px;
+
+}
+
+/* ==========================================
+   FIELD GRID
+========================================== */
+
+.left{
+
+    background:#161B22;
+
+    padding:25px;
+
+    border-radius:15px;
+
+}
+
+.left h2{
+
+    margin-bottom:20px;
+
+    color:#00E676;
+
+}
+
+#fieldGrid{
+
+    display:grid;
+
+    grid-template-columns:repeat(10,60px);
+
+    grid-template-rows:repeat(10,60px);
+
+    gap:6px;
+
+    justify-content:center;
+
+}
+
+/* ==========================================
+   GRID CELL
+========================================== */
+
+.cell{
+
+    width:60px;
+
+    height:60px;
+
+    background:#1F2937;
+
+    border:1px solid #2D3748;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:24px;
+
+    border-radius:6px;
+
+    transition:.3s;
+
+}
+
+.cell:hover{
+
+    background:#2C3E50;
+
+}
+
+/* ==========================================
+   ROBOT
+========================================== */
+
+.robot{
+
+    background:#00E676 !important;
+
+    color:#000;
+
+    animation:pulse 1s infinite;
+
+}
+
+/* ==========================================
+   WEED
+========================================== */
+
+.weed{
+
+    background:#43A047 !important;
+
+}
+
+/* ==========================================
+   PATH
+========================================== */
+
+.path{
+
+    background:#2196F3 !important;
+
+}
+
+/* ==========================================
+   OBSTACLE
+========================================== */
+
+.obstacle{
+
+    background:#E53935 !important;
+
+}
+
+/* ==========================================
+   RIGHT PANEL
+========================================== */
+
+.right{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
+}
+
+/* ==========================================
+   CARD
+========================================== */
+
+.card{
+
+    background:#161B22;
+
+    padding:20px;
+
+    border-radius:15px;
+
+    text-align:center;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    transition:.3s;
+
+}
+
+.card:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:0 0 15px rgba(0,230,118,.25);
+
+}
+
+.card h3{
+
+    color:#00E676;
+
+    margin-bottom:15px;
+
+}
+
+.card p{
+
+    font-size:24px;
+
+    font-weight:bold;
+
+}
+
+.card ul{
+
+    list-style:none;
+
+    text-align:left;
+
+    margin-top:10px;
+
+}
+
+.card li{
+
+    padding:6px 0;
+
+}
+
+/* ==========================================
+   FOOTER
+========================================== */
+
+footer{
+
+    margin-top:35px;
+
+    padding:20px;
+
+    text-align:center;
+
+    background:#161B22;
+
+    color:#aaa;
+
+}
+
+/* ==========================================
+   ANIMATION
+========================================== */
+
+@keyframes pulse{
+
+0%{
+
+transform:scale(1);
+
+}
+
+50%{
+
+transform:scale(1.08);
+
+}
+
+100%{
+
+transform:scale(1);
+
+}
+
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media(max-width:1100px){
+
+.container{
+
+grid-template-columns:1fr;
+
+}
+
+}
+
+@media(max-width:768px){
+
+header{
+
+flex-direction:column;
+
+gap:20px;
+
+}
+
+nav{
+
+flex-wrap:wrap;
+
+justify-content:center;
+
+}
+
+#fieldGrid{
+
+grid-template-columns:repeat(10,42px);
+
+grid-template-rows:repeat(10,42px);
+
+}
+
+.cell{
+
+width:42px;
+
+height:42px;
+
+font-size:18px;
+
+}
+
+}
+
+@media(max-width:480px){
+
+#fieldGrid{
+
+grid-template-columns:repeat(10,32px);
+
+grid-template-rows:repeat(10,32px);
+
+}
+
+.cell{
+
+width:32px;
+
+height:32px;
+
+font-size:14px;
+
+}
+
+header h1{
+
+font-size:22px;
+
+}
+
+}
