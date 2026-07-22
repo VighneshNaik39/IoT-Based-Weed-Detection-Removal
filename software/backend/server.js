@@ -505,3 +505,137 @@ onStartup();
 app.listen(5000, "0.0.0.0", () => {
   console.log("🚀 Server running on http://localhost:5000");
 });
+// =============================
+// 📊 ANALYTICS API
+// =============================
+app.get("/api/analytics", (req, res) => {
+
+    res.json({
+
+        weedsDetected: sessionStats.weedsDetected,
+
+        weedsRemoved: sessionStats.weedsRemoved,
+
+        scansToday: sessionStats.scansToday,
+
+        battery: 80,
+
+        runtime: Math.floor(process.uptime() / 60),
+
+        distance: sessionStats.scansToday * 0.5,
+
+        obstacles: Math.floor(sessionStats.scansToday / 10)
+
+    });
+
+});
+// =============================
+// 🚨 ALERTS API
+// =============================
+app.get("/api/alerts", (req, res) => {
+
+    const alerts = [];
+
+    if (!isESP32Connected()) {
+
+        alerts.push({
+            time: new Date().toLocaleTimeString(),
+            type: "ESP32",
+            message: "ESP32 Disconnected",
+            status: "Critical"
+        });
+
+    }
+
+    if (80 < 20) {
+
+        alerts.push({
+            time: new Date().toLocaleTimeString(),
+            type: "Battery",
+            message: "Battery Low",
+            status: "Warning"
+        });
+
+    }
+
+    if (robotState.cutter) {
+
+        alerts.push({
+            time: new Date().toLocaleTimeString(),
+            type: "Cutter",
+            message: "Cutter Running",
+            status: "OK"
+        });
+
+    }
+
+    res.json(alerts);
+
+});
+// =============================
+// 🗑 CLEAR ALERTS
+// =============================
+app.delete("/api/alerts/clear", (req, res) => {
+
+    res.json({
+
+        success: true,
+
+        message: "Alerts Cleared"
+
+    });
+
+});
+// =============================
+// 🗺 FIELD MAP
+// =============================
+
+let robotPosition = {
+
+    x: 0,
+
+    y: 0
+
+};
+
+app.get("/api/field-map", (req, res) => {
+
+    res.json({
+
+        x: robotPosition.x,
+
+        y: robotPosition.y,
+
+        direction: robotState.movement,
+
+        distance: sessionStats.scansToday * 0.5,
+
+        weeds: [
+
+            {x:2,y:3},
+
+            {x:4,y:5},
+
+            {x:6,y:2}
+
+        ]
+
+    });
+
+});
+app.post("/api/movement/forward",(req,res)=>{
+
+robotState.movement="FORWARD";
+
+robotPosition.x--;
+
+res.json({
+
+success:true
+
+});
+
+});
+robotPosition.x++;
+robotPosition.y--;
+robotPosition.y++;
