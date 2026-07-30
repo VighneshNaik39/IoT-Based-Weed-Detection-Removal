@@ -1,213 +1,118 @@
-/* ==========================================
-   GLOBAL
-========================================== */
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
+.analytics-kpi-row {
+  grid-template-columns: repeat(4, 1fr);
 }
 
-body{
-    background:#0B1220;
-    color:#ffffff;
+.rc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
 }
 
-/* ==========================================
-   HEADER
-========================================== */
-
-header{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:18px 35px;
-    background:#161B22;
-    box-shadow:0 5px 15px rgba(0,0,0,.4);
+/* ==============================
+   BAR CHART — dependency-free, built from divs
+============================== */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  height: 220px;
+  padding: 10px 6px 0;
+  border-bottom: 1px solid var(--gray-200);
 }
 
-.logo{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    font-size:24px;
-    color:#00E676;
-    font-weight:600;
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 8px;
 }
 
-nav{
-    display:flex;
-    gap:15px;
+.bar-track {
+  width: 100%;
+  max-width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  background: var(--gray-100);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  overflow: hidden;
 }
 
-nav a{
-    color:white;
-    text-decoration:none;
-    padding:10px 16px;
-    border-radius:8px;
-    transition:.3s;
+.bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, var(--green-500), var(--green-700));
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: height 0.5s ease;
+  min-height: 2px;
+  position: relative;
 }
 
-nav a:hover,
-nav .active{
-    background:#00E676;
-    color:#000;
+.bar-fill .bar-count {
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-700);
 }
 
-/* ==========================================
-   MAIN CONTAINER
-========================================== */
-
-.container{
-    width:95%;
-    margin:30px auto;
+.bar-label {
+  font-size: 11px;
+  color: var(--gray-500);
+  text-align: center;
 }
 
-/* ==========================================
-   DASHBOARD CARDS
-========================================== */
-
-.cards{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
-    margin-bottom:30px;
+.chart-empty {
+  color: var(--gray-400);
+  font-size: 12.5px;
+  text-align: center;
+  width: 100%;
+  align-self: center;
 }
 
-.card{
-    background:rgba(255,255,255,.05);
-    border:1px solid rgba(255,255,255,.08);
-    backdrop-filter:blur(15px);
-    border-radius:15px;
-    padding:25px;
-    text-align:center;
-    transition:.3s;
+/* ==============================
+   SESSION TABLE
+============================== */
+.an-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
 }
 
-.card:hover{
-    transform:translateY(-5px);
-    box-shadow:0 0 20px rgba(0,230,118,.3);
+.an-table th {
+  text-align: left;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  letter-spacing: 0.05em;
+  padding: 8px 6px;
+  border-bottom: 1px solid var(--gray-200);
 }
 
-.card i{
-    font-size:35px;
-    color:#00E676;
-    margin-bottom:15px;
+.an-table td {
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--gray-100);
+  color: var(--gray-700);
+  font-family: var(--font-mono);
 }
 
-.card h3{
-    color:#ccc;
-    margin-bottom:10px;
+.an-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
 }
 
-.card h1{
-    color:#ffffff;
-    font-size:34px;
-}
+.an-badge.completed { background: var(--green-100); color: var(--green-600); }
+.an-badge.active     { background: var(--amber-100); color: var(--amber-500); }
 
-/* ==========================================
-   CHARTS
-========================================== */
-
-.charts{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(450px,1fr));
-    gap:25px;
-}
-
-.chart{
-    background:#161B22;
-    padding:25px;
-    border-radius:15px;
-}
-
-.chart h2{
-    color:#00E676;
-    margin-bottom:20px;
-}
-
-canvas{
-    width:100% !important;
-    height:350px !important;
-}
-
-/* ==========================================
-   FOOTER
-========================================== */
-
-footer{
-    margin-top:40px;
-    padding:20px;
-    background:#161B22;
-    text-align:center;
-    color:#999;
-}
-
-/* ==========================================
-   RESPONSIVE
-========================================== */
-
-@media(max-width:1100px){
-
-.charts{
-
-grid-template-columns:1fr;
-
-}
-
-}
-
-@media(max-width:768px){
-
-header{
-
-flex-direction:column;
-
-gap:20px;
-
-}
-
-nav{
-
-flex-wrap:wrap;
-
-justify-content:center;
-
-}
-
-.cards{
-
-grid-template-columns:1fr;
-
-}
-
-canvas{
-
-height:280px !important;
-
-}
-
-}
-
-@media(max-width:480px){
-
-.logo{
-
-font-size:20px;
-
-}
-
-.chart{
-
-padding:15px;
-
-}
-
-canvas{
-
-height:220px !important;
-
-}
-
+@media (max-width: 1100px) {
+  .rc-grid { grid-template-columns: 1fr; }
+  .analytics-kpi-row { grid-template-columns: repeat(2, 1fr); }
 }

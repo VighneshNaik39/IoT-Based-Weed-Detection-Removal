@@ -13,7 +13,7 @@
 // ============================================================
 const char* ssid       = "meowww";
 const char* password   = "capital v";
-const char* serverBase = "http://192.168.218.135:5000";
+const char* serverBase = "http://192.168.48.135:5000";
 
 WebServer server(80);
 

@@ -1,269 +1,103 @@
-// ==========================================
-// Field Map JavaScript
-// ==========================================
+// ==============================
+// FIELD MAP PAGE
+// Zone status comes from /api/status (weed/clear), same signal the
+// dashboard uses. Robot marker position is an illustrative mapping of
+// the current movement command from /api/robot/status — there's no
+// GPS/positioning sensor on the robot yet (see Phase 5 roadmap).
+// ==============================
+const BASE_URL = "";
 
-const fieldGrid = document.getElementById("fieldGrid");
+const ZONE_POSITIONS = {
+  forward:  { top: "22%", left: "50%", zone: "a" },
+  right:    { top: "50%", left: "78%", zone: "b" },
+  backward: { top: "78%", left: "50%", zone: "c" },
+  left:     { top: "50%", left: "22%", zone: "d" },
+  stop:     { top: "50%", left: "50%", zone: null }
+};
 
-const robotPosition = document.getElementById("robotPosition");
-const direction = document.getElementById("direction");
-const distance = document.getElementById("distance");
-const weedCount = document.getElementById("weedCount");
-
-// ==========================================
-// SETTINGS
-// ==========================================
-
-const ROWS = 10;
-const COLS = 10;
-
-let robotX = 0;
-let robotY = 0;
-
-let travelledDistance = 0;
-
-let currentDirection = "STOP";
-
-let weeds = [
-    {x:2,y:3},
-    {x:6,y:5},
-    {x:8,y:8},
-    {x:4,y:1},
-    {x:1,y:7}
-];
-
-// ==========================================
-// CREATE GRID
-// ==========================================
-
-function createGrid(){
-
-    fieldGrid.innerHTML="";
-
-    for(let r=0;r<ROWS;r++){
-
-        for(let c=0;c<COLS;c++){
-
-            const cell=document.createElement("div");
-
-            cell.classList.add("cell");
-
-            cell.id=`cell-${r}-${c}`;
-
-            fieldGrid.appendChild(cell);
-
-        }
-
-    }
-
+function tickClock() {
+  const el = document.getElementById("clock");
+  if (el) el.textContent = new Date().toLocaleTimeString();
 }
+setInterval(tickClock, 1000);
+tickClock();
 
-// ==========================================
-// DRAW WEEDS
-// ==========================================
+async function loadWeedStatus() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/status`);
+    if (!res.ok) throw new Error("status unavailable");
+    const data = await res.json();
 
-function drawWeeds(){
+    const isWeed = data.status === "Weed detected";
 
-    weeds.forEach(w=>{
-
-        const cell=document.getElementById(`cell-${w.x}-${w.y}`);
-
-        if(cell){
-
-            cell.classList.add("weed");
-
-            cell.innerHTML="🌱";
-
-        }
-
+    ["a", "b", "c", "d"].forEach(z => {
+      const zoneEl = document.getElementById(`fz-${z}`);
+      const statusEl = document.getElementById(`fz-${z}-status`);
+      zoneEl.classList.toggle("danger", isWeed);
+      statusEl.textContent = isWeed ? "WEED" : "CLEAR";
     });
 
+    const fieldChip = document.getElementById("field-chip");
+    fieldChip.textContent = isWeed ? "WEED DETECTED" : "CLEAR";
+    fieldChip.className = "panel-chip " + (isWeed ? "weed-chip" : "clear-chip");
+
+    document.getElementById("sum-clear").textContent = isWeed ? "0 / 4" : "4 / 4";
+    document.getElementById("sum-flagged").textContent = isWeed ? "4 / 4" : "0 / 4";
+
+    if (data.time) {
+      document.getElementById("last-updated").textContent =
+        "Last update: " + new Date(data.time).toLocaleTimeString();
+    }
+
+    const sysBadge = document.getElementById("sys-badge");
+    sysBadge.textContent = data.esp32Connected ? "● System Online" : "● Backend Online, ESP32 Idle";
+    sysBadge.className = "sys-badge " + (data.esp32Connected ? "online" : "refreshing");
+
+    const dot = document.getElementById("device-dot");
+    const text = document.getElementById("device-status-text");
+    if (dot) dot.style.background = data.esp32Connected ? "var(--green-400)" : "var(--red-600)";
+    if (text) text.textContent = data.esp32Connected ? "Connected" : "Waiting for data";
+
+  } catch (err) {
+    console.warn("Field map: weed status unreachable:", err.message);
+  }
 }
 
-// ==========================================
-// DRAW ROBOT
-// ==========================================
+async function loadRobotPosition() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/robot/status`);
+    if (!res.ok) throw new Error("robot status unavailable");
+    const payload = await res.json();
+    const data = payload.data || payload;
 
-function drawRobot(){
+    const cmd = (data.command || "stop").toLowerCase();
+    const pos = ZONE_POSITIONS[cmd] || ZONE_POSITIONS.stop;
 
-    document.querySelectorAll(".robot").forEach(cell=>{
+    const robotEl = document.getElementById("field-robot");
+    robotEl.style.top = pos.top;
+    robotEl.style.left = pos.left;
 
-        cell.classList.remove("robot");
-
-        cell.innerHTML="";
-
+    ["a", "b", "c", "d"].forEach(z => {
+      document.getElementById(`fz-${z}`).classList.toggle("active-zone", pos.zone === z);
     });
 
-    const robotCell=document.getElementById(`cell-${robotX}-${robotY}`);
+    document.getElementById("pos-command").textContent = cmd.toUpperCase();
+    document.getElementById("pos-mode").textContent = (data.mode || "--").toUpperCase();
 
-    if(robotCell){
+    const obsEl = document.getElementById("pos-obstacle");
+    obsEl.textContent = data.obstacle ? "BLOCKED" : "CLEAR";
+    obsEl.className = "status-value " + (data.obstacle ? "warn" : "ok");
 
-        robotCell.classList.add("robot");
+    document.getElementById("pos-distance").textContent =
+      (data.distanceCm != null ? data.distanceCm.toFixed(1) : "--") + " cm";
 
-        robotCell.innerHTML="🤖";
-
-    }
-
-    robotPosition.innerHTML=`X:${robotX} Y:${robotY}`;
-
-    direction.innerHTML=currentDirection;
-
-    distance.innerHTML=travelledDistance.toFixed(2)+" m";
-
-    weedCount.innerHTML=weeds.length;
-
+  } catch (err) {
+    // Robot/ESP32 not reachable — leave last-known marker position in place.
+    console.warn("Field map: robot status unreachable:", err.message);
+  }
 }
 
-// ==========================================
-// PATH
-// ==========================================
-
-function drawPath(x,y){
-
-    const cell=document.getElementById(`cell-${x}-${y}`);
-
-    if(cell){
-
-        if(!cell.classList.contains("weed")){
-
-            cell.classList.add("path");
-
-        }
-
-    }
-
-}
-
-// ==========================================
-// MOVE ROBOT
-// ==========================================
-
-function move(dx,dy,dir){
-
-    drawPath(robotX,robotY);
-
-    const nx=robotX+dx;
-    const ny=robotY+dy;
-
-    if(nx<0 || ny<0 || nx>=ROWS || ny>=COLS){
-
-        return;
-
-    }
-
-    robotX=nx;
-    robotY=ny;
-
-    currentDirection=dir;
-
-    travelledDistance+=1;
-
-    removeWeed(robotX,robotY);
-
-    drawRobot();
-
-}
-
-// ==========================================
-// REMOVE WEED
-// ==========================================
-
-function removeWeed(x,y){
-
-    weeds=weeds.filter(w=>{
-
-        return !(w.x===x && w.y===y);
-
-    });
-
-}
-
-// ==========================================
-// KEYBOARD CONTROL
-// ==========================================
-
-document.addEventListener("keydown",e=>{
-
-    switch(e.key.toLowerCase()){
-
-        case "w":
-
-            move(-1,0,"FORWARD");
-
-        break;
-
-        case "s":
-
-            move(1,0,"BACKWARD");
-
-        break;
-
-        case "a":
-
-            move(0,-1,"LEFT");
-
-        break;
-
-        case "d":
-
-            move(0,1,"RIGHT");
-
-        break;
-
-    }
-
-});
-
-// ==========================================
-// LIVE BACKEND UPDATE
-// ==========================================
-
-async function updateFromBackend(){
-
-    try{
-
-        const res=await fetch("http://localhost:3000/field-map");
-
-        const data=await res.json();
-
-        robotX=data.x;
-        robotY=data.y;
-
-        travelledDistance=data.distance;
-
-        currentDirection=data.direction;
-
-        weeds=data.weeds;
-
-        createGrid();
-
-        drawWeeds();
-
-        drawRobot();
-
-    }
-
-    catch(e){
-
-        console.log("Backend not connected");
-
-    }
-
-}
-
-// ==========================================
-// AUTO REFRESH
-// ==========================================
-
-setInterval(updateFromBackend,3000);
-
-// ==========================================
-// INITIALIZE
-// ==========================================
-
-createGrid();
-
-drawWeeds();
-
-drawRobot();
-
-console.log("Field Map Loaded");
+loadWeedStatus();
+loadRobotPosition();
+setInterval(loadWeedStatus, 3000);
+setInterval(loadRobotPosition, 2000);

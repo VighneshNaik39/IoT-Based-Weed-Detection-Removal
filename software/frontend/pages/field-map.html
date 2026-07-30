@@ -1,137 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Field Map</title>
-
-<link rel="stylesheet" href="../css/field-map.css">
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-
-<script defer src="../js/field-map.js"></script>
-
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Field Map - WeedGuard</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="stylesheet" href="/css/field-map.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
-
 <body>
 
-<header>
+<div class="layout">
 
-<h1>🌾 Smart Field Map</h1>
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌿</div>
+      <div>
+        <p class="brand-name">WeedGuard</p>
+        <p class="brand-sub">IoT Detection System</p>
+      </div>
+    </div>
 
-<nav>
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">MAIN</p>
+      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
+      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
+      <a href="/pages/field-map.html" class="nav-item active"><span class="nav-item-icon">🗺</span> Field Map</a>
+      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
 
-<a href="../index.html">Dashboard</a>
+      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
+      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
+      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
+      <a href="/pages/alerts.html" class="nav-item">
+        <span class="nav-item-icon">🔔</span> Alerts
+        <span class="nav-badge" id="alert-badge">0</span>
+      </a>
+    </nav>
 
-<a href="robot-control.html">Robot Control</a>
+    <div class="sidebar-device">
+      <div class="device-dot" id="device-dot"></div>
+      <div>
+        <p class="device-name">ESP32 Module</p>
+        <p class="device-status" id="device-status-text">Connecting...</p>
+      </div>
+    </div>
+  </aside>
 
-<a href="field-map.html" class="active">Field Map</a>
+  <div class="main">
 
-<a href="analytics.html">Analytics</a>
+    <header class="topbar">
+      <div>
+        <h1 class="topbar-title">Field Map</h1>
+        <p class="topbar-sub">Zone layout & robot position · <span id="last-updated">--</span></p>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-time" id="clock">--:--:-- --</div>
+        <span class="sys-badge online" id="sys-badge">● Checking...</span>
+      </div>
+    </header>
 
-<a href="logs.html">Logs</a>
+    <div class="content">
 
-<a href="alerts.html">Alerts</a>
+      <div class="panel map-note">
+        <span class="map-note-icon">ℹ</span>
+        <p>
+          This is a zone-level layout, not GPS tracking — the robot doesn't carry a positioning
+          sensor yet. The highlighted zone below reflects the robot's <strong>current movement
+          command</strong> from Robot Control, and zone color reflects the <strong>last detection
+          result</strong> from the dashboard. Precise GPS/vision-based positioning is planned for
+          Phase 5.
+        </p>
+      </div>
 
-<a href="settings.html">Settings</a>
+      <div class="rc-grid">
 
-</nav>
+        <div class="panel">
+          <div class="panel-header">
+            <p class="panel-title">Field Layout — Station Alpha</p>
+            <span class="panel-chip" id="field-chip">CLEAR</span>
+          </div>
 
-</header>
+          <div class="field-grid" id="field-grid">
+            <div class="field-zone" id="fz-a" data-zone="a">
+              <span class="field-zone-label">Zone A</span>
+              <span class="field-zone-status" id="fz-a-status">--</span>
+            </div>
+            <div class="field-zone" id="fz-b" data-zone="b">
+              <span class="field-zone-label">Zone B</span>
+              <span class="field-zone-status" id="fz-b-status">--</span>
+            </div>
+            <div class="field-zone" id="fz-c" data-zone="c">
+              <span class="field-zone-label">Zone C</span>
+              <span class="field-zone-status" id="fz-c-status">--</span>
+            </div>
+            <div class="field-zone" id="fz-d" data-zone="d">
+              <span class="field-zone-label">Zone D</span>
+              <span class="field-zone-status" id="fz-d-status">--</span>
+            </div>
+            <div class="field-robot" id="field-robot" title="Robot">🤖</div>
+          </div>
 
-<div class="container">
+          <div class="field-legend">
+            <span><i class="dot safe"></i> Clear</span>
+            <span><i class="dot danger"></i> Weed detected</span>
+            <span><i class="dot active"></i> Robot here</span>
+          </div>
+        </div>
 
-<div class="left">
+        <div class="rc-side">
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Robot Position Info</p></div>
+            <ul class="status-list">
+              <li><span class="status-label">Current Command</span><span class="status-value" id="pos-command">--</span></li>
+              <li><span class="status-label">Mode</span><span class="status-value" id="pos-mode">--</span></li>
+              <li><span class="status-label">Obstacle</span><span class="status-value" id="pos-obstacle">--</span></li>
+              <li><span class="status-label">Distance</span><span class="status-value" id="pos-distance">-- cm</span></li>
+            </ul>
+          </div>
 
-<h2>Live Farm Grid</h2>
+          <div class="panel">
+            <div class="panel-header"><p class="panel-title">Field Summary</p></div>
+            <ul class="status-list">
+              <li><span class="status-label">Zones monitored</span><span class="status-value">4</span></li>
+              <li><span class="status-label">Zones clear</span><span class="status-value ok" id="sum-clear">--</span></li>
+              <li><span class="status-label">Zones flagged</span><span class="status-value warn" id="sum-flagged">--</span></li>
+            </ul>
+          </div>
+        </div>
 
-<div id="fieldGrid">
-
+      </div>
+    </div>
+  </div>
 </div>
 
-</div>
-
-<div class="right">
-
-<div class="card">
-
-<h3>Robot Position</h3>
-
-<p id="robotPosition">
-
-X:0 Y:0
-
-</p>
-
-</div>
-
-<div class="card">
-
-<h3>Current Direction</h3>
-
-<p id="direction">
-
-STOP
-
-</p>
-
-</div>
-
-<div class="card">
-
-<h3>Distance Covered</h3>
-
-<p id="distance">
-
-0.00 m
-
-</p>
-
-</div>
-
-<div class="card">
-
-<h3>Detected Weeds</h3>
-
-<p id="weedCount">
-
-0
-
-</p>
-
-</div>
-
-<div class="card">
-
-<h3>Legend</h3>
-
-<ul>
-
-<li>🤖 Robot</li>
-
-<li>🌱 Weed</li>
-
-<li>⬜ Empty</li>
-
-<li>🟦 Path</li>
-
-</ul>
-
-</div>
-
-</div>
-
-</div>
-
-<footer>
-
-IoT Weed Detection & Robotic Weed Removal
-
-</footer>
-
+<script src="/js/field-map.js"></script>
 </body>
-
 </html>

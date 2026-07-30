@@ -1,284 +1,131 @@
-// ==========================================
-// Analytics Dashboard
-// ==========================================
+// ==============================
+// ANALYTICS PAGE
+// Reads from GET /api/logs (recent detection log) and
+// GET /api/sessions (last 5 grouped sessions) — no new backend
+// endpoints needed, this page is purely a different view of
+// data the backend already exposes.
+// ==============================
+const BASE_URL = "";
 
-// Dashboard Cards
-const weedDetected = document.getElementById("weedDetected");
-const weedRemoved = document.getElementById("weedRemoved");
-const distanceTravelled = document.getElementById("distanceTravelled");
-const battery = document.getElementById("battery");
-const runtime = document.getElementById("runtime");
-const obstacles = document.getElementById("obstacles");
+function tickClock() {
+  const el = document.getElementById("clock");
+  if (el) el.textContent = new Date().toLocaleTimeString();
+}
+setInterval(tickClock, 1000);
+tickClock();
 
-// ==========================================
-// SAMPLE DATA
-// (Replace with backend data later)
-// ==========================================
+async function loadKpisFromLogs() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/logs`);
+    if (!res.ok) throw new Error("logs unavailable");
+    const logs = await res.json();
 
-let dashboard = {
+    const totalScans = logs.length;
+    const totalWeeds = logs.filter(l => l.status === "Weed detected").length;
+    const rate = totalScans > 0 ? Math.round((totalWeeds / totalScans) * 100) : 0;
 
-    weedsDetected:24,
+    document.getElementById("an-total-scans").textContent = totalScans;
+    document.getElementById("an-total-weeds").textContent = totalWeeds;
+    document.getElementById("an-detection-rate").textContent = rate + "%";
 
-    weedsRemoved:18,
+    const sysBadge = document.getElementById("sys-badge");
+    sysBadge.textContent = "● System Online";
+    sysBadge.className = "sys-badge online";
 
-    distance:42.5,
+    const dot = document.getElementById("device-dot");
+    const text = document.getElementById("device-status-text");
+    if (dot) dot.style.background = "var(--green-400)";
+    if (text) text.textContent = "Connected";
 
-    battery:88,
-
-    runtime:52,
-
-    obstacles:5
-
-};
-
-// ==========================================
-// UPDATE CARDS
-// ==========================================
-
-function updateCards(){
-
-    weedDetected.innerHTML = dashboard.weedsDetected;
-
-    weedRemoved.innerHTML = dashboard.weedsRemoved;
-
-    distanceTravelled.innerHTML =
-        dashboard.distance + " m";
-
-    battery.innerHTML =
-        dashboard.battery + "%";
-
-    runtime.innerHTML =
-        dashboard.runtime + " min";
-
-    obstacles.innerHTML =
-        dashboard.obstacles;
-
+  } catch (err) {
+    console.warn("Analytics: could not load logs:", err.message);
+    const sysBadge = document.getElementById("sys-badge");
+    sysBadge.textContent = "● Offline";
+    sysBadge.className = "sys-badge refreshing";
+  }
 }
 
-// ==========================================
-// MOVEMENT CHART
-// ==========================================
+async function loadSessions() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/sessions`);
+    if (!res.ok) throw new Error("sessions unavailable");
+    const sessions = await res.json();
 
-const movementChart = new Chart(
+    document.getElementById("an-sessions").textContent = sessions.length;
 
-document.getElementById("movementChart"),
+    renderBarChart(sessions);
+    renderSessionTable(sessions);
 
-{
-
-type:"bar",
-
-data:{
-
-labels:[
-
-"Forward",
-
-"Backward",
-
-"Left",
-
-"Right",
-
-"Stop"
-
-],
-
-datasets:[{
-
-label:"Commands",
-
-data:[
-
-55,
-
-14,
-
-20,
-
-18,
-
-10
-
-],
-
-backgroundColor:[
-
-"#00E676",
-
-"#00BCD4",
-
-"#FFC107",
-
-"#FF9800",
-
-"#F44336"
-
-],
-
-borderRadius:8
-
-}]
-
-},
-
-options:{
-
-responsive:true,
-
-plugins:{
-
-legend:{
-
-display:false
-
+  } catch (err) {
+    console.warn("Analytics: could not load sessions:", err.message);
+    document.getElementById("bar-chart").innerHTML =
+      '<p class="chart-empty">Session data unavailable — backend unreachable.</p>';
+    document.getElementById("session-table-body").innerHTML =
+      '<tr><td colspan="6" class="chart-empty">Session data unavailable.</td></tr>';
+  }
 }
 
+function renderBarChart(sessions) {
+  const chart = document.getElementById("bar-chart");
+
+  if (!sessions.length) {
+    chart.innerHTML = '<p class="chart-empty">No sessions recorded yet.</p>';
+    return;
+  }
+
+  // Oldest -> newest, left to right
+  const ordered = [...sessions].reverse();
+  const maxDetections = Math.max(1, ...ordered.map(s => s.totalDetections || 0));
+
+  chart.innerHTML = "";
+  ordered.forEach(s => {
+    const heightPct = Math.max(4, Math.round(((s.totalDetections || 0) / maxDetections) * 100));
+
+    const col = document.createElement("div");
+    col.className = "bar-col";
+    col.innerHTML = `
+      <div class="bar-track">
+        <div class="bar-fill" style="height:${heightPct}%">
+          <span class="bar-count">${s.totalDetections ?? 0}</span>
+        </div>
+      </div>
+      <span class="bar-label">S${s.sessionNumber}</span>
+    `;
+    chart.appendChild(col);
+  });
 }
 
+function renderSessionTable(sessions) {
+  const body = document.getElementById("session-table-body");
+
+  if (!sessions.length) {
+    body.innerHTML = '<tr><td colspan="6" class="chart-empty">No sessions recorded yet.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = "";
+  sessions.forEach(s => {
+    const started = s.startTime
+      ? new Date(s.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+      : "--";
+
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${s.sessionNumber}</td>
+      <td>${started}</td>
+      <td>${s.executions ?? 0}</td>
+      <td>${s.totalDetections ?? 0}</td>
+      <td>${s.avgMoisture != null ? s.avgMoisture + "%" : "--"}</td>
+      <td><span class="an-badge ${s.completed ? "completed" : "active"}">${s.completed ? "Completed" : "In Progress"}</span></td>
+    `;
+    body.appendChild(tr);
+  });
 }
 
+function loadAll() {
+  loadKpisFromLogs();
+  loadSessions();
 }
 
-// ==========================================
-// BATTERY CHART
-// ==========================================
-
-);
-
-const batteryChart = new Chart(
-
-document.getElementById("batteryChart"),
-
-{
-
-type:"line",
-
-data:{
-
-labels:[
-
-"10 AM",
-
-"11 AM",
-
-"12 PM",
-
-"1 PM",
-
-"2 PM",
-
-"3 PM"
-
-],
-
-datasets:[{
-
-label:"Battery",
-
-data:[
-
-100,
-
-98,
-
-95,
-
-93,
-
-90,
-
-88
-
-],
-
-fill:true,
-
-borderColor:"#00E676",
-
-backgroundColor:"rgba(0,230,118,.15)",
-
-tension:.4
-
-}]
-
-},
-
-options:{
-
-responsive:true
-
-}
-
-}
-
-// ==========================================
-// FETCH BACKEND
-// ==========================================
-
-);
-
-async function loadAnalytics(){
-
-    try{
-
-        const response = await fetch(
-
-        "http://localhost:3000/analytics"
-
-        );
-
-        const data = await response.json();
-
-        dashboard.weedsDetected =
-            data.weedsDetected;
-
-        dashboard.weedsRemoved =
-            data.weedsRemoved;
-
-        dashboard.distance =
-            data.distance;
-
-        dashboard.battery =
-            data.battery;
-
-        dashboard.runtime =
-            data.runtime;
-
-        dashboard.obstacles =
-            data.obstacles;
-
-        updateCards();
-
-    }
-
-    catch(error){
-
-        console.log(
-
-        "Using Local Sample Data"
-
-        );
-
-        updateCards();
-
-    }
-
-}
-
-// ==========================================
-// AUTO REFRESH
-// ==========================================
-
-setInterval(loadAnalytics,5000);
-
-loadAnalytics();
-
-// ==========================================
-// CONSOLE
-// ==========================================
-
-console.log(
-
-"Analytics Dashboard Loaded"
-
-);
+loadAll();
+setInterval(loadAll, 5000);

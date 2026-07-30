@@ -1,0 +1,4385 @@
+From 7025b60e1f4989ffbba55221e9245c9f636c510a Mon Sep 17 00:00:00 2001
+From: VighneshNaik39 <naikvighnesh39@gmail.com>
+Date: Tue, 28 Jul 2026 15:03:34 +0530
+Subject: [PATCH] Added login feature
+
+---
+ .../Weed_Detection_Project_Pipeline (2).pdf   | 105 -----
+ docs/api-documentation.md                     | 220 +++++++++
+ .../esp32_phase4_v1_3/esp32_phase4_v1_3.ino   |   2 +-
+ software/backend/.env                         |   2 +
+ software/backend/config/esp32.js              |   6 +
+ .../backend/controllers/cutterController.js   |  27 ++
+ software/backend/controllers/logController.js |  15 +
+ .../backend/controllers/modeController.js     |  34 ++
+ .../backend/controllers/robotController.js    |  60 +++
+ .../backend/controllers/settingsController.js |  16 +
+ .../backend/controllers/statusController.js   |  25 +
+ software/backend/data/logs.json               | 434 +++++++++---------
+ software/backend/data/sessions.json           | 270 +++++++++++
+ software/backend/data/settings.json           |   8 +
+ software/backend/middleware/errorHandler.js   |   0
+ software/backend/package-lock.json            | 245 +++++++++-
+ software/backend/package.json                 |   5 +-
+ software/backend/routes/apiContract.js        |  41 ++
+ software/backend/routes/cutter.js             |   8 +
+ software/backend/routes/logs.js               |   8 +
+ software/backend/routes/mode.js               |   8 +
+ software/backend/routes/movement.js           |   9 +
+ software/backend/routes/robot.js              |  13 +
+ software/backend/routes/settings.js           |   9 +
+ software/backend/routes/status.js             |   9 +
+ software/backend/routes/stop.js               |   9 +
+ software/backend/server.js                    |  38 +-
+ software/backend/services/esp32Service.js     |  44 ++
+ software/backend/services/loggerService.js    |  48 ++
+ software/backend/services/settingsService.js  |  37 ++
+ software/frontend/css/alerts.css              |  59 +++
+ software/frontend/css/analytics.css           | 118 +++++
+ software/frontend/css/field-map.css           | 129 ++++++
+ software/frontend/css/robot-control.css       | 201 ++++++++
+ software/frontend/index.html                  |  10 +-
+ software/frontend/js/alerts.js                | 150 ++++++
+ software/frontend/js/analytics.js             | 131 ++++++
+ software/frontend/js/field-map.js             | 103 +++++
+ software/frontend/js/robot-control.js         | 228 +++++++++
+ software/frontend/js/settings.js              |  85 +++-
+ software/frontend/pages/alerts.html           | 103 +++++
+ software/frontend/pages/analytics.html        | 126 +++++
+ software/frontend/pages/field-map.html        | 138 ++++++
+ software/frontend/pages/logs.html             |   4 +
+ software/frontend/pages/robot-control.html    | 138 ++++++
+ software/frontend/pages/settings.html         |  50 +-
+ 46 files changed, 3169 insertions(+), 359 deletions(-)
+ delete mode 100644 docs/Resources/Weed_Detection_Project_Pipeline (2).pdf
+ create mode 100644 docs/api-documentation.md
+ create mode 100644 software/backend/.env
+ create mode 100644 software/backend/config/esp32.js
+ create mode 100644 software/backend/controllers/cutterController.js
+ create mode 100644 software/backend/controllers/logController.js
+ create mode 100644 software/backend/controllers/modeController.js
+ create mode 100644 software/backend/controllers/robotController.js
+ create mode 100644 software/backend/controllers/settingsController.js
+ create mode 100644 software/backend/controllers/statusController.js
+ create mode 100644 software/backend/data/settings.json
+ create mode 100644 software/backend/middleware/errorHandler.js
+ create mode 100644 software/backend/routes/apiContract.js
+ create mode 100644 software/backend/routes/cutter.js
+ create mode 100644 software/backend/routes/logs.js
+ create mode 100644 software/backend/routes/mode.js
+ create mode 100644 software/backend/routes/movement.js
+ create mode 100644 software/backend/routes/robot.js
+ create mode 100644 software/backend/routes/settings.js
+ create mode 100644 software/backend/routes/status.js
+ create mode 100644 software/backend/routes/stop.js
+ create mode 100644 software/backend/services/esp32Service.js
+ create mode 100644 software/backend/services/loggerService.js
+ create mode 100644 software/backend/services/settingsService.js
+ create mode 100644 software/frontend/css/alerts.css
+ create mode 100644 software/frontend/css/analytics.css
+ create mode 100644 software/frontend/css/field-map.css
+ create mode 100644 software/frontend/css/robot-control.css
+ create mode 100644 software/frontend/js/alerts.js
+ create mode 100644 software/frontend/js/analytics.js
+ create mode 100644 software/frontend/js/field-map.js
+ create mode 100644 software/frontend/js/robot-control.js
+ create mode 100644 software/frontend/pages/alerts.html
+ create mode 100644 software/frontend/pages/analytics.html
+ create mode 100644 software/frontend/pages/field-map.html
+ create mode 100644 software/frontend/pages/robot-control.html
+
+diff --git a/docs/Resources/Weed_Detection_Project_Pipeline (2).pdf b/docs/Resources/Weed_Detection_Project_Pipeline (2).pdf
+deleted file mode 100644
+index b622d32..0000000
+--- a/docs/Resources/Weed_Detection_Project_Pipeline (2).pdf	
++++ /dev/null
+@@ -1,105 +0,0 @@
+-%PDF-1.4
+-%���� ReportLab Generated PDF document http://www.reportlab.com
+-1 0 obj
+-<<
+-/F1 2 0 R /F2 3 0 R /F3 4 0 R /F4 5 0 R
+->>
+-endobj
+-2 0 obj
+-<<
+-/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+->>
+-endobj
+-3 0 obj
+-<<
+-/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+->>
+-endobj
+-4 0 obj
+-<<
+-/BaseFont /Symbol /Name /F3 /Subtype /Type1 /Type /Font
+->>
+-endobj
+-5 0 obj
+-<<
+-/BaseFont /ZapfDingbats /Name /F4 /Subtype /Type1 /Type /Font
+->>
+-endobj
+-6 0 obj
+-<<
+-/Contents 11 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 10 0 R /Resources <<
+-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+->> /Rotate 0 /Trans <<
+-
+->> 
+-  /Type /Page
+->>
+-endobj
+-7 0 obj
+-<<
+-/Contents 12 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 10 0 R /Resources <<
+-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+->> /Rotate 0 /Trans <<
+-
+->> 
+-  /Type /Page
+->>
+-endobj
+-8 0 obj
+-<<
+-/PageMode /UseNone /Pages 10 0 R /Type /Catalog
+->>
+-endobj
+-9 0 obj
+-<<
+-/Author (\(anonymous\)) /CreationDate (D:20260302091556+00'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260302091556+00'00') /Producer (ReportLab PDF Library - www.reportlab.com) 
+-  /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
+->>
+-endobj
+-10 0 obj
+-<<
+-/Count 2 /Kids [ 6 0 R 7 0 R ] /Type /Pages
+->>
+-endobj
+-11 0 obj
+-<<
+-/Filter [ /ASCII85Decode /FlateDecode ] /Length 1840
+->>
+-stream
+-Gb!;d9iL(3&A@ZcqD)#^.Kk7UR5k9M]50bb"505</rD4nK5G0G)iFUegQH-g%Zsnmc!`++0lj>,ot'hgKFJ]GD"Tm8!D[9HHsqZp_!E+YDrSV"$I38hIi[1qdW6Q'rCI\t,Fj<<E/NItE<;Nhi&Gc2nV%'g,TU%Q_j<'gA@&%0,%q$B.K90=9,a-G/)Ut6WflJ>`6k()Mb%?@_-'d(BsIREZNlkGJ^N;3-u%Q9M.uq(:Hp_7Rp$K7T;*c4<69E#Q'"a`FMlc6joRL+RV$8"a"X86LKg'A!Mi9EN/81m7@@VJ1?82oRQN86HK+ko?sZmdk-ak3#f@1MCeqW&c:8p\dsOHl(sXGsVen[t]m$A_aYZJ.3t-K82r4Y;kC's&jE+W#"pVL3]lA[m,H`rK*@IpiG""tH>N8UEI>,'];GIS)UcC$L1#smZ)$l\]SMZ)u[(tPWFNo'0.[SMPJZ..a5G\EU-A1N,p--mgGW-AlWJfR4<!1^Ej4*:?-RF?8@Yp(:3?1\F0(X4_+AqP%'bW>8["OfX/Mn>JaQ?fhU#[INn4<YF(AF'B,,QJlSut^@N0*)f';:H\%jC#b#bC!N8.oHs@mJIVZ2+gjG;l[W9u?L7_Ju'c)69u3Lfc5GiQ2q.;r.KfZTPDujJ)4i[^#aYJmuDfCP/:)2(7'5?BIQolS8<pX-F6<Y_eK]Z(DXYdUaT2<f$sGZ`5ERdpS)E9N3u?Jg1sK6V2uZ4,An]F\VMk#B/4@2uP`MLlUsAH%^&&2Pq+?PJ@VPE2Qu(-ba.f!un\`0o\Lp$QSZ?#Y,^JQ[\tr?nr1m0_/WK]?Yc8#+.hl2$#==W_+mBmpt.WnMWim+s'1nC)9-KmFo_:2Z(r=(Qoce^ZA4'C[D$XntbW'e).@L^j(I]a/34M!f<^C"9!JQX1UITGhV/YAfoPWML?CLq?F!trs7fP'=O^D=^[;m<)8pW:OV?Y2$VY:1WaX@^hC#&,Y+l@igZfqhWE\F`kA$RW-ip2T\A>0.-ZniNko#NLn!S7>j9L$E9-6uSb+-%Fle$],].L`i#\\J@([7'P3,pd1OAf\4p[,(]r"Y?Q5jK#,Aj)N60cpb;`nU@@:P8VeFa?3EO<Os/!`]<.XFr)(0Bm#Ad1jfLs.iXpG\V"`mkot&:N+$.S_Q1Ud!uHOaQ[<r]KE#G5D[Hn_A.NY1Q!'AT4P:/Nm_=7_1MNgXe5ucYH#?W?"DFX[ho\*OVVR'VCiAC#aBJM&nQHL7:__'?K(LELSY"-V>>RM;d^K2js\jc1#U]A9c`+.)WY13/M.V/rA()B0=/N.4%=dNU-$()")^"h_DdSk[<ku8qhkSF*us?/a#mel8Mp2+S%`+T!GL>mW7plg\6rgMa*'AW[:kG@6'$ds3dgr-[8rpUf)JT9SK3?,^2ui.[idqnS.fb7WYI(]_HT^^CQqXEC7a3!pGh1J*V^hDk'@X,[V)*E[TT(`MMo!IB0D%m<H[-ZO2C4#]`_aQRseGB*hr)cjPYmXbYLG9MJ4@\8R^A2q*#8fCsW7$VaJ0S`&?#Nsor#7p#&&i,7ALbF7n:i8:NWaSKi*AY=0:s$%eM)qWeGWC>-'HImH@aq_NI@h/Tm*c34k+soZkBY2'cN)ER^=/FRS4D?U$^lt([[ko<_E6XOqUB;"6[I"nRC7/ctJ"ek9G@kLAdPE8KeYE,)(S#(_)+[M,46G>*7_G%22`QIh:?"cIRQYD4a./jSKlXRK$!H:cD"a`C6aJ_RrdNFBm6eBNWf'qXR!n6;!sNT7*`H_='8=&`'X7auY3urcO$hn[C*d-W9'Wf/4fPo%f,':U`T7%b&gCk$4n?3f@kA&Hi#i!';X"~>endstream
+-endobj
+-12 0 obj
+-<<
+-/Filter [ /ASCII85Decode /FlateDecode ] /Length 1451
+->>
+-stream
+-Gb!#\9lK&M&A@sBbb^#;JN+iBII/aa;RG'[d_t?UEa`LuelED^MJeN*^I(VXA]J9>+pJB!&NtF[o$%SUL*dJiLY2WP"`U_so4nD\_Vu.5Rk\#mKr`2RT*abDEAEHi,_\3&ZS]p)S;(qaqc9gG:-i8&cu(m:qtZ=BYc(rU-gF1$jqB:p^uFr,.L^VC%>)Kb(m;f]^.Z!N2-fW?N,.a`iOH<EZ\WNgPE2d/5b:\)daHl4BW68;Y,VRZc^&6X+`gfPU0`[;Ii2>>@FKIkTEQnE]4sVDfhl87rs/Q%kT#$J)h*((eFlOHjp!9!E/,&A[kdR19"2+!Q^G7cEL?o@>@^&^)%N/f@\!o4:):j?$jZ_\r??+g[("kNH+K:@[%D3"1Q$aTo`;f,MIe$;mm$n-A&n1VMPnN:L"%)rBf(IQCc#BS\u<+kA.A9t@V?ND_$/UiDac:Z9%6M=]`0hX_!^pO+UlJ3,I8d@=\N6'M-I=;U!+G7%/6J!4FWmGZ8bBQ#5ca@S`>g=!W9PFeTa2:Pbidm[D;BL[\J+OGN.E^V`PYRA7gesX:>&2hE3q,V-`)W!9Q9f*BoKGV_2Zo_44RnEVLlIS'mL'*1S^Db,A$!=*HSHor..`^<M@;RZ^i(\5^G^6MZd2p/]nBZus`t.(M"EF>+>eCC48"')EEsm<Q']:li^hg3I,%:%EppOtSt)E,[kP58(HV^#3'%jl,KT`09<iCFsln5J*HGTrucRg?/f%_;bk8[Pn+k.)Yg]\9fiM^)!:al)&\LL61!;GO%S[9@S8fkG;uQb%FH>VLLeBN6g+gBaTou%[VW<$27QgfFgrrpd8gV%G4/bE>$7WSQ4IpL9>Vrk,I$N[GPGJeUBL,Cnd*tgKI9L=,bD&QR5I[)>2G!'n%n'V4lYA)>-ne<\pMbnn3C8cdG*Dd!$l%TGNI@C1bsgR9RppH7=!;RF2&6RrKK/d*7501=j^s,T/ENYFCofFkO2YXq5(TS\]0jr7taUq,Z]gAK.)cVSt)$D>TU'X2a+A.^0M5:Qf6Ys.CYFG-m=<A[H<tp)8p+?8_lUNGcJG#"Rug[>%r;Ns/i@EWLKg7'i2H4aF_oMUreRK#EVO&2<]2B&o28g"7V;/]P5f6Gjn!Iea%@8nsK(lm4p,iaA`pQR\*(H"EQ4k=WWjEZJgXNpBd=VJRK6VV)5sYnC71U4s$DN?qtl>m&ucYj9k2(AmZfB`(8Nk`eI?g5dJ),G4KEiE/:489UTDMh^b7^/55OJej?NLmKF0_Qf=kijX>Up]?](0NF@I\u^,0Rb+UH;qcJprAYa'Em5PsTt@R_HT)]YLPP=RJGf\:r'?S9M_RP^;t?j.J)r?[Gfhb0GlD`r.FRDr5PO*#AR_V:3:9l@nk@4_]Ucr<<"edn/f!6m]k#jSaccEUA;8g!,L]pRQ3CVE?J4\<`04.=$X`R+U75N[K#pe;"bK;~>endstream
+-endobj
+-xref
+-0 13
+-0000000000 65535 f 
+-0000000073 00000 n 
+-0000000134 00000 n 
+-0000000241 00000 n 
+-0000000353 00000 n 
+-0000000430 00000 n 
+-0000000513 00000 n 
+-0000000718 00000 n 
+-0000000923 00000 n 
+-0000000992 00000 n 
+-0000001275 00000 n 
+-0000001341 00000 n 
+-0000003273 00000 n 
+-trailer
+-<<
+-/ID 
+-[<f0ff8f48e7f8c2989160681bfb1a7e6a><f0ff8f48e7f8c2989160681bfb1a7e6a>]
+-% ReportLab generated PDF document -- digest (http://www.reportlab.com)
+-
+-/Info 9 0 R
+-/Root 8 0 R
+-/Size 13
+->>
+-startxref
+-4816
+-%%EOF
+diff --git a/docs/api-documentation.md b/docs/api-documentation.md
+new file mode 100644
+index 0000000..1369b83
+--- /dev/null
++++ b/docs/api-documentation.md
+@@ -0,0 +1,220 @@
++# API Documentation — IoT Weed Detection & Removal (Phase 4)
++
++Base URL (local): `http://localhost:5000`
++All bodies are JSON. All responses are JSON unless noted.
++
++The backend sits between the **dashboard (frontend)** and the **ESP32 robot**.
++Two groups of endpoints exist:
++
++- **Dashboard-facing** — used by the web UI to read status/logs and to send commands.
++- **ESP32-facing (proxy)** — the backend forwards these to the robot's own tiny HTTP
++  server (see `software/backend/config/esp32.js`, `services/esp32Service.js`) and
++  relays the robot's response back.
++- **ESP32 → backend (ingest)** — the one endpoint the robot itself calls, to push
++  sensor readings *up* to the backend (`POST /api/update`).
++
++---
++
++## Health / Misc
++
++### `GET /api/data`
++Simple liveness check.
++
++**Response `200`**
++```json
++{ "message": "Hello ESP32 👋", "status": "Server running" }
++```
++
++---
++
++## Weed Detection Status & Logs
++
++### `GET /api/status`
++Current weed-detection state, derived from the most recent log entry, plus
++running session counters. Used by the main dashboard KPIs.
++
++**Response `200`**
++```json
++{
++  "status": "Weed detected" | "No weed detected",
++  "moisture": 42,
++  "time": "2026-07-19T10:15:00.000Z",
++  "scansToday": 118,
++  "weedsDetected": 12,
++  "weedsRemoved": 8,
++  "battery": 80,
++  "esp32Connected": true
++}
++```
++`esp32Connected` is `true` only if the ESP32 posted to `/api/update` within the
++last 15 seconds (`ESP32_TIMEOUT_MS`).
++
++### `POST /api/update`  *(called by the ESP32, not the dashboard)*
++Ingests one sensor reading. Updates live state, appends to the log (capped at
++100 entries), and updates the current session's counters.
++
++**Request body**
++```json
++{ "weed": true, "moisture": 42 }
++```
++- `weed` (boolean, required)
++- `moisture` (number, optional)
++
++**Response `200`**
++```json
++{ "success": true }
++```
++**Response `400`** if `weed` is missing or not a boolean:
++```json
++{ "error": "Invalid or missing 'weed' value" }
++```
++
++### `GET /api/logs`
++Returns the full stored log array (newest first, max 100 entries), each entry
++shaped like the `status`/`moisture`/`time` fields above.
++
++**Response `200`**
++```json
++[
++  { "status": "Weed detected", "moisture": 40, "time": "2026-07-19T10:15:00.000Z" },
++  { "status": "No weed detected", "moisture": 38, "time": "2026-07-19T10:14:57.000Z" }
++]
++```
++
++### `GET /api/sessions`
++Returns the 5 most recent "sessions" (a session = a run of the robot, grouped
++by activity), newest first. The most recent session may still be in progress
++(`completed: false`) and reflects live in-memory counters.
++
++**Response `200`**
++```json
++[
++  {
++    "sessionNumber": 7,
++    "startTime": "2026-07-19T09:00:00.000Z",
++    "endTime": null,
++    "durationMs": 340000,
++    "totalDetections": 4,
++    "executions": 55,
++    "avgMoisture": 41,
++    "completed": false
++  }
++]
++```
++
++---
++
++## Robot Movement & Cutter (proxied to ESP32)
++
++These all forward to the ESP32's own HTTP server at `ESP32_IP` (set in
++`software/backend/.env`) and return whatever the ESP32 responds with, wrapped
++in `{ success, data }`. If the ESP32 is unreachable, they respond `5xx` with
++`{ success: false, message: <error> }`.
++
++### `POST /api/move`
++**Request body**
++```json
++{ "command": "forward" | "backward" | "left" | "right" }
++```
++
++### `POST /api/stop`
++No body required. Halts the robot.
++
++### `POST /api/mode`  (also mounted at `POST /api/robot/mode`)
++**Request body**
++```json
++{ "mode": "manual" | "autonomous" }
++```
++**Response `400`** if `mode` is missing or not one of the two allowed values.
++
++### `POST /api/cutter`
++**Request body**
++```json
++{ "state": true | false }
++```
++
++### `GET /api/robot/status`
++Proxies the ESP32's own `/status` endpoint (live mode, current command,
++distance reading, obstacle flag, cutter state, connectivity) — distinct from
++`GET /api/status` above, which is the *weed-detection* status derived from
++logs, not the robot's motion/hardware status.
++
++---
++
++## Literal API Contract Aliases
++
++These exist purely so the documented contract in the Phase 4 Execution Guide
++has a matching, literally-named endpoint. They forward to the exact same
++controllers as the generic endpoints above (the dashboard itself uses the
++generic ones; these are equivalent alternates).
++
++| Endpoint | Equivalent to |
++|---|---|
++| `POST /api/forward` | `POST /api/move` with `{ "command": "forward" }` |
++| `POST /api/backward` | `POST /api/move` with `{ "command": "backward" }` |
++| `POST /api/left` | `POST /api/move` with `{ "command": "left" }` |
++| `POST /api/right` | `POST /api/move` with `{ "command": "right" }` |
++| `POST /api/cutter/on` | `POST /api/cutter` with `{ "state": true }` |
++| `POST /api/cutter/off` | `POST /api/cutter` with `{ "state": false }` |
++
++`POST /api/stop` already lives at that exact path natively — no alias needed.
++
++---
++
++## Settings
++
++### `GET /api/settings`
++Returns the current saved settings (falls back to defaults for anything not
++yet set).
++
++**Response `200`**
++```json
++{
++  "success": true,
++  "data": {
++    "autoDetect": true,
++    "alerts": true,
++    "autoRemove": false,
++    "robotSpeed": 200,
++    "obstacleThresholdCm": 25,
++    "wifiSSID": "meowww"
++  }
++}
++```
++
++### `POST /api/settings`
++Merges the given fields into the saved settings (partial updates allowed) and
++persists to `software/backend/data/settings.json`.
++
++**Request body** (any subset of the fields above)
++```json
++{ "robotSpeed": 180, "obstacleThresholdCm": 30 }
++```
++
++**Response `200`**
++```json
++{ "success": true, "data": { "...": "full merged settings object" } }
++```
++
++**Note:** these values are stored on the backend and shown in the dashboard,
++but changing `robotSpeed`, `obstacleThresholdCm`, or `wifiSSID` here does
++**not** reflash the ESP32 — the firmware currently reads its own hardcoded
++constants (`MOTOR_SPEED`, `OBSTACLE_CM`, `ssid`) at compile time. Syncing
++these live is a Phase 5+ item (would require the ESP32 to poll `/api/settings`
++or the backend to push values to it on change).
++
++---
++
++## Legacy / Unused
++
++### `POST /api/control`
++Overwrites an in-memory `control` object (`{ autoMode, removal }`). Not
++currently read by any other endpoint or by the dashboard — kept for backward
++compatibility, safe to remove once confirmed unused.
++
++### Dead route file
++`software/backend/routes/status.js` + `controllers/statusController.js`'s
++`getStatus` are not mounted anywhere in `server.js` under a bare `/api/status`
++path (only `/api/robot/status`, via `routes/robot.js`, is active). The file is
++currently unused — either remove it or intentionally mount it if a plain
++`/api/status` proxy to the ESP32 is still wanted alongside the log-derived one.
+diff --git a/hardware/ESP-32/sketch_apr12a_v3/esp32_phase4_v1_3/esp32_phase4_v1_3.ino b/hardware/ESP-32/sketch_apr12a_v3/esp32_phase4_v1_3/esp32_phase4_v1_3.ino
+index a9d65da..07e3861 100644
+--- a/hardware/ESP-32/sketch_apr12a_v3/esp32_phase4_v1_3/esp32_phase4_v1_3.ino
++++ b/hardware/ESP-32/sketch_apr12a_v3/esp32_phase4_v1_3/esp32_phase4_v1_3.ino
+@@ -13,7 +13,7 @@
+ // ============================================================
+ const char* ssid       = "meowww";
+ const char* password   = "capital v";
+-const char* serverBase = "http://192.168.218.135:5000";
++const char* serverBase = "http://192.168.48.135:5000";
+ 
+ WebServer server(80);
+ 
+diff --git a/software/backend/.env b/software/backend/.env
+new file mode 100644
+index 0000000..fca8acd
+--- /dev/null
++++ b/software/backend/.env
+@@ -0,0 +1,2 @@
++PORT=5000
++ESP32_IP=192.168.48.59
+\ No newline at end of file
+diff --git a/software/backend/config/esp32.js b/software/backend/config/esp32.js
+new file mode 100644
+index 0000000..efa08ae
+--- /dev/null
++++ b/software/backend/config/esp32.js
+@@ -0,0 +1,6 @@
++require("dotenv").config();
++
++module.exports = {
++    ip: process.env.ESP32_IP,
++    baseURL: `http://${process.env.ESP32_IP}`
++};
+\ No newline at end of file
+diff --git a/software/backend/controllers/cutterController.js b/software/backend/controllers/cutterController.js
+new file mode 100644
+index 0000000..3b1d31a
+--- /dev/null
++++ b/software/backend/controllers/cutterController.js
+@@ -0,0 +1,27 @@
++const esp32 = require("../services/esp32Service");
++
++exports.setCutter = async (req, res) => {
++    try {
++        const { state } = req.body;
++
++        if (typeof state !== "boolean") {
++            return res.status(400).json({
++                success: false,
++                message: "State must be true or false"
++            });
++        }
++
++        const response = await esp32.cutter(state);
++
++        res.json({
++            success: true,
++            data: response.data
++        });
++
++    } catch (err) {
++        res.status(503).json({
++            success: false,
++            message: err.message
++        });
++    }
++};
+\ No newline at end of file
+diff --git a/software/backend/controllers/logController.js b/software/backend/controllers/logController.js
+new file mode 100644
+index 0000000..1a6d718
+--- /dev/null
++++ b/software/backend/controllers/logController.js
+@@ -0,0 +1,15 @@
++const loggerService = require("../services/loggerService");
++
++// -------------------------
++// GET /api/logs
++// -------------------------
++exports.getLogs = (req, res) => {
++  try {
++    res.json(loggerService.readLogs());
++  } catch (err) {
++    res.status(500).json({
++      success: false,
++      message: "Failed to read logs"
++    });
++  }
++};
+diff --git a/software/backend/controllers/modeController.js b/software/backend/controllers/modeController.js
+new file mode 100644
+index 0000000..6279e53
+--- /dev/null
++++ b/software/backend/controllers/modeController.js
+@@ -0,0 +1,34 @@
++const esp32 = require("../services/esp32Service");
++
++exports.setMode = async (req, res) => {
++    try {
++        const { mode } = req.body;
++
++        if (!mode) {
++            return res.status(400).json({
++                success: false,
++                message: "Mode is required"
++            });
++        }
++
++        if (!["manual", "autonomous"].includes(mode)) {
++            return res.status(400).json({
++                success: false,
++                message: "Invalid mode"
++            });
++        }
++
++        const response = await esp32.mode(mode);
++
++        res.json({
++            success: true,
++            data: response.data
++        });
++
++    } catch (err) {
++        res.status(503).json({
++            success: false,
++            message: err.message
++        });
++    }
++};
+\ No newline at end of file
+diff --git a/software/backend/controllers/robotController.js b/software/backend/controllers/robotController.js
+new file mode 100644
+index 0000000..1211cea
+--- /dev/null
++++ b/software/backend/controllers/robotController.js
+@@ -0,0 +1,60 @@
++const esp32 = require("../services/esp32Service");
++
++// -------------------------
++// Move Robot
++// -------------------------
++exports.move = async (req, res) => {
++
++    try {
++
++        const { command } = req.body;
++
++        if (!command) {
++            return res.status(400).json({
++                success: false,
++                message: "Command is required"
++            });
++        }
++
++        const response = await esp32.move(command);
++
++        res.json({
++            success: true,
++            data: response.data
++        });
++
++    } catch (err) {
++
++        res.status(500).json({
++            success: false,
++            message: err.message
++        });
++
++    }
++
++};
++
++// -------------------------
++// Stop Robot
++// -------------------------
++exports.stop = async (req, res) => {
++
++    try {
++
++        const response = await esp32.stop();
++
++        res.json({
++            success: true,
++            data: response.data
++        });
++
++    } catch (err) {
++
++        res.status(500).json({
++            success: false,
++            message: err.message
++        });
++
++    }
++
++};
+\ No newline at end of file
+diff --git a/software/backend/controllers/settingsController.js b/software/backend/controllers/settingsController.js
+new file mode 100644
+index 0000000..aa062a0
+--- /dev/null
++++ b/software/backend/controllers/settingsController.js
+@@ -0,0 +1,16 @@
++const settingsService = require("../services/settingsService");
++
++// GET /api/settings
++exports.getSettings = (req, res) => {
++  res.json({ success: true, data: settingsService.readSettings() });
++};
++
++// POST /api/settings
++exports.updateSettings = (req, res) => {
++  try {
++    const updated = settingsService.writeSettings(req.body || {});
++    res.json({ success: true, data: updated });
++  } catch (err) {
++    res.status(500).json({ success: false, message: "Failed to save settings" });
++  }
++};
+diff --git a/software/backend/controllers/statusController.js b/software/backend/controllers/statusController.js
+new file mode 100644
+index 0000000..7e8eb22
+--- /dev/null
++++ b/software/backend/controllers/statusController.js
+@@ -0,0 +1,25 @@
++const esp32 = require("../services/esp32Service");
++
++exports.getStatus = async (req, res) => {
++
++    try {
++
++        const response = await esp32.status();
++
++        res.json({
++            success: true,
++            data: response.data
++        });
++
++    } catch (err) {
++
++        console.error(err.message);
++
++        res.status(500).json({
++            success: false,
++            message: "Failed to get robot status"
++        });
++
++    }
++
++};
+\ No newline at end of file
+diff --git a/software/backend/data/logs.json b/software/backend/data/logs.json
+index 086301f..961cb78 100644
+--- a/software/backend/data/logs.json
++++ b/software/backend/data/logs.json
+@@ -1,502 +1,502 @@
+ [
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:45:55.436Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:46:06.365Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:45:50.358Z"
++    "moisture": null,
++    "time": "2026-07-28T08:46:03.364Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:45:44.481Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:46:00.362Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:51.651Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:57.361Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:45.712Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:45:54.368Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:40.592Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:51.362Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:34.545Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:45:48.363Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:26.746Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:45.364Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:21.669Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:45.207Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:16.591Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:30.203Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:11.509Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:27.202Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:06.389Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:24.225Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:42:01.103Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:21.203Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:56.028Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:18.205Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:50.950Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:15.227Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:44.900Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:45:12.186Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:38.742Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:09.186Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:32.704Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:45:06.186Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:16.828Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:03.185Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:11.709Z"
++    "moisture": null,
++    "time": "2026-07-28T08:45:00.177Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:41:06.509Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:57.185Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:40:51.430Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:54.181Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:40:46.314Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:51.180Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:36:51.157Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:48.177Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:36:46.076Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:45.178Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:36:40.956Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:42.178Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:36:35.017Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:44:39.177Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:36:29.849Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:36.177Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:36:23.979Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:44:33.149Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:36:18.903Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:30.149Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:50.871Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:27.149Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:45.000Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:44:24.150Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:39.925Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:21.149Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:33.940Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:44:18.139Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:28.865Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:15.140Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:22.816Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:44:12.140Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:17.743Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:09.139Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:11.867Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:44:06.140Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:06.747Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:03.138Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:35:01.626Z"
++    "moisture": null,
++    "time": "2026-07-28T08:44:00.775Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:56.506Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:57.856Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:51.386Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:54.120Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:46.219Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:51.137Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:41.146Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:48.114Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:35.917Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:45.086Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:30.838Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:42.049Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:24.967Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:43:39.050Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:19.847Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:36.027Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:34:13.908Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:43:33.028Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:57.874Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:29.987Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:51.995Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:43:26.988Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:46.725Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:24.019Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:41.652Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:21.015Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:36.581Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:17.978Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:31.503Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:15.001Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:26.429Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:11.970Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:10.459Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:08.968Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:33:04.588Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:43:06.027Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:59.506Z"
++    "moisture": null,
++    "time": "2026-07-28T08:43:02.954Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:53.627Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:42:59.956Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:26.795Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:56.979Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:21.631Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:53.942Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:16.556Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:50.952Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:11.347Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:47.969Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:06.268Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:44.931Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:32:01.196Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:41.929Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:56.085Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:38.960Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:45.173Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:42:35.925Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:40.100Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:32.917Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:34.111Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:42:29.917Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:29.040Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:26.948Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:23.865Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:23.947Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:15.935Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:20.948Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:10.736Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:17.946Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:31:04.862Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:42:14.946Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:30:56.068Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:42:11.948Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:30:47.368Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:42:08.951Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:30:39.481Z"
++    "moisture": null,
++    "time": "2026-07-28T08:42:05.952Z"
+   },
+   {
+-    "status": "No weed detected",
++    "status": "Weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:30:21.366Z"
++    "time": "2026-07-28T08:42:03.434Z"
+   },
+   {
+-    "status": "No weed detected",
++    "status": "Weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:30:16.297Z"
++    "time": "2026-07-28T08:42:03.168Z"
+   },
+   {
+     "status": "No weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:30:11.215Z"
++    "time": "2026-07-28T08:42:01.263Z"
+   },
+   {
+     "status": "No weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:30:06.096Z"
++    "time": "2026-07-28T08:42:01.045Z"
+   },
+   {
+     "status": "No weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:30:00.863Z"
++    "time": "2026-07-28T08:42:00.872Z"
+   },
+   {
+-    "status": "Weed detected",
++    "status": "No weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:29:54.993Z"
++    "time": "2026-07-28T08:42:00.688Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:29:49.916Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:59.884Z"
+   },
+   {
+     "status": "Weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:29:43.979Z"
++    "time": "2026-07-28T08:41:57.703Z"
+   },
+   {
+-    "status": "No weed detected",
++    "status": "Weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:29:38.856Z"
++    "time": "2026-07-28T08:41:57.478Z"
+   },
+   {
+     "status": "Weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:29:32.850Z"
++    "time": "2026-07-28T08:41:57.087Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:29:27.772Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:56.885Z"
+   },
+   {
+     "status": "Weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:29:21.857Z"
++    "time": "2026-07-28T08:41:56.865Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:29:16.693Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:53.889Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:29:11.617Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:50.883Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:29:06.498Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:47.887Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:27:59.012Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:44.888Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:27:53.134Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:41:41.883Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:27:48.058Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:38.883Z"
+   },
+   {
+     "status": "No weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:27:42.939Z"
++    "moisture": null,
++    "time": "2026-07-28T08:41:35.892Z"
+   },
+   {
+-    "status": "Weed detected",
+-    "moisture": 45,
+-    "time": "2026-06-27T08:27:23.992Z"
++    "status": "No weed detected",
++    "moisture": null,
++    "time": "2026-07-28T08:41:32.889Z"
+   },
+   {
+     "status": "No weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:27:18.914Z"
++    "time": "2026-07-28T08:41:30.815Z"
+   },
+   {
+-    "status": "Weed detected",
++    "status": "No weed detected",
+     "moisture": 45,
+-    "time": "2026-06-27T08:27:13.036Z"
++    "time": "2026-07-28T08:41:30.597Z"
+   }
+ ]
+\ No newline at end of file
+diff --git a/software/backend/data/sessions.json b/software/backend/data/sessions.json
+index 9ba2c36..d61b026 100644
+--- a/software/backend/data/sessions.json
++++ b/software/backend/data/sessions.json
+@@ -288,5 +288,275 @@
+     "executions": 0,
+     "avgMoisture": null,
+     "completed": true
++  },
++  {
++    "sessionNumber": 30,
++    "startTime": "2026-06-28T09:07:51.239Z",
++    "endTime": "2026-06-28T09:14:13.188Z",
++    "durationMs": 381949,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 31,
++    "startTime": "2026-06-28T09:37:05.046Z",
++    "endTime": "2026-06-28T09:37:08.344Z",
++    "durationMs": 3298,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 32,
++    "startTime": "2026-06-28T09:46:01.243Z",
++    "endTime": "2026-06-28T10:07:00.291Z",
++    "durationMs": 1259048,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 33,
++    "startTime": "2026-06-28T10:07:12.651Z",
++    "endTime": "2026-06-28T10:08:09.750Z",
++    "durationMs": 57099,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 34,
++    "startTime": "2026-06-28T10:10:04.047Z",
++    "endTime": "2026-06-28T10:11:08.654Z",
++    "durationMs": 64607,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 35,
++    "startTime": "2026-06-28T10:11:16.575Z",
++    "endTime": "2026-06-28T10:16:45.561Z",
++    "durationMs": 328987,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 36,
++    "startTime": "2026-06-28T10:16:51.682Z",
++    "endTime": "2026-06-28T10:20:16.295Z",
++    "durationMs": 204613,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 37,
++    "startTime": "2026-06-28T10:20:23.897Z",
++    "endTime": "2026-06-28T10:25:22.681Z",
++    "durationMs": 298784,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 38,
++    "startTime": "2026-06-28T10:25:25.716Z",
++    "endTime": "2026-06-28T10:32:30.388Z",
++    "durationMs": 424672,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 39,
++    "startTime": "2026-06-28T10:32:33.615Z",
++    "endTime": "2026-06-28T10:38:42.488Z",
++    "durationMs": 368873,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 40,
++    "startTime": "2026-06-28T10:38:45.914Z",
++    "endTime": "2026-06-28T10:44:14.805Z",
++    "durationMs": 328891,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 41,
++    "startTime": "2026-06-29T06:53:08.575Z",
++    "endTime": "2026-06-29T07:08:14.046Z",
++    "durationMs": 905471,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 42,
++    "startTime": "2026-07-19T13:34:03.214Z",
++    "endTime": "2026-07-19T13:34:03.215Z",
++    "durationMs": 1,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 43,
++    "startTime": "2026-07-19T13:36:06.062Z",
++    "endTime": "2026-07-19T13:36:06.063Z",
++    "durationMs": 1,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 44,
++    "startTime": "2026-07-19T13:51:49.922Z",
++    "endTime": "2026-07-19T13:56:54.069Z",
++    "durationMs": 304148,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 45,
++    "startTime": "2026-07-19T13:57:05.654Z",
++    "endTime": "2026-07-19T13:57:13.323Z",
++    "durationMs": 7669,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 46,
++    "startTime": "2026-07-19T13:57:11.181Z",
++    "endTime": "2026-07-19T13:57:11.181Z",
++    "durationMs": 0,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 47,
++    "startTime": "2026-07-19T14:10:18.556Z",
++    "endTime": "2026-07-19T14:11:01.421Z",
++    "durationMs": 42865,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 48,
++    "startTime": "2026-07-19T14:13:35.143Z",
++    "endTime": "2026-07-19T14:15:19.110Z",
++    "durationMs": 103967,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 49,
++    "startTime": "2026-07-19T14:15:52.644Z",
++    "endTime": "2026-07-19T14:19:52.220Z",
++    "durationMs": 239576,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 50,
++    "startTime": "2026-07-19T14:21:14.649Z",
++    "endTime": "2026-07-19T14:35:16.398Z",
++    "durationMs": 841749,
++    "totalDetections": 34,
++    "executions": 73,
++    "avgMoisture": 45,
++    "completed": true
++  },
++  {
++    "sessionNumber": 51,
++    "startTime": "2026-07-19T14:36:36.965Z",
++    "endTime": "2026-07-19T14:38:20.517Z",
++    "durationMs": 103552,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 52,
++    "startTime": "2026-07-19T14:39:31.842Z",
++    "endTime": "2026-07-19T14:42:11.357Z",
++    "durationMs": 159515,
++    "totalDetections": 5,
++    "executions": 8,
++    "avgMoisture": 45,
++    "completed": true
++  },
++  {
++    "sessionNumber": 53,
++    "startTime": "2026-07-19T14:42:36.635Z",
++    "endTime": "2026-07-19T14:49:07.658Z",
++    "durationMs": 391023,
++    "totalDetections": 0,
++    "executions": 0,
++    "avgMoisture": null,
++    "completed": true
++  },
++  {
++    "sessionNumber": 54,
++    "startTime": "2026-07-19T14:50:27.955Z",
++    "endTime": "2026-07-19T14:55:35.721Z",
++    "durationMs": 307766,
++    "totalDetections": 4,
++    "executions": 106,
++    "avgMoisture": 45,
++    "completed": true
++  },
++  {
++    "sessionNumber": 55,
++    "startTime": "2026-07-28T08:40:18.381Z",
++    "endTime": "2026-07-28T08:45:32.188Z",
++    "durationMs": 313807,
++    "totalDetections": 13,
++    "executions": 109,
++    "avgMoisture": 45,
++    "completed": true
++  },
++  {
++    "sessionNumber": 56,
++    "startTime": "2026-07-28T08:45:43.477Z",
++    "endTime": "2026-07-28T08:46:07.274Z",
++    "durationMs": 23797,
++    "totalDetections": 0,
++    "executions": 9,
++    "avgMoisture": null,
++    "completed": true
+   }
+ ]
+\ No newline at end of file
+diff --git a/software/backend/data/settings.json b/software/backend/data/settings.json
+new file mode 100644
+index 0000000..6b908cd
+--- /dev/null
++++ b/software/backend/data/settings.json
+@@ -0,0 +1,8 @@
++{
++  "autoDetect": true,
++  "alerts": true,
++  "autoRemove": false,
++  "robotSpeed": 200,
++  "obstacleThresholdCm": 25,
++  "wifiSSID": "meowww"
++}
+diff --git a/software/backend/middleware/errorHandler.js b/software/backend/middleware/errorHandler.js
+new file mode 100644
+index 0000000..e69de29
+diff --git a/software/backend/package-lock.json b/software/backend/package-lock.json
+index adb3652..07f614b 100644
+--- a/software/backend/package-lock.json
++++ b/software/backend/package-lock.json
+@@ -9,8 +9,11 @@
+       "version": "1.0.0",
+       "license": "ISC",
+       "dependencies": {
++        "axios": "^1.18.1",
+         "cors": "^2.8.6",
+-        "express": "^5.2.1"
++        "dotenv": "^17.4.2",
++        "express": "^5.2.1",
++        "morgan": "^1.11.0"
+       }
+     },
+     "node_modules/accepts": {
+@@ -26,6 +29,48 @@
+         "node": ">= 0.6"
+       }
+     },
++    "node_modules/agent-base": {
++      "version": "6.0.2",
++      "resolved": "https://registry.npmjs.org/agent-base/-/agent-base-6.0.2.tgz",
++      "integrity": "sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==",
++      "license": "MIT",
++      "dependencies": {
++        "debug": "4"
++      },
++      "engines": {
++        "node": ">= 6.0.0"
++      }
++    },
++    "node_modules/asynckit": {
++      "version": "0.4.0",
++      "resolved": "https://registry.npmjs.org/asynckit/-/asynckit-0.4.0.tgz",
++      "integrity": "sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==",
++      "license": "MIT"
++    },
++    "node_modules/axios": {
++      "version": "1.18.1",
++      "resolved": "https://registry.npmjs.org/axios/-/axios-1.18.1.tgz",
++      "integrity": "sha512-3nTvFlvpn9Zu/RkHUqtc7/+al4UpRW5az71ap5zccp6e8RAYEzhMTecX8Dz1wWDYrPpUoB1HAQEGEAEvUr7S9g==",
++      "license": "MIT",
++      "dependencies": {
++        "follow-redirects": "^1.16.0",
++        "form-data": "^4.0.5",
++        "https-proxy-agent": "^5.0.1",
++        "proxy-from-env": "^2.1.0"
++      }
++    },
++    "node_modules/basic-auth": {
++      "version": "2.0.1",
++      "resolved": "https://registry.npmjs.org/basic-auth/-/basic-auth-2.0.1.tgz",
++      "integrity": "sha512-NF+epuEdnUYVlGuhaxbbq+dvJttwLnGY+YixlXlME5KpQ5W3CnXA5cVTneY3SPbPDRkcjMbifrwmFYcClgOZeg==",
++      "license": "MIT",
++      "dependencies": {
++        "safe-buffer": "5.1.2"
++      },
++      "engines": {
++        "node": ">= 0.8"
++      }
++    },
+     "node_modules/body-parser": {
+       "version": "2.2.2",
+       "resolved": "https://registry.npmjs.org/body-parser/-/body-parser-2.2.2.tgz",
+@@ -88,6 +133,18 @@
+         "url": "https://github.com/sponsors/ljharb"
+       }
+     },
++    "node_modules/combined-stream": {
++      "version": "1.0.8",
++      "resolved": "https://registry.npmjs.org/combined-stream/-/combined-stream-1.0.8.tgz",
++      "integrity": "sha512-FQN4MRfuJeHf7cBbBMJFXhKSDq+2kAArBlmRBvcvFE5BB1HZKXtSFASDhdlz9zOYwxh8lDdnvmMOe/+5cdoEdg==",
++      "license": "MIT",
++      "dependencies": {
++        "delayed-stream": "~1.0.0"
++      },
++      "engines": {
++        "node": ">= 0.8"
++      }
++    },
+     "node_modules/content-disposition": {
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/content-disposition/-/content-disposition-1.0.1.tgz",
+@@ -162,6 +219,15 @@
+         }
+       }
+     },
++    "node_modules/delayed-stream": {
++      "version": "1.0.0",
++      "resolved": "https://registry.npmjs.org/delayed-stream/-/delayed-stream-1.0.0.tgz",
++      "integrity": "sha512-ZySD7Nf91aLB0RxL4KGrKHBXl7Eds1DAmEdcoVawXnLD7SDhpNgtuII2aAkg7a7QS41jxPSZ17p4VdGnMHk3MQ==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=0.4.0"
++      }
++    },
+     "node_modules/depd": {
+       "version": "2.0.0",
+       "resolved": "https://registry.npmjs.org/depd/-/depd-2.0.0.tgz",
+@@ -171,6 +237,18 @@
+         "node": ">= 0.8"
+       }
+     },
++    "node_modules/dotenv": {
++      "version": "17.4.2",
++      "resolved": "https://registry.npmjs.org/dotenv/-/dotenv-17.4.2.tgz",
++      "integrity": "sha512-nI4U3TottKAcAD9LLud4Cb7b2QztQMUEfHbvhTH09bqXTxnSie8WnjPALV/WMCrJZ6UV/qHJ6L03OqO3LcdYZw==",
++      "license": "BSD-2-Clause",
++      "engines": {
++        "node": ">=12"
++      },
++      "funding": {
++        "url": "https://dotenvx.com"
++      }
++    },
+     "node_modules/dunder-proto": {
+       "version": "1.0.1",
+       "resolved": "https://registry.npmjs.org/dunder-proto/-/dunder-proto-1.0.1.tgz",
+@@ -230,6 +308,21 @@
+         "node": ">= 0.4"
+       }
+     },
++    "node_modules/es-set-tostringtag": {
++      "version": "2.1.0",
++      "resolved": "https://registry.npmjs.org/es-set-tostringtag/-/es-set-tostringtag-2.1.0.tgz",
++      "integrity": "sha512-j6vWzfrGVfyXxge+O0x5sh6cvxAog0a/4Rdd2K36zCMV5eJ+/+tOAngRO8cODMNWbVRdVlmGZQL2YS3yR8bIUA==",
++      "license": "MIT",
++      "dependencies": {
++        "es-errors": "^1.3.0",
++        "get-intrinsic": "^1.2.6",
++        "has-tostringtag": "^1.0.2",
++        "hasown": "^2.0.2"
++      },
++      "engines": {
++        "node": ">= 0.4"
++      }
++    },
+     "node_modules/escape-html": {
+       "version": "1.0.3",
+       "resolved": "https://registry.npmjs.org/escape-html/-/escape-html-1.0.3.tgz",
+@@ -309,6 +402,63 @@
+         "url": "https://opencollective.com/express"
+       }
+     },
++    "node_modules/follow-redirects": {
++      "version": "1.16.0",
++      "resolved": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.0.tgz",
++      "integrity": "sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==",
++      "funding": [
++        {
++          "type": "individual",
++          "url": "https://github.com/sponsors/RubenVerborgh"
++        }
++      ],
++      "license": "MIT",
++      "engines": {
++        "node": ">=4.0"
++      },
++      "peerDependenciesMeta": {
++        "debug": {
++          "optional": true
++        }
++      }
++    },
++    "node_modules/form-data": {
++      "version": "4.0.6",
++      "resolved": "https://registry.npmjs.org/form-data/-/form-data-4.0.6.tgz",
++      "integrity": "sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ==",
++      "license": "MIT",
++      "dependencies": {
++        "asynckit": "^0.4.0",
++        "combined-stream": "^1.0.8",
++        "es-set-tostringtag": "^2.1.0",
++        "hasown": "^2.0.4",
++        "mime-types": "^2.1.35"
++      },
++      "engines": {
++        "node": ">= 6"
++      }
++    },
++    "node_modules/form-data/node_modules/mime-db": {
++      "version": "1.52.0",
++      "resolved": "https://registry.npmjs.org/mime-db/-/mime-db-1.52.0.tgz",
++      "integrity": "sha512-sPU4uV7dYlvtWJxwwxHD0PuihVNiE7TyAbQ5SWxDCB9mUYvOgroQOwYQQOKPJ8CIbE+1ETVlOoK1UC2nU3gYvg==",
++      "license": "MIT",
++      "engines": {
++        "node": ">= 0.6"
++      }
++    },
++    "node_modules/form-data/node_modules/mime-types": {
++      "version": "2.1.35",
++      "resolved": "https://registry.npmjs.org/mime-types/-/mime-types-2.1.35.tgz",
++      "integrity": "sha512-ZDY+bPm5zTTF+YpCrAU9nK0UgICYPT0QtT1NZWFv4s++TNkcgVaT0g6+4R2uI4MjQjzysHB1zxuWL50hzaeXiw==",
++      "license": "MIT",
++      "dependencies": {
++        "mime-db": "1.52.0"
++      },
++      "engines": {
++        "node": ">= 0.6"
++      }
++    },
+     "node_modules/forwarded": {
+       "version": "0.2.0",
+       "resolved": "https://registry.npmjs.org/forwarded/-/forwarded-0.2.0.tgz",
+@@ -397,10 +547,25 @@
+         "url": "https://github.com/sponsors/ljharb"
+       }
+     },
++    "node_modules/has-tostringtag": {
++      "version": "1.0.2",
++      "resolved": "https://registry.npmjs.org/has-tostringtag/-/has-tostringtag-1.0.2.tgz",
++      "integrity": "sha512-NqADB8VjPFLM2V0VvHUewwwsw0ZWBaIdgo+ieHtK3hasLz4qeCRjYcqfB6AQrBggRKppKF8L52/VqdVsO47Dlw==",
++      "license": "MIT",
++      "dependencies": {
++        "has-symbols": "^1.0.3"
++      },
++      "engines": {
++        "node": ">= 0.4"
++      },
++      "funding": {
++        "url": "https://github.com/sponsors/ljharb"
++      }
++    },
+     "node_modules/hasown": {
+-      "version": "2.0.2",
+-      "resolved": "https://registry.npmjs.org/hasown/-/hasown-2.0.2.tgz",
+-      "integrity": "sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==",
++      "version": "2.0.4",
++      "resolved": "https://registry.npmjs.org/hasown/-/hasown-2.0.4.tgz",
++      "integrity": "sha512-T2UbfbBEF32wiepXIsMlTW9+dDYC6wMh/t/vYA4tuOMKqWz/n3vr1NFSxQiyP+zk2mXsoMA/i/7qV6LKut1t1A==",
+       "license": "MIT",
+       "dependencies": {
+         "function-bind": "^1.1.2"
+@@ -429,6 +594,19 @@
+         "url": "https://opencollective.com/express"
+       }
+     },
++    "node_modules/https-proxy-agent": {
++      "version": "5.0.1",
++      "resolved": "https://registry.npmjs.org/https-proxy-agent/-/https-proxy-agent-5.0.1.tgz",
++      "integrity": "sha512-dFcAjpTQFgoLMzC2VwU+C/CbS7uRL0lWmxDITmqm7C+7F0Odmj6s9l6alZc6AELXhrnggM2CeWSXHGOdX2YtwA==",
++      "license": "MIT",
++      "dependencies": {
++        "agent-base": "6",
++        "debug": "4"
++      },
++      "engines": {
++        "node": ">= 6"
++      }
++    },
+     "node_modules/iconv-lite": {
+       "version": "0.7.2",
+       "resolved": "https://registry.npmjs.org/iconv-lite/-/iconv-lite-0.7.2.tgz",
+@@ -521,6 +699,41 @@
+         "url": "https://opencollective.com/express"
+       }
+     },
++    "node_modules/morgan": {
++      "version": "1.11.0",
++      "resolved": "https://registry.npmjs.org/morgan/-/morgan-1.11.0.tgz",
++      "integrity": "sha512-zSkVu3t18r39pw4ixfBKvfZi3y2UOqr7d4WYwcj3m8nXpEQK4rPO6GLzs/CExoRgmX3y9EjmmcXqv6jq0SK46g==",
++      "license": "MIT",
++      "dependencies": {
++        "basic-auth": "~2.0.1",
++        "debug": "2.6.9",
++        "depd": "~2.0.0",
++        "on-finished": "~2.4.1",
++        "on-headers": "~1.1.0"
++      },
++      "engines": {
++        "node": ">= 0.8.0"
++      },
++      "funding": {
++        "type": "opencollective",
++        "url": "https://opencollective.com/express"
++      }
++    },
++    "node_modules/morgan/node_modules/debug": {
++      "version": "2.6.9",
++      "resolved": "https://registry.npmjs.org/debug/-/debug-2.6.9.tgz",
++      "integrity": "sha512-bC7ElrdJaJnPbAP+1EotYvqZsb3ecl5wi6Bfi6BJTUcNowp6cvspg0jXznRTKDjm/E7AdgFBVeAPVMNcKGsHMA==",
++      "license": "MIT",
++      "dependencies": {
++        "ms": "2.0.0"
++      }
++    },
++    "node_modules/morgan/node_modules/ms": {
++      "version": "2.0.0",
++      "resolved": "https://registry.npmjs.org/ms/-/ms-2.0.0.tgz",
++      "integrity": "sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A==",
++      "license": "MIT"
++    },
+     "node_modules/ms": {
+       "version": "2.1.3",
+       "resolved": "https://registry.npmjs.org/ms/-/ms-2.1.3.tgz",
+@@ -569,6 +782,15 @@
+         "node": ">= 0.8"
+       }
+     },
++    "node_modules/on-headers": {
++      "version": "1.1.0",
++      "resolved": "https://registry.npmjs.org/on-headers/-/on-headers-1.1.0.tgz",
++      "integrity": "sha512-737ZY3yNnXy37FHkQxPzt4UZ2UWPWiCZWLvFZ4fu5cueciegX0zGPnrlY6bwRg4FdQOe9YU8MkmJwGhoMybl8A==",
++      "license": "MIT",
++      "engines": {
++        "node": ">= 0.8"
++      }
++    },
+     "node_modules/once": {
+       "version": "1.4.0",
+       "resolved": "https://registry.npmjs.org/once/-/once-1.4.0.tgz",
+@@ -610,6 +832,15 @@
+         "node": ">= 0.10"
+       }
+     },
++    "node_modules/proxy-from-env": {
++      "version": "2.1.0",
++      "resolved": "https://registry.npmjs.org/proxy-from-env/-/proxy-from-env-2.1.0.tgz",
++      "integrity": "sha512-cJ+oHTW1VAEa8cJslgmUZrc+sjRKgAKl3Zyse6+PV38hZe/V6Z14TbCuXcan9F9ghlz4QrFr2c92TNF82UkYHA==",
++      "license": "MIT",
++      "engines": {
++        "node": ">=10"
++      }
++    },
+     "node_modules/qs": {
+       "version": "6.15.0",
+       "resolved": "https://registry.npmjs.org/qs/-/qs-6.15.0.tgz",
+@@ -665,6 +896,12 @@
+         "node": ">= 18"
+       }
+     },
++    "node_modules/safe-buffer": {
++      "version": "5.1.2",
++      "resolved": "https://registry.npmjs.org/safe-buffer/-/safe-buffer-5.1.2.tgz",
++      "integrity": "sha512-Gd2UZBJDkXlY7GbJxfsE8/nvKkUEU1G38c1siN6QP6a9PT9MmHB8GnpscSmMJSoF8LOIrt8ud/wPtojys4G6+g==",
++      "license": "MIT"
++    },
+     "node_modules/safer-buffer": {
+       "version": "2.1.2",
+       "resolved": "https://registry.npmjs.org/safer-buffer/-/safer-buffer-2.1.2.tgz",
+diff --git a/software/backend/package.json b/software/backend/package.json
+index 8f3a2d0..cbb22a0 100644
+--- a/software/backend/package.json
++++ b/software/backend/package.json
+@@ -12,7 +12,10 @@
+   "license": "ISC",
+   "type": "commonjs",
+   "dependencies": {
++    "axios": "^1.18.1",
+     "cors": "^2.8.6",
+-    "express": "^5.2.1"
++    "dotenv": "^17.4.2",
++    "express": "^5.2.1",
++    "morgan": "^1.11.0"
+   }
+ }
+diff --git a/software/backend/routes/apiContract.js b/software/backend/routes/apiContract.js
+new file mode 100644
+index 0000000..e795f9b
+--- /dev/null
++++ b/software/backend/routes/apiContract.js
+@@ -0,0 +1,41 @@
++// ============================================================
++// Thin aliases matching the literal API Contract in the
++// Phase 4 Execution Guide (POST /api/forward, /api/backward,
++// /api/left, /api/right, /api/cutter/on, /api/cutter/off).
++//
++// These forward to the same controllers used by /api/move and
++// /api/cutter so behaviour (and ESP32 wiring) stays identical —
++// this file exists purely so the documented contract has a real
++// matching endpoint, in addition to the generic ones the
++// dashboard actually uses.
++// (POST /api/stop already exists natively at that exact path.)
++// ============================================================
++const express = require("express");
++const router = express.Router();
++
++const robotController  = require("../controllers/robotController");
++const cutterController = require("../controllers/cutterController");
++
++function withCommand(command) {
++  return (req, res, next) => {
++    req.body = { ...req.body, command };
++    next();
++  };
++}
++
++function withCutterState(state) {
++  return (req, res, next) => {
++    req.body = { ...req.body, state };
++    next();
++  };
++}
++
++router.post("/forward",  withCommand("forward"),  robotController.move);
++router.post("/backward", withCommand("backward"), robotController.move);
++router.post("/left",     withCommand("left"),     robotController.move);
++router.post("/right",    withCommand("right"),    robotController.move);
++
++router.post("/cutter/on",  withCutterState(true),  cutterController.setCutter);
++router.post("/cutter/off", withCutterState(false), cutterController.setCutter);
++
++module.exports = router;
+diff --git a/software/backend/routes/cutter.js b/software/backend/routes/cutter.js
+new file mode 100644
+index 0000000..d3f1c48
+--- /dev/null
++++ b/software/backend/routes/cutter.js
+@@ -0,0 +1,8 @@
++const express = require("express");
++const router = express.Router();
++
++const cutterController = require("../controllers/cutterController");
++
++router.post("/", cutterController.setCutter);
++
++module.exports = router;
+\ No newline at end of file
+diff --git a/software/backend/routes/logs.js b/software/backend/routes/logs.js
+new file mode 100644
+index 0000000..6495c81
+--- /dev/null
++++ b/software/backend/routes/logs.js
+@@ -0,0 +1,8 @@
++const express = require("express");
++const router = express.Router();
++
++const logController = require("../controllers/logController");
++
++router.get("/", logController.getLogs);
++
++module.exports = router;
+diff --git a/software/backend/routes/mode.js b/software/backend/routes/mode.js
+new file mode 100644
+index 0000000..1ecf5cb
+--- /dev/null
++++ b/software/backend/routes/mode.js
+@@ -0,0 +1,8 @@
++const express = require("express");
++const router = express.Router();
++
++const modeController = require("../controllers/modeController");
++
++router.post("/", modeController.setMode);
++
++module.exports = router;
+\ No newline at end of file
+diff --git a/software/backend/routes/movement.js b/software/backend/routes/movement.js
+new file mode 100644
+index 0000000..310b22f
+--- /dev/null
++++ b/software/backend/routes/movement.js
+@@ -0,0 +1,9 @@
++const express = require("express");
++
++const router = express.Router();
++
++const movement = require("../controllers/robotController");
++
++router.post("/", movement.move);
++
++module.exports = router;
+\ No newline at end of file
+diff --git a/software/backend/routes/robot.js b/software/backend/routes/robot.js
+new file mode 100644
+index 0000000..6f346b7
+--- /dev/null
++++ b/software/backend/routes/robot.js
+@@ -0,0 +1,13 @@
++const express = require("express");
++const router = express.Router();
++
++const statusController = require("../controllers/statusController");
++const modeController   = require("../controllers/modeController");
++
++// GET /api/robot/status  -> live ESP32 state (mode, command, distanceCm, obstacle, cutter, connected)
++router.get("/status", statusController.getStatus);
++
++// POST /api/robot/mode   -> body: { "mode": "manual" | "autonomous" }
++router.post("/mode", modeController.setMode);
++
++module.exports = router;
+diff --git a/software/backend/routes/settings.js b/software/backend/routes/settings.js
+new file mode 100644
+index 0000000..91bcde8
+--- /dev/null
++++ b/software/backend/routes/settings.js
+@@ -0,0 +1,9 @@
++const express = require("express");
++const router = express.Router();
++
++const settingsController = require("../controllers/settingsController");
++
++router.get("/", settingsController.getSettings);
++router.post("/", settingsController.updateSettings);
++
++module.exports = router;
+diff --git a/software/backend/routes/status.js b/software/backend/routes/status.js
+new file mode 100644
+index 0000000..544f306
+--- /dev/null
++++ b/software/backend/routes/status.js
+@@ -0,0 +1,9 @@
++const express = require("express");
++
++const router = express.Router();
++
++const statusController = require("../controllers/statusController");
++
++router.get("/", statusController.getStatus);
++
++module.exports = router;
+\ No newline at end of file
+diff --git a/software/backend/routes/stop.js b/software/backend/routes/stop.js
+new file mode 100644
+index 0000000..59fcb22
+--- /dev/null
++++ b/software/backend/routes/stop.js
+@@ -0,0 +1,9 @@
++const express = require("express");
++
++const router = express.Router();
++
++const robot = require("../controllers/robotController");
++
++router.post("/", robot.stop);
++
++module.exports = router;
+\ No newline at end of file
+diff --git a/software/backend/server.js b/software/backend/server.js
+index 4ef6f94..14bd67c 100644
+--- a/software/backend/server.js
++++ b/software/backend/server.js
+@@ -1,12 +1,34 @@
++const movementRoutes    = require("./routes/movement");
++const modeRoutes        = require("./routes/mode");
++const cutterRoutes      = require("./routes/cutter");
++const stopRoutes        = require("./routes/stop");
++const robotRoutes       = require("./routes/robot");
++const settingsRoutes    = require("./routes/settings");
++const logsRoutes        = require("./routes/logs");
++const apiContractRoutes = require("./routes/apiContract");
+ const express = require("express");
+ const cors = require("cors");
+ const fs = require("fs");
+ const path = require("path");
+ 
++const loggerService = require("./services/loggerService");
++
+ const app = express();
+ 
+ app.use(cors());
+ app.use(express.json());
++app.use("/api/move", movementRoutes);
++app.use("/api/stop", stopRoutes);
++app.use("/api/mode", modeRoutes);
++app.use("/api/cutter", cutterRoutes);
++// NOTE: robot status/mode live under /api/robot/*, NOT /api/status —
++// mounting the ESP32 status proxy at /api/status previously shadowed
++// the weed-detection status handler further down in this file, since
++// Express matches the first registered route. Keep these separate.
++app.use("/api/robot", robotRoutes);
++app.use("/api/settings", settingsRoutes);
++app.use("/api/logs", logsRoutes);
++app.use("/api", apiContractRoutes);
+ app.use(express.static(__dirname + "/../frontend"));
+ 
+ // =============================
+@@ -24,15 +46,9 @@ if (!fs.existsSync(sessionFilePath)) fs.writeFileSync(sessionFilePath, "[]");
+ // =============================
+ // 📁 READ / WRITE HELPERS
+ // =============================
+-function readLogs() {
+-  try { return JSON.parse(fs.readFileSync(logFilePath, "utf8")); }
+-  catch { return []; }
+-}
+-
+-function writeLogs(logs) {
+-  try { fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2)); }
+-  catch (err) { console.error("❌ Error writing logs:", err); }
+-}
++// readLogs/writeLogs now live in services/loggerService.js (also used by
++// routes/logs.js -> controllers/logController.js for GET /api/logs).
++const { readLogs, writeLogs } = loggerService;
+ 
+ function readSessions() {
+   try { return JSON.parse(fs.readFileSync(sessionFilePath, "utf8")); }
+@@ -221,9 +237,7 @@ app.get("/api/status", (req, res) => {
+   });
+ });
+ 
+-app.get("/api/logs", (req, res) => {
+-  res.json(readLogs());
+-});
++// GET /api/logs is now handled by routes/logs.js -> controllers/logController.js
+ 
+ // =============================
+ // ✅ GET SESSIONS
+diff --git a/software/backend/services/esp32Service.js b/software/backend/services/esp32Service.js
+new file mode 100644
+index 0000000..a7a82d2
+--- /dev/null
++++ b/software/backend/services/esp32Service.js
+@@ -0,0 +1,44 @@
++const axios = require("axios");
++const esp32 = require("../config/esp32");
++
++const api = axios.create({
++    baseURL: esp32.baseURL,
++    timeout: 5000,
++    headers: {
++        "Content-Type": "application/json"
++    }
++});
++
++async function move(command) {
++    return api.post("/move", {
++        command
++    });
++}
++
++async function stop() {
++    return api.post("/stop");
++}
++
++async function mode(mode) {
++    return api.post("/mode", {
++        mode
++    });
++}
++
++async function cutter(state) {
++    return api.post("/cutter", {
++        state
++    });
++}
++
++async function status() {
++    return api.get("/status");
++}
++
++module.exports = {
++    move,
++    stop,
++    mode,
++    cutter,
++    status
++};
+\ No newline at end of file
+diff --git a/software/backend/services/loggerService.js b/software/backend/services/loggerService.js
+new file mode 100644
+index 0000000..ae880d2
+--- /dev/null
++++ b/software/backend/services/loggerService.js
+@@ -0,0 +1,48 @@
++const fs = require("fs");
++const path = require("path");
++
++const logFilePath = path.join(__dirname, "..", "data", "logs.json");
++
++// Make sure the log file always exists
++if (!fs.existsSync(logFilePath)) fs.writeFileSync(logFilePath, "[]");
++
++// -------------------------
++// Read all logs (newest first)
++// -------------------------
++function readLogs() {
++  try {
++    return JSON.parse(fs.readFileSync(logFilePath, "utf8"));
++  } catch (err) {
++    console.error("❌ Error reading logs:", err.message);
++    return [];
++  }
++}
++
++// -------------------------
++// Overwrite the full log file
++// -------------------------
++function writeLogs(logs) {
++  try {
++    fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2));
++  } catch (err) {
++    console.error("❌ Error writing logs:", err.message);
++  }
++}
++
++// -------------------------
++// Append a single entry to the front of the log,
++// capped at `maxEntries` (default 100)
++// -------------------------
++function appendLog(entry, maxEntries = 100) {
++  const logs = readLogs();
++  logs.unshift(entry);
++  if (logs.length > maxEntries) logs.length = maxEntries;
++  writeLogs(logs);
++  return logs;
++}
++
++module.exports = {
++  readLogs,
++  writeLogs,
++  appendLog
++};
+diff --git a/software/backend/services/settingsService.js b/software/backend/services/settingsService.js
+new file mode 100644
+index 0000000..51511bf
+--- /dev/null
++++ b/software/backend/services/settingsService.js
+@@ -0,0 +1,37 @@
++const fs = require("fs");
++const path = require("path");
++
++const settingsFilePath = path.join(__dirname, "..", "data", "settings.json");
++
++// Defaults mirror the ESP32 firmware constants (MOTOR_SPEED, OBSTACLE_CM, ssid)
++// so the dashboard starts in sync with what's actually flashed to the robot.
++const DEFAULT_SETTINGS = {
++  autoDetect: true,
++  alerts: true,
++  autoRemove: false,
++  robotSpeed: 200,          // PWM 0-255
++  obstacleThresholdCm: 25,  // cm
++  wifiSSID: "meowww"
++};
++
++if (!fs.existsSync(settingsFilePath)) {
++  fs.writeFileSync(settingsFilePath, JSON.stringify(DEFAULT_SETTINGS, null, 2));
++}
++
++function readSettings() {
++  try {
++    const saved = JSON.parse(fs.readFileSync(settingsFilePath, "utf8"));
++    return { ...DEFAULT_SETTINGS, ...saved };
++  } catch (err) {
++    console.error("❌ Error reading settings:", err.message);
++    return { ...DEFAULT_SETTINGS };
++  }
++}
++
++function writeSettings(partial) {
++  const merged = { ...readSettings(), ...partial };
++  fs.writeFileSync(settingsFilePath, JSON.stringify(merged, null, 2));
++  return merged;
++}
++
++module.exports = { readSettings, writeSettings, DEFAULT_SETTINGS };
+diff --git a/software/frontend/css/alerts.css b/software/frontend/css/alerts.css
+new file mode 100644
+index 0000000..838c5c3
+--- /dev/null
++++ b/software/frontend/css/alerts.css
+@@ -0,0 +1,59 @@
++.alerts-kpi-row {
++  grid-template-columns: repeat(4, 1fr);
++}
++
++.alert-feed {
++  list-style: none;
++  display: flex;
++  flex-direction: column;
++  gap: 10px;
++}
++
++.alert-item {
++  display: flex;
++  align-items: flex-start;
++  gap: 12px;
++  padding: 14px 16px;
++  border-radius: var(--radius-md);
++  border-left: 4px solid var(--gray-300);
++  background: var(--gray-50);
++}
++
++.alert-item.critical { border-left-color: var(--red-600); background: var(--red-100); }
++.alert-item.warning   { border-left-color: var(--amber-500); background: var(--amber-100); }
++.alert-item.info       { border-left-color: var(--green-500); background: var(--green-50); }
++
++.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
++
++.alert-body { flex: 1; }
++
++.alert-title {
++  font-size: 13px;
++  font-weight: 700;
++  color: var(--gray-900);
++  margin-bottom: 2px;
++}
++
++.alert-desc {
++  font-size: 12px;
++  color: var(--gray-500);
++}
++
++.alert-time {
++  font-family: var(--font-mono);
++  font-size: 11px;
++  color: var(--gray-400);
++  white-space: nowrap;
++  margin-top: 2px;
++}
++
++.alert-empty {
++  text-align: center;
++  color: var(--gray-400);
++  font-size: 12.5px;
++  padding: 30px 0;
++}
++
++@media (max-width: 1100px) {
++  .alerts-kpi-row { grid-template-columns: repeat(2, 1fr); }
++}
+diff --git a/software/frontend/css/analytics.css b/software/frontend/css/analytics.css
+new file mode 100644
+index 0000000..1a338e2
+--- /dev/null
++++ b/software/frontend/css/analytics.css
+@@ -0,0 +1,118 @@
++.analytics-kpi-row {
++  grid-template-columns: repeat(4, 1fr);
++}
++
++.rc-grid {
++  display: grid;
++  grid-template-columns: 1fr 1fr;
++  gap: 20px;
++  align-items: start;
++}
++
++/* ==============================
++   BAR CHART — dependency-free, built from divs
++============================== */
++.bar-chart {
++  display: flex;
++  align-items: flex-end;
++  gap: 16px;
++  height: 220px;
++  padding: 10px 6px 0;
++  border-bottom: 1px solid var(--gray-200);
++}
++
++.bar-col {
++  flex: 1;
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  justify-content: flex-end;
++  height: 100%;
++  gap: 8px;
++}
++
++.bar-track {
++  width: 100%;
++  max-width: 46px;
++  height: 100%;
++  display: flex;
++  align-items: flex-end;
++  background: var(--gray-100);
++  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
++  overflow: hidden;
++}
++
++.bar-fill {
++  width: 100%;
++  background: linear-gradient(180deg, var(--green-500), var(--green-700));
++  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
++  transition: height 0.5s ease;
++  min-height: 2px;
++  position: relative;
++}
++
++.bar-fill .bar-count {
++  position: absolute;
++  top: -20px;
++  left: 0;
++  right: 0;
++  text-align: center;
++  font-size: 11px;
++  font-weight: 700;
++  color: var(--gray-700);
++}
++
++.bar-label {
++  font-size: 11px;
++  color: var(--gray-500);
++  text-align: center;
++}
++
++.chart-empty {
++  color: var(--gray-400);
++  font-size: 12.5px;
++  text-align: center;
++  width: 100%;
++  align-self: center;
++}
++
++/* ==============================
++   SESSION TABLE
++============================== */
++.an-table {
++  width: 100%;
++  border-collapse: collapse;
++  font-size: 12.5px;
++}
++
++.an-table th {
++  text-align: left;
++  color: var(--gray-400);
++  text-transform: uppercase;
++  font-size: 10.5px;
++  letter-spacing: 0.05em;
++  padding: 8px 6px;
++  border-bottom: 1px solid var(--gray-200);
++}
++
++.an-table td {
++  padding: 10px 6px;
++  border-bottom: 1px solid var(--gray-100);
++  color: var(--gray-700);
++  font-family: var(--font-mono);
++}
++
++.an-badge {
++  font-size: 10.5px;
++  font-weight: 700;
++  padding: 3px 9px;
++  border-radius: 20px;
++}
++
++.an-badge.completed { background: var(--green-100); color: var(--green-600); }
++.an-badge.active     { background: var(--amber-100); color: var(--amber-500); }
++
++@media (max-width: 1100px) {
++  .rc-grid { grid-template-columns: 1fr; }
++  .analytics-kpi-row { grid-template-columns: repeat(2, 1fr); }
++}
+diff --git a/software/frontend/css/field-map.css b/software/frontend/css/field-map.css
+new file mode 100644
+index 0000000..4515a64
+--- /dev/null
++++ b/software/frontend/css/field-map.css
+@@ -0,0 +1,129 @@
++.map-note {
++  display: flex;
++  gap: 12px;
++  align-items: flex-start;
++  background: var(--green-50);
++  border-color: var(--green-200);
++}
++
++.map-note-icon {
++  font-size: 16px;
++  color: var(--green-600);
++  flex-shrink: 0;
++}
++
++.map-note p {
++  font-size: 12.5px;
++  color: var(--gray-700);
++  line-height: 1.6;
++}
++
++.rc-grid {
++  display: grid;
++  grid-template-columns: 1fr 340px;
++  gap: 20px;
++  align-items: start;
++}
++
++.rc-side {
++  display: flex;
++  flex-direction: column;
++  gap: 20px;
++}
++
++/* ==============================
++   FIELD GRID — signature element
++============================== */
++.field-grid {
++  position: relative;
++  display: grid;
++  grid-template-columns: 1fr 1fr;
++  grid-template-rows: 1fr 1fr;
++  gap: 14px;
++  aspect-ratio: 4 / 3;
++  padding: 14px;
++  background: repeating-linear-gradient(
++    45deg,
++    var(--green-50),
++    var(--green-50) 10px,
++    #ecf7ef 10px,
++    #ecf7ef 20px
++  );
++  border-radius: var(--radius-md);
++  border: 1px solid var(--gray-200);
++}
++
++.field-zone {
++  border-radius: var(--radius-md);
++  background: var(--white);
++  border: 2px solid var(--green-200);
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  justify-content: center;
++  gap: 6px;
++  transition: border-color 0.3s, background 0.3s;
++}
++
++.field-zone-label {
++  font-size: 12px;
++  font-weight: 700;
++  color: var(--gray-500);
++  letter-spacing: 0.04em;
++}
++
++.field-zone-status {
++  font-family: var(--font-mono);
++  font-size: 11px;
++  font-weight: 700;
++  padding: 3px 10px;
++  border-radius: 20px;
++  background: var(--green-100);
++  color: var(--green-600);
++}
++
++.field-zone.danger {
++  border-color: var(--red-600);
++  background: var(--red-100);
++}
++.field-zone.danger .field-zone-status {
++  background: var(--red-600);
++  color: #fff;
++}
++
++.field-zone.active-zone {
++  border-color: var(--green-600);
++  box-shadow: 0 0 0 3px rgba(45,106,79,0.18);
++}
++
++.field-robot {
++  position: absolute;
++  font-size: 26px;
++  transition: top 0.5s ease, left 0.5s ease;
++  transform: translate(-50%, -50%);
++  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
++  pointer-events: none;
++}
++
++.field-legend {
++  display: flex;
++  gap: 18px;
++  margin-top: 14px;
++  font-size: 12px;
++  color: var(--gray-500);
++}
++
++.field-legend .dot {
++  display: inline-block;
++  width: 9px; height: 9px;
++  border-radius: 50%;
++  margin-right: 6px;
++}
++
++.dot.safe   { background: var(--green-500); }
++.dot.danger { background: var(--red-600); }
++.dot.active { background: var(--green-700); box-shadow: 0 0 0 3px rgba(45,106,79,0.2); }
++
++@media (max-width: 1100px) {
++  .rc-grid { grid-template-columns: 1fr; }
++}
+diff --git a/software/frontend/css/robot-control.css b/software/frontend/css/robot-control.css
+new file mode 100644
+index 0000000..5839167
+--- /dev/null
++++ b/software/frontend/css/robot-control.css
+@@ -0,0 +1,201 @@
++/* ==============================
++   MODE PANEL
++============================== */
++.mode-panel {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  gap: 20px;
++  flex-wrap: wrap;
++}
++
++.mode-panel-left .panel-title { margin-bottom: 4px; }
++
++.mode-desc {
++  font-size: 12.5px;
++  color: var(--gray-500);
++}
++
++.mode-switch {
++  display: flex;
++  background: var(--gray-100);
++  border-radius: 999px;
++  padding: 4px;
++  gap: 4px;
++}
++
++.mode-btn {
++  border: none;
++  background: transparent;
++  font-family: var(--font);
++  font-size: 13px;
++  font-weight: 600;
++  color: var(--gray-500);
++  padding: 9px 20px;
++  border-radius: 999px;
++  cursor: pointer;
++  transition: background 0.18s, color 0.18s, transform 0.15s;
++}
++
++.mode-btn:hover { color: var(--gray-700); }
++
++.mode-btn.active {
++  background: var(--green-700);
++  color: #fff;
++  box-shadow: var(--shadow-sm);
++}
++
++.mode-btn#btn-autonomous.active { background: var(--amber-500); }
++
++/* ==============================
++   TWO-COLUMN CONTROL LAYOUT
++============================== */
++.rc-grid {
++  display: grid;
++  grid-template-columns: 1fr 380px;
++  gap: 20px;
++  align-items: start;
++}
++
++.rc-side {
++  display: flex;
++  flex-direction: column;
++  gap: 20px;
++}
++
++/* ==============================
++   D-PAD — signature control element
++============================== */
++.dpad {
++  display: grid;
++  grid-template-columns: 76px 76px 76px;
++  grid-template-rows: 76px 76px 76px;
++  grid-template-areas:
++    ".    fwd  ."
++    "left stop right"
++    ".    back .";
++  gap: 10px;
++  justify-content: center;
++  margin: 12px auto 6px;
++}
++
++.dpad-btn {
++  border: none;
++  border-radius: var(--radius-md);
++  font-size: 24px;
++  font-weight: 700;
++  cursor: pointer;
++  transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
++  box-shadow: var(--shadow-sm);
++  color: #fff;
++  background: var(--green-600);
++}
++
++.dpad-btn:hover  { background: var(--green-500); transform: translateY(-2px); box-shadow: var(--shadow-md); }
++.dpad-btn:active { transform: translateY(0) scale(0.96); }
++
++.dpad-btn:disabled {
++  background: var(--gray-200);
++  color: var(--gray-400);
++  cursor: not-allowed;
++  transform: none;
++  box-shadow: none;
++}
++
++.dpad-forward  { grid-area: fwd;  }
++.dpad-left     { grid-area: left; }
++.dpad-right    { grid-area: right; }
++.dpad-backward { grid-area: back; }
++
++.dpad-stop {
++  grid-area: stop;
++  background: var(--red-600);
++  font-size: 20px;
++}
++.dpad-stop:hover { background: #a8332a; }
++.dpad-stop:disabled { background: var(--red-600); color: #fff; opacity: 0.55; } /* Stop always usable, dim only if unreachable */
++
++.dpad-hint {
++  text-align: center;
++  font-size: 11.5px;
++  color: var(--gray-400);
++  margin-top: 4px;
++}
++
++/* ==============================
++   CUTTER CONTROLS
++============================== */
++.cutter-controls {
++  display: flex;
++  gap: 10px;
++}
++
++.cutter-btn {
++  flex: 1;
++  border: none;
++  border-radius: var(--radius-sm);
++  padding: 14px 10px;
++  font-family: var(--font);
++  font-size: 13.5px;
++  font-weight: 700;
++  cursor: pointer;
++  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
++}
++
++.cutter-btn.on  { background: var(--red-600); color: #fff; }
++.cutter-btn.off { background: var(--gray-200); color: var(--gray-700); }
++
++.cutter-btn:hover  { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
++.cutter-btn:active { transform: translateY(0); }
++
++.cutter-btn.on.armed  { box-shadow: 0 0 0 3px rgba(192,57,43,0.25); }
++.cutter-btn.off.armed { background: var(--green-600); color: #fff; }
++
++/* ==============================
++   STATUS LIST
++============================== */
++.status-list {
++  list-style: none;
++  display: flex;
++  flex-direction: column;
++  gap: 12px;
++}
++
++.status-list li {
++  display: flex;
++  align-items: center;
++  justify-content: space-between;
++  font-size: 13px;
++  padding-bottom: 12px;
++  border-bottom: 1px dashed var(--gray-200);
++}
++
++.status-list li:last-child { border-bottom: none; padding-bottom: 0; }
++
++.status-label { color: var(--gray-500); }
++
++.status-value {
++  font-family: var(--font-mono);
++  font-weight: 700;
++  color: var(--gray-900);
++}
++
++.status-value.warn { color: var(--red-600); }
++.status-value.ok   { color: var(--green-600); }
++.status-value.amber{ color: var(--amber-500); }
++
++/* ==============================
++   RESPONSIVE
++============================== */
++@media (max-width: 1100px) {
++  .rc-grid { grid-template-columns: 1fr; }
++}
++
++@media (max-width: 640px) {
++  .mode-panel { flex-direction: column; align-items: flex-start; }
++  .dpad {
++    grid-template-columns: 64px 64px 64px;
++    grid-template-rows: 64px 64px 64px;
++  }
++  .dpad-btn { font-size: 20px; }
++}
+diff --git a/software/frontend/index.html b/software/frontend/index.html
+index 024488b..690ff39 100644
+--- a/software/frontend/index.html
++++ b/software/frontend/index.html
+@@ -23,15 +23,15 @@
+ 
+     <nav class="sidebar-nav">
+       <p class="nav-section-label">MAIN</p>
+-      <a href="#" class="nav-item active"><span class="nav-item-icon">⊞</span> Dashboard</a>
++      <a href="/index.html" class="nav-item active"><span class="nav-item-icon">⊞</span> Dashboard</a>
+       <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
+-      <a href="#" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
+-      <a href="#" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
++      <a href="/pages/field-map.html" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
++      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
+ 
+       <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
+-      <a href="#" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
++      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
+       <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
+-      <a href="#" class="nav-item">
++      <a href="/pages/alerts.html" class="nav-item">
+         <span class="nav-item-icon">🔔</span> Alerts
+         <span class="nav-badge" id="alert-badge">0</span>
+       </a>
+diff --git a/software/frontend/js/alerts.js b/software/frontend/js/alerts.js
+new file mode 100644
+index 0000000..0fe2459
+--- /dev/null
++++ b/software/frontend/js/alerts.js
+@@ -0,0 +1,150 @@
++// ==============================
++// ALERTS PAGE
++// Derives alerts from existing endpoints — no dedicated "alerts" data
++// is stored server-side yet, this synthesizes a live feed from:
++//   GET /api/status        -> weed detection + ESP32 connectivity
++//   GET /api/robot/status  -> obstacle sensor + robot link
++// ==============================
++const BASE_URL = "";
++
++function tickClock() {
++  const el = document.getElementById("clock");
++  if (el) el.textContent = new Date().toLocaleTimeString();
++}
++setInterval(tickClock, 1000);
++tickClock();
++
++function timeNow() {
++  return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
++}
++
++async function checkAlerts() {
++  const alerts = [];
++
++  // --- Weed / dashboard status ---
++  let weedData = null;
++  try {
++    const res = await fetch(`${BASE_URL}/api/status`);
++    if (!res.ok) throw new Error();
++    weedData = await res.json();
++
++    document.getElementById("al-backend").textContent = "Online";
++    document.getElementById("al-backend").className = "kpi-value";
++
++    const sysBadge = document.getElementById("sys-badge");
++    sysBadge.textContent = "● System Online";
++    sysBadge.className = "sys-badge online";
++
++    const dot = document.getElementById("device-dot");
++    const text = document.getElementById("device-status-text");
++    if (dot) dot.style.background = "var(--green-400)";
++    if (text) text.textContent = "Connected";
++
++    if (weedData.status === "Weed detected") {
++      alerts.push({
++        level: "warning",
++        icon: "⚠",
++        title: "Weed detected in field",
++        desc: `Moisture reading: ${weedData.moisture != null ? weedData.moisture + "%" : "unknown"}`
++      });
++    }
++
++    document.getElementById("al-esp32").textContent = weedData.esp32Connected ? "Connected" : "Idle";
++    document.getElementById("al-esp32").className = "kpi-value " + (weedData.esp32Connected ? "" : "amber");
++
++    if (!weedData.esp32Connected) {
++      alerts.push({
++        level: "warning",
++        icon: "📡",
++        title: "ESP32 sensor feed idle",
++        desc: "No detection data received in the last 15 seconds."
++      });
++    }
++
++  } catch (err) {
++    document.getElementById("al-backend").textContent = "Offline";
++    document.getElementById("al-backend").className = "kpi-value red";
++
++    const sysBadge = document.getElementById("sys-badge");
++    sysBadge.textContent = "● Offline";
++    sysBadge.className = "sys-badge refreshing";
++
++    const dot = document.getElementById("device-dot");
++    const text = document.getElementById("device-status-text");
++    if (dot) dot.style.background = "var(--red-600)";
++    if (text) text.textContent = "Disconnected";
++
++    alerts.push({
++      level: "critical",
++      icon: "🔌",
++      title: "Backend unreachable",
++      desc: "Dashboard can't reach the Node.js API at all — check the server."
++    });
++  }
++
++  // --- Robot / obstacle status ---
++  try {
++    const res = await fetch(`${BASE_URL}/api/robot/status`);
++    if (!res.ok) throw new Error();
++    const payload = await res.json();
++    const data = payload.data || payload;
++
++    document.getElementById("al-obstacle").textContent = data.obstacle ? "Blocked" : "Clear";
++    document.getElementById("al-obstacle").className = "kpi-value " + (data.obstacle ? "red" : "");
++
++    if (data.obstacle) {
++      alerts.push({
++        level: "critical",
++        icon: "🚧",
++        title: "Obstacle detected",
++        desc: `HC-SR04 reads ${data.distanceCm != null ? data.distanceCm.toFixed(1) + " cm" : "an obstruction"} — avoidance routine active.`
++      });
++    }
++
++  } catch (err) {
++    document.getElementById("al-obstacle").textContent = "Unknown";
++    document.getElementById("al-obstacle").className = "kpi-value amber";
++
++    alerts.push({
++      level: "warning",
++      icon: "🤖",
++      title: "Robot link unreachable",
++      desc: "Can't reach the ESP32 for movement/obstacle status via the backend."
++    });
++  }
++
++  renderAlerts(alerts);
++}
++
++function renderAlerts(alerts) {
++  const feed = document.getElementById("alert-feed");
++  const badge = document.getElementById("alert-badge");
++
++  badge.textContent = alerts.length;
++
++  document.getElementById("al-active").textContent = alerts.length;
++  document.getElementById("al-active").className = "kpi-value " + (alerts.length > 0 ? "red" : "");
++
++  if (alerts.length === 0) {
++    feed.innerHTML = '<li class="alert-empty">✔ No active alerts — everything looks normal.</li>';
++    return;
++  }
++
++  feed.innerHTML = "";
++  alerts.forEach(a => {
++    const li = document.createElement("li");
++    li.className = "alert-item " + a.level;
++    li.innerHTML = `
++      <span class="alert-icon">${a.icon}</span>
++      <div class="alert-body">
++        <p class="alert-title">${a.title}</p>
++        <p class="alert-desc">${a.desc}</p>
++      </div>
++      <span class="alert-time">${timeNow()}</span>
++    `;
++    feed.appendChild(li);
++  });
++}
++
++checkAlerts();
++setInterval(checkAlerts, 4000);
+diff --git a/software/frontend/js/analytics.js b/software/frontend/js/analytics.js
+new file mode 100644
+index 0000000..9eba586
+--- /dev/null
++++ b/software/frontend/js/analytics.js
+@@ -0,0 +1,131 @@
++// ==============================
++// ANALYTICS PAGE
++// Reads from GET /api/logs (recent detection log) and
++// GET /api/sessions (last 5 grouped sessions) — no new backend
++// endpoints needed, this page is purely a different view of
++// data the backend already exposes.
++// ==============================
++const BASE_URL = "";
++
++function tickClock() {
++  const el = document.getElementById("clock");
++  if (el) el.textContent = new Date().toLocaleTimeString();
++}
++setInterval(tickClock, 1000);
++tickClock();
++
++async function loadKpisFromLogs() {
++  try {
++    const res = await fetch(`${BASE_URL}/api/logs`);
++    if (!res.ok) throw new Error("logs unavailable");
++    const logs = await res.json();
++
++    const totalScans = logs.length;
++    const totalWeeds = logs.filter(l => l.status === "Weed detected").length;
++    const rate = totalScans > 0 ? Math.round((totalWeeds / totalScans) * 100) : 0;
++
++    document.getElementById("an-total-scans").textContent = totalScans;
++    document.getElementById("an-total-weeds").textContent = totalWeeds;
++    document.getElementById("an-detection-rate").textContent = rate + "%";
++
++    const sysBadge = document.getElementById("sys-badge");
++    sysBadge.textContent = "● System Online";
++    sysBadge.className = "sys-badge online";
++
++    const dot = document.getElementById("device-dot");
++    const text = document.getElementById("device-status-text");
++    if (dot) dot.style.background = "var(--green-400)";
++    if (text) text.textContent = "Connected";
++
++  } catch (err) {
++    console.warn("Analytics: could not load logs:", err.message);
++    const sysBadge = document.getElementById("sys-badge");
++    sysBadge.textContent = "● Offline";
++    sysBadge.className = "sys-badge refreshing";
++  }
++}
++
++async function loadSessions() {
++  try {
++    const res = await fetch(`${BASE_URL}/api/sessions`);
++    if (!res.ok) throw new Error("sessions unavailable");
++    const sessions = await res.json();
++
++    document.getElementById("an-sessions").textContent = sessions.length;
++
++    renderBarChart(sessions);
++    renderSessionTable(sessions);
++
++  } catch (err) {
++    console.warn("Analytics: could not load sessions:", err.message);
++    document.getElementById("bar-chart").innerHTML =
++      '<p class="chart-empty">Session data unavailable — backend unreachable.</p>';
++    document.getElementById("session-table-body").innerHTML =
++      '<tr><td colspan="6" class="chart-empty">Session data unavailable.</td></tr>';
++  }
++}
++
++function renderBarChart(sessions) {
++  const chart = document.getElementById("bar-chart");
++
++  if (!sessions.length) {
++    chart.innerHTML = '<p class="chart-empty">No sessions recorded yet.</p>';
++    return;
++  }
++
++  // Oldest -> newest, left to right
++  const ordered = [...sessions].reverse();
++  const maxDetections = Math.max(1, ...ordered.map(s => s.totalDetections || 0));
++
++  chart.innerHTML = "";
++  ordered.forEach(s => {
++    const heightPct = Math.max(4, Math.round(((s.totalDetections || 0) / maxDetections) * 100));
++
++    const col = document.createElement("div");
++    col.className = "bar-col";
++    col.innerHTML = `
++      <div class="bar-track">
++        <div class="bar-fill" style="height:${heightPct}%">
++          <span class="bar-count">${s.totalDetections ?? 0}</span>
++        </div>
++      </div>
++      <span class="bar-label">S${s.sessionNumber}</span>
++    `;
++    chart.appendChild(col);
++  });
++}
++
++function renderSessionTable(sessions) {
++  const body = document.getElementById("session-table-body");
++
++  if (!sessions.length) {
++    body.innerHTML = '<tr><td colspan="6" class="chart-empty">No sessions recorded yet.</td></tr>';
++    return;
++  }
++
++  body.innerHTML = "";
++  sessions.forEach(s => {
++    const started = s.startTime
++      ? new Date(s.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
++      : "--";
++
++    const tr = document.createElement("tr");
++    tr.innerHTML = `
++      <td>${s.sessionNumber}</td>
++      <td>${started}</td>
++      <td>${s.executions ?? 0}</td>
++      <td>${s.totalDetections ?? 0}</td>
++      <td>${s.avgMoisture != null ? s.avgMoisture + "%" : "--"}</td>
++      <td><span class="an-badge ${s.completed ? "completed" : "active"}">${s.completed ? "Completed" : "In Progress"}</span></td>
++    `;
++    body.appendChild(tr);
++  });
++}
++
++function loadAll() {
++  loadKpisFromLogs();
++  loadSessions();
++}
++
++loadAll();
++setInterval(loadAll, 5000);
+diff --git a/software/frontend/js/field-map.js b/software/frontend/js/field-map.js
+new file mode 100644
+index 0000000..a1be6a9
+--- /dev/null
++++ b/software/frontend/js/field-map.js
+@@ -0,0 +1,103 @@
++// ==============================
++// FIELD MAP PAGE
++// Zone status comes from /api/status (weed/clear), same signal the
++// dashboard uses. Robot marker position is an illustrative mapping of
++// the current movement command from /api/robot/status — there's no
++// GPS/positioning sensor on the robot yet (see Phase 5 roadmap).
++// ==============================
++const BASE_URL = "";
++
++const ZONE_POSITIONS = {
++  forward:  { top: "22%", left: "50%", zone: "a" },
++  right:    { top: "50%", left: "78%", zone: "b" },
++  backward: { top: "78%", left: "50%", zone: "c" },
++  left:     { top: "50%", left: "22%", zone: "d" },
++  stop:     { top: "50%", left: "50%", zone: null }
++};
++
++function tickClock() {
++  const el = document.getElementById("clock");
++  if (el) el.textContent = new Date().toLocaleTimeString();
++}
++setInterval(tickClock, 1000);
++tickClock();
++
++async function loadWeedStatus() {
++  try {
++    const res = await fetch(`${BASE_URL}/api/status`);
++    if (!res.ok) throw new Error("status unavailable");
++    const data = await res.json();
++
++    const isWeed = data.status === "Weed detected";
++
++    ["a", "b", "c", "d"].forEach(z => {
++      const zoneEl = document.getElementById(`fz-${z}`);
++      const statusEl = document.getElementById(`fz-${z}-status`);
++      zoneEl.classList.toggle("danger", isWeed);
++      statusEl.textContent = isWeed ? "WEED" : "CLEAR";
++    });
++
++    const fieldChip = document.getElementById("field-chip");
++    fieldChip.textContent = isWeed ? "WEED DETECTED" : "CLEAR";
++    fieldChip.className = "panel-chip " + (isWeed ? "weed-chip" : "clear-chip");
++
++    document.getElementById("sum-clear").textContent = isWeed ? "0 / 4" : "4 / 4";
++    document.getElementById("sum-flagged").textContent = isWeed ? "4 / 4" : "0 / 4";
++
++    if (data.time) {
++      document.getElementById("last-updated").textContent =
++        "Last update: " + new Date(data.time).toLocaleTimeString();
++    }
++
++    const sysBadge = document.getElementById("sys-badge");
++    sysBadge.textContent = data.esp32Connected ? "● System Online" : "● Backend Online, ESP32 Idle";
++    sysBadge.className = "sys-badge " + (data.esp32Connected ? "online" : "refreshing");
++
++    const dot = document.getElementById("device-dot");
++    const text = document.getElementById("device-status-text");
++    if (dot) dot.style.background = data.esp32Connected ? "var(--green-400)" : "var(--red-600)";
++    if (text) text.textContent = data.esp32Connected ? "Connected" : "Waiting for data";
++
++  } catch (err) {
++    console.warn("Field map: weed status unreachable:", err.message);
++  }
++}
++
++async function loadRobotPosition() {
++  try {
++    const res = await fetch(`${BASE_URL}/api/robot/status`);
++    if (!res.ok) throw new Error("robot status unavailable");
++    const payload = await res.json();
++    const data = payload.data || payload;
++
++    const cmd = (data.command || "stop").toLowerCase();
++    const pos = ZONE_POSITIONS[cmd] || ZONE_POSITIONS.stop;
++
++    const robotEl = document.getElementById("field-robot");
++    robotEl.style.top = pos.top;
++    robotEl.style.left = pos.left;
++
++    ["a", "b", "c", "d"].forEach(z => {
++      document.getElementById(`fz-${z}`).classList.toggle("active-zone", pos.zone === z);
++    });
++
++    document.getElementById("pos-command").textContent = cmd.toUpperCase();
++    document.getElementById("pos-mode").textContent = (data.mode || "--").toUpperCase();
++
++    const obsEl = document.getElementById("pos-obstacle");
++    obsEl.textContent = data.obstacle ? "BLOCKED" : "CLEAR";
++    obsEl.className = "status-value " + (data.obstacle ? "warn" : "ok");
++
++    document.getElementById("pos-distance").textContent =
++      (data.distanceCm != null ? data.distanceCm.toFixed(1) : "--") + " cm";
++
++  } catch (err) {
++    // Robot/ESP32 not reachable — leave last-known marker position in place.
++    console.warn("Field map: robot status unreachable:", err.message);
++  }
++}
++
++loadWeedStatus();
++loadRobotPosition();
++setInterval(loadWeedStatus, 3000);
++setInterval(loadRobotPosition, 2000);
+diff --git a/software/frontend/js/robot-control.js b/software/frontend/js/robot-control.js
+new file mode 100644
+index 0000000..a4aa542
+--- /dev/null
++++ b/software/frontend/js/robot-control.js
+@@ -0,0 +1,228 @@
++// ==============================
++// ROBOT CONTROL PAGE
++// Talks to:
++//   GET  /api/robot/status  -> { mode, command, distanceCm, obstacle, cutter, connected }
++//   POST /api/robot/mode    -> { mode: "manual" | "autonomous" }
++//   POST /api/move          -> { command: "forward" | "backward" | "left" | "right" }
++//   POST /api/stop
++//   POST /api/cutter        -> { state: true | false }
++//   GET  /api/status        -> dashboard weed/battery status (for battery + link badge)
++// ==============================
++const BASE_URL = "";
++
++let currentMode = "manual";      // tracked locally so we can disable D-pad instantly
++let robotReachable = false;
++
++// ------------------------------
++// CLOCK (same pattern as dashboard)
++// ------------------------------
++function tickClock() {
++  const el = document.getElementById("clock");
++  if (el) el.textContent = new Date().toLocaleTimeString();
++}
++setInterval(tickClock, 1000);
++tickClock();
++
++// ------------------------------
++// MODE SWITCH
++// ------------------------------
++async function setMode(mode) {
++  try {
++    const res = await fetch(`${BASE_URL}/api/robot/mode`, {
++      method: "POST",
++      headers: { "Content-Type": "application/json" },
++      body: JSON.stringify({ mode })
++    });
++    if (!res.ok) throw new Error("Mode change rejected");
++    applyModeUI(mode);
++  } catch (err) {
++    console.warn("Could not switch mode:", err.message);
++    flashUnreachable();
++  }
++}
++
++function applyModeUI(mode) {
++  currentMode = mode;
++
++  document.getElementById("btn-manual").classList.toggle("active", mode === "manual");
++  document.getElementById("btn-autonomous").classList.toggle("active", mode === "autonomous");
++
++  const desc = document.getElementById("mode-desc");
++  const chip = document.getElementById("dpad-chip");
++  const hint = document.getElementById("dpad-hint");
++
++  if (mode === "autonomous") {
++    desc.textContent = "Autonomous — the robot drives itself and avoids obstacles.";
++    chip.textContent = "AUTONOMOUS";
++    hint.textContent = "Manual movement is disabled while autonomous. Stop still works.";
++  } else {
++    desc.textContent = "Manual — you're driving the robot directly.";
++    chip.textContent = "MANUAL";
++    hint.textContent = "Use the arrows to drive. Stop always works.";
++  }
++
++  setDpadEnabled(mode === "manual");
++}
++
++function setDpadEnabled(enabled) {
++  ["btn-forward", "btn-backward", "btn-left", "btn-right"].forEach(id => {
++    document.getElementById(id).disabled = !enabled;
++  });
++}
++
++document.getElementById("btn-manual").addEventListener("click", () => setMode("manual"));
++document.getElementById("btn-autonomous").addEventListener("click", () => setMode("autonomous"));
++
++// ------------------------------
++// MOVEMENT
++// ------------------------------
++async function sendMove(command) {
++  try {
++    const res = await fetch(`${BASE_URL}/api/move`, {
++      method: "POST",
++      headers: { "Content-Type": "application/json" },
++      body: JSON.stringify({ command })
++    });
++    if (!res.ok) throw new Error("Move rejected");
++  } catch (err) {
++    console.warn("Move failed:", err.message);
++    flashUnreachable();
++  }
++}
++
++async function sendStop() {
++  try {
++    const res = await fetch(`${BASE_URL}/api/stop`, { method: "POST" });
++    if (!res.ok) throw new Error("Stop failed");
++    // ESP32 firmware drops back to Manual on emergency stop — mirror that here
++    applyModeUI("manual");
++  } catch (err) {
++    console.warn("Stop failed:", err.message);
++    flashUnreachable();
++  }
++}
++
++document.querySelectorAll(".dpad-btn[data-cmd]").forEach(btn => {
++  btn.addEventListener("click", () => sendMove(btn.dataset.cmd));
++});
++document.getElementById("btn-stop").addEventListener("click", sendStop);
++
++// ------------------------------
++// CUTTER
++// ------------------------------
++async function setCutter(state) {
++  try {
++    const res = await fetch(`${BASE_URL}/api/cutter`, {
++      method: "POST",
++      headers: { "Content-Type": "application/json" },
++      body: JSON.stringify({ state })
++    });
++    if (!res.ok) throw new Error("Cutter command rejected");
++  } catch (err) {
++    console.warn("Cutter command failed:", err.message);
++    flashUnreachable();
++  }
++}
++
++document.getElementById("btn-cutter-on").addEventListener("click", () => setCutter(true));
++document.getElementById("btn-cutter-off").addEventListener("click", () => setCutter(false));
++
++function applyCutterUI(on) {
++  const chip = document.getElementById("cutter-chip");
++  chip.textContent = on ? "ON" : "OFF";
++  chip.className = "panel-chip " + (on ? "weed-chip" : "clear-chip");
++
++  document.getElementById("btn-cutter-on").classList.toggle("armed", on);
++  document.getElementById("btn-cutter-off").classList.toggle("armed", !on);
++}
++
++// ------------------------------
++// LIVE STATUS POLLING
++// ------------------------------
++async function loadRobotStatus() {
++  try {
++    const res = await fetch(`${BASE_URL}/api/robot/status`);
++    if (!res.ok) throw new Error("robot status unavailable");
++    const payload = await res.json();
++    const data = payload.data || payload;
++
++    robotReachable = true;
++    setLinkUI(true);
++
++    // Keep mode buttons/D-pad in sync with what the ESP32 reports,
++    // in case someone else (or the physical e-stop) changed it.
++    if (data.mode && data.mode !== currentMode) applyModeUI(data.mode);
++
++    document.getElementById("st-mode").textContent = (data.mode || "--").toUpperCase();
++    document.getElementById("st-action").textContent = (data.command || "--").toUpperCase();
++
++    const distEl = document.getElementById("st-distance");
++    distEl.textContent = (data.distanceCm != null ? data.distanceCm.toFixed(1) : "--") + " cm";
++
++    const obsEl = document.getElementById("st-obstacle");
++    obsEl.textContent = data.obstacle ? "BLOCKED" : "CLEAR";
++    obsEl.className = "status-value " + (data.obstacle ? "warn" : "ok");
++
++    applyCutterUI(!!data.cutter);
++
++  } catch (err) {
++    robotReachable = false;
++    setLinkUI(false);
++  }
++}
++
++async function loadWeedStatusForBattery() {
++  try {
++    const res = await fetch(`${BASE_URL}/api/status`);
++    if (!res.ok) throw new Error("status unavailable");
++    const data = await res.json();
++
++    const battEl = document.getElementById("st-battery");
++    battEl.textContent = (data.battery ?? "--") + "%";
++    battEl.className = "status-value " + (data.battery != null && data.battery < 20 ? "warn" : "");
++
++    const sysBadge = document.getElementById("sys-badge");
++    if (sysBadge) {
++      sysBadge.textContent = data.esp32Connected ? "● System Online" : "● Backend Online, ESP32 Idle";
++      sysBadge.className = "sys-badge " + (data.esp32Connected ? "online" : "refreshing");
++    }
++  } catch (err) {
++    const sysBadge = document.getElementById("sys-badge");
++    if (sysBadge) {
++      sysBadge.textContent = "● Offline";
++      sysBadge.className = "sys-badge refreshing";
++    }
++  }
++}
++
++function setLinkUI(reachable) {
++  const linkEl = document.getElementById("st-link");
++  linkEl.textContent = reachable ? "CONNECTED" : "UNREACHABLE";
++  linkEl.className = "status-value " + (reachable ? "ok" : "warn");
++
++  const connChip = document.getElementById("conn-chip");
++  connChip.textContent = reachable ? "LIVE" : "OFFLINE";
++  connChip.className = "panel-chip " + (reachable ? "clear-chip" : "weed-chip");
++
++  const dot = document.getElementById("device-dot");
++  const text = document.getElementById("device-status-text");
++  if (dot) dot.style.background = reachable ? "var(--green-400)" : "var(--red-600)";
++  if (text) text.textContent = reachable ? "Connected" : "Disconnected";
++
++  // Movement/cutter/mode only make sense to send when the ESP32 is reachable.
++  setDpadEnabled(reachable && currentMode === "manual");
++}
++
++function flashUnreachable() {
++  robotReachable = false;
++  setLinkUI(false);
++}
++
++// ------------------------------
++// BOOT + POLLING LOOP
++// ------------------------------
++loadRobotStatus();
++loadWeedStatusForBattery();
++
++setInterval(loadRobotStatus, 1500);
++setInterval(loadWeedStatusForBattery, 3000);
+diff --git a/software/frontend/js/settings.js b/software/frontend/js/settings.js
+index 06d2394..26adb41 100644
+--- a/software/frontend/js/settings.js
++++ b/software/frontend/js/settings.js
+@@ -1,15 +1,71 @@
+ const BASE_URL = "";
+-function saveSettings() {
++
++// -------------------------
++// Save settings to backend
++// -------------------------
++async function saveSettings() {
+     const settings = {
+         autoDetect: document.getElementById("autoDetect").checked,
+         alerts: document.getElementById("alerts").checked,
+-        autoRemove: document.getElementById("autoRemove").checked
++        autoRemove: document.getElementById("autoRemove").checked,
++        robotSpeed: Number(document.getElementById("robotSpeed").value),
++        obstacleThresholdCm: Number(document.getElementById("obstacleThresholdCm").value),
++        wifiSSID: document.getElementById("wifiSSID").value.trim()
+     };
+ 
+-    localStorage.setItem("weedSettings", JSON.stringify(settings));
+-    alert("✅ Settings saved successfully!");
++    try {
++        const res = await fetch(`${BASE_URL}/api/settings`, {
++            method: "POST",
++            headers: { "Content-Type": "application/json" },
++            body: JSON.stringify(settings)
++        });
++
++        if (!res.ok) throw new Error(`Save failed (${res.status})`);
++
++        const body = await res.json();
++        if (!body.success) throw new Error(body.message || "Save failed");
++
++        alert("✅ Settings saved successfully!");
++    } catch (err) {
++        console.error("Failed to save settings:", err);
++        alert("❌ Could not save settings — is the backend running?");
++    }
+ }
+ 
++// -------------------------
++// Load settings from backend
++// -------------------------
++async function loadSettings() {
++    try {
++        const res = await fetch(`${BASE_URL}/api/settings`);
++        if (!res.ok) throw new Error(`Load failed (${res.status})`);
++
++        const body = await res.json();
++        const settings = body.data || {};
++
++        if (settings.autoDetect !== undefined) document.getElementById("autoDetect").checked = settings.autoDetect;
++        if (settings.alerts !== undefined) document.getElementById("alerts").checked = settings.alerts;
++        if (settings.autoRemove !== undefined) document.getElementById("autoRemove").checked = settings.autoRemove;
++
++        if (settings.robotSpeed !== undefined) {
++            document.getElementById("robotSpeed").value = settings.robotSpeed;
++            document.getElementById("robotSpeedValue").textContent = settings.robotSpeed;
++        }
++        if (settings.obstacleThresholdCm !== undefined) {
++            document.getElementById("obstacleThresholdCm").value = settings.obstacleThresholdCm;
++        }
++        if (settings.wifiSSID !== undefined) {
++            document.getElementById("wifiSSID").value = settings.wifiSSID;
++        }
++    } catch (err) {
++        console.error("Failed to load settings:", err);
++        // Leave the HTML defaults in place if the backend can't be reached
++    }
++}
++
++// -------------------------
++// Connection status (System Information card)
++// -------------------------
+ function updateConnectionStatus(isConnected) {
+     const statusBadge = document.getElementById('connectionStatus');
+     const deviceInfo = document.getElementById('deviceName');
+@@ -25,12 +81,13 @@ function updateConnectionStatus(isConnected) {
+     }
+ 
+     if (deviceInfo) {
+-deviceInfo.textContent = isConnected ? 'ESP32-WROOM-32 Connected' : 'No device connected';    }
++        deviceInfo.textContent = isConnected ? 'ESP32-WROOM-32 Connected' : 'No device connected';
++    }
+ }
+ 
+ async function checkConnectionStatus() {
+     try {
+-        const res = await fetch("/api/status");
++        const res = await fetch(`${BASE_URL}/api/status`);
+ 
+         if (!res.ok) throw new Error();
+ 
+@@ -47,14 +104,16 @@ async function checkConnectionStatus() {
+ }
+ 
+ window.onload = function () {
+-    const saved = JSON.parse(localStorage.getItem("weedSettings"));
+-    if (saved) {
+-        document.getElementById("autoDetect").checked = saved.autoDetect;
+-        document.getElementById("alerts").checked = saved.alerts;
+-        document.getElementById("autoRemove").checked = saved.autoRemove;
+-    }
++    loadSettings();
++
++    // Live-update the speed slider's numeric readout as it's dragged
++    const speedSlider = document.getElementById("robotSpeed");
++    const speedValue = document.getElementById("robotSpeedValue");
++    speedSlider.addEventListener("input", () => {
++        speedValue.textContent = speedSlider.value;
++    });
+ 
+     checkConnectionStatus();
+     // Re-check every 5 seconds
+     setInterval(checkConnectionStatus, 5000);
+-};
+\ No newline at end of file
++};
+diff --git a/software/frontend/pages/alerts.html b/software/frontend/pages/alerts.html
+new file mode 100644
+index 0000000..cd14cef
+--- /dev/null
++++ b/software/frontend/pages/alerts.html
+@@ -0,0 +1,103 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8"/>
++  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
++  <title>Alerts - WeedGuard</title>
++  <link rel="stylesheet" href="/css/style.css"/>
++  <link rel="stylesheet" href="/css/alerts.css"/>
++  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
++</head>
++<body>
++
++<div class="layout">
++
++  <aside class="sidebar">
++    <div class="sidebar-brand">
++      <div class="brand-icon">🌿</div>
++      <div>
++        <p class="brand-name">WeedGuard</p>
++        <p class="brand-sub">IoT Detection System</p>
++      </div>
++    </div>
++
++    <nav class="sidebar-nav">
++      <p class="nav-section-label">MAIN</p>
++      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
++      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
++      <a href="/pages/field-map.html" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
++      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
++
++      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
++      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
++      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
++      <a href="/pages/alerts.html" class="nav-item active">
++        <span class="nav-item-icon">🔔</span> Alerts
++        <span class="nav-badge" id="alert-badge">0</span>
++      </a>
++    </nav>
++
++    <div class="sidebar-device">
++      <div class="device-dot" id="device-dot"></div>
++      <div>
++        <p class="device-name">ESP32 Module</p>
++        <p class="device-status" id="device-status-text">Connecting...</p>
++      </div>
++    </div>
++  </aside>
++
++  <div class="main">
++
++    <header class="topbar">
++      <div>
++        <h1 class="topbar-title">Alerts</h1>
++        <p class="topbar-sub">Connection, obstacle & system events</p>
++      </div>
++      <div class="topbar-right">
++        <div class="topbar-time" id="clock">--:--:-- --</div>
++        <span class="sys-badge online" id="sys-badge">● Checking...</span>
++      </div>
++    </header>
++
++    <div class="content">
++
++      <div class="kpi-row alerts-kpi-row">
++        <div class="kpi-card">
++          <p class="kpi-label">Active Alerts</p>
++          <p class="kpi-value red" id="al-active">--</p>
++          <p class="kpi-delta negative">Needs attention</p>
++        </div>
++        <div class="kpi-card">
++          <p class="kpi-label">Backend</p>
++          <p class="kpi-value" id="al-backend">--</p>
++          <p class="kpi-delta positive">Node.js API</p>
++        </div>
++        <div class="kpi-card">
++          <p class="kpi-label">ESP32 Link</p>
++          <p class="kpi-value" id="al-esp32">--</p>
++          <p class="kpi-delta">Firmware heartbeat</p>
++        </div>
++        <div class="kpi-card">
++          <p class="kpi-label">Obstacle Sensor</p>
++          <p class="kpi-value" id="al-obstacle">--</p>
++          <p class="kpi-delta">HC-SR04</p>
++        </div>
++      </div>
++
++      <div class="panel">
++        <div class="panel-header">
++          <p class="panel-title">Alert Feed</p>
++          <span class="panel-chip clear-chip">Auto-refreshing</span>
++        </div>
++        <ul class="alert-feed" id="alert-feed">
++          <li class="alert-empty">Checking system status...</li>
++        </ul>
++      </div>
++
++    </div>
++  </div>
++</div>
++
++<script src="/js/alerts.js"></script>
++</body>
++</html>
+diff --git a/software/frontend/pages/analytics.html b/software/frontend/pages/analytics.html
+new file mode 100644
+index 0000000..47baeb3
+--- /dev/null
++++ b/software/frontend/pages/analytics.html
+@@ -0,0 +1,126 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8"/>
++  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
++  <title>Analytics - WeedGuard</title>
++  <link rel="stylesheet" href="/css/style.css"/>
++  <link rel="stylesheet" href="/css/analytics.css"/>
++  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
++</head>
++<body>
++
++<div class="layout">
++
++  <aside class="sidebar">
++    <div class="sidebar-brand">
++      <div class="brand-icon">🌿</div>
++      <div>
++        <p class="brand-name">WeedGuard</p>
++        <p class="brand-sub">IoT Detection System</p>
++      </div>
++    </div>
++
++    <nav class="sidebar-nav">
++      <p class="nav-section-label">MAIN</p>
++      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
++      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
++      <a href="/pages/field-map.html" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
++      <a href="/pages/analytics.html" class="nav-item active"><span class="nav-item-icon">📊</span> Analytics</a>
++
++      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
++      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
++      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
++      <a href="/pages/alerts.html" class="nav-item">
++        <span class="nav-item-icon">🔔</span> Alerts
++        <span class="nav-badge" id="alert-badge">0</span>
++      </a>
++    </nav>
++
++    <div class="sidebar-device">
++      <div class="device-dot" id="device-dot"></div>
++      <div>
++        <p class="device-name">ESP32 Module</p>
++        <p class="device-status" id="device-status-text">Connecting...</p>
++      </div>
++    </div>
++  </aside>
++
++  <div class="main">
++
++    <header class="topbar">
++      <div>
++        <h1 class="topbar-title">Analytics</h1>
++        <p class="topbar-sub">Detections, executions & session history</p>
++      </div>
++      <div class="topbar-right">
++        <div class="topbar-time" id="clock">--:--:-- --</div>
++        <span class="sys-badge online" id="sys-badge">● Checking...</span>
++        <button class="topbar-btn" onclick="loadAll()">↻ Refresh</button>
++      </div>
++    </header>
++
++    <div class="content">
++
++      <div class="kpi-row analytics-kpi-row">
++        <div class="kpi-card">
++          <p class="kpi-label">Total Scans (log)</p>
++          <p class="kpi-value" id="an-total-scans">--</p>
++          <p class="kpi-delta positive">From latest 100 log entries</p>
++        </div>
++        <div class="kpi-card">
++          <p class="kpi-label">Total Weeds Detected</p>
++          <p class="kpi-value red" id="an-total-weeds">--</p>
++          <p class="kpi-delta negative">Across recent log entries</p>
++        </div>
++        <div class="kpi-card">
++          <p class="kpi-label">Detection Rate</p>
++          <p class="kpi-value amber" id="an-detection-rate">--%</p>
++          <p class="kpi-delta">Weeds ÷ scans</p>
++        </div>
++        <div class="kpi-card">
++          <p class="kpi-label">Sessions Tracked</p>
++          <p class="kpi-value" id="an-sessions">--</p>
++          <p class="kpi-delta positive">Last 5 shown below</p>
++        </div>
++      </div>
++
++      <div class="rc-grid">
++
++        <div class="panel">
++          <div class="panel-header">
++            <p class="panel-title">Detections per Session</p>
++            <span class="panel-chip clear-chip" id="chart-chip">Last 5 sessions</span>
++          </div>
++          <div class="bar-chart" id="bar-chart">
++            <p class="chart-empty" id="chart-empty">Loading session data...</p>
++          </div>
++        </div>
++
++        <div class="panel">
++          <div class="panel-header"><p class="panel-title">Session Table</p></div>
++          <table class="an-table">
++            <thead>
++              <tr>
++                <th>#</th>
++                <th>Started</th>
++                <th>Executions</th>
++                <th>Detections</th>
++                <th>Avg Moisture</th>
++                <th>Status</th>
++              </tr>
++            </thead>
++            <tbody id="session-table-body">
++              <tr><td colspan="6" class="chart-empty">Loading...</td></tr>
++            </tbody>
++          </table>
++        </div>
++
++      </div>
++    </div>
++  </div>
++</div>
++
++<script src="/js/analytics.js"></script>
++</body>
++</html>
+diff --git a/software/frontend/pages/field-map.html b/software/frontend/pages/field-map.html
+new file mode 100644
+index 0000000..24738e7
+--- /dev/null
++++ b/software/frontend/pages/field-map.html
+@@ -0,0 +1,138 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8"/>
++  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
++  <title>Field Map - WeedGuard</title>
++  <link rel="stylesheet" href="/css/style.css"/>
++  <link rel="stylesheet" href="/css/field-map.css"/>
++  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
++</head>
++<body>
++
++<div class="layout">
++
++  <aside class="sidebar">
++    <div class="sidebar-brand">
++      <div class="brand-icon">🌿</div>
++      <div>
++        <p class="brand-name">WeedGuard</p>
++        <p class="brand-sub">IoT Detection System</p>
++      </div>
++    </div>
++
++    <nav class="sidebar-nav">
++      <p class="nav-section-label">MAIN</p>
++      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
++      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
++      <a href="/pages/field-map.html" class="nav-item active"><span class="nav-item-icon">🗺</span> Field Map</a>
++      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
++
++      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
++      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
++      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
++      <a href="/pages/alerts.html" class="nav-item">
++        <span class="nav-item-icon">🔔</span> Alerts
++        <span class="nav-badge" id="alert-badge">0</span>
++      </a>
++    </nav>
++
++    <div class="sidebar-device">
++      <div class="device-dot" id="device-dot"></div>
++      <div>
++        <p class="device-name">ESP32 Module</p>
++        <p class="device-status" id="device-status-text">Connecting...</p>
++      </div>
++    </div>
++  </aside>
++
++  <div class="main">
++
++    <header class="topbar">
++      <div>
++        <h1 class="topbar-title">Field Map</h1>
++        <p class="topbar-sub">Zone layout & robot position · <span id="last-updated">--</span></p>
++      </div>
++      <div class="topbar-right">
++        <div class="topbar-time" id="clock">--:--:-- --</div>
++        <span class="sys-badge online" id="sys-badge">● Checking...</span>
++      </div>
++    </header>
++
++    <div class="content">
++
++      <div class="panel map-note">
++        <span class="map-note-icon">ℹ</span>
++        <p>
++          This is a zone-level layout, not GPS tracking — the robot doesn't carry a positioning
++          sensor yet. The highlighted zone below reflects the robot's <strong>current movement
++          command</strong> from Robot Control, and zone color reflects the <strong>last detection
++          result</strong> from the dashboard. Precise GPS/vision-based positioning is planned for
++          Phase 5.
++        </p>
++      </div>
++
++      <div class="rc-grid">
++
++        <div class="panel">
++          <div class="panel-header">
++            <p class="panel-title">Field Layout — Station Alpha</p>
++            <span class="panel-chip" id="field-chip">CLEAR</span>
++          </div>
++
++          <div class="field-grid" id="field-grid">
++            <div class="field-zone" id="fz-a" data-zone="a">
++              <span class="field-zone-label">Zone A</span>
++              <span class="field-zone-status" id="fz-a-status">--</span>
++            </div>
++            <div class="field-zone" id="fz-b" data-zone="b">
++              <span class="field-zone-label">Zone B</span>
++              <span class="field-zone-status" id="fz-b-status">--</span>
++            </div>
++            <div class="field-zone" id="fz-c" data-zone="c">
++              <span class="field-zone-label">Zone C</span>
++              <span class="field-zone-status" id="fz-c-status">--</span>
++            </div>
++            <div class="field-zone" id="fz-d" data-zone="d">
++              <span class="field-zone-label">Zone D</span>
++              <span class="field-zone-status" id="fz-d-status">--</span>
++            </div>
++            <div class="field-robot" id="field-robot" title="Robot">🤖</div>
++          </div>
++
++          <div class="field-legend">
++            <span><i class="dot safe"></i> Clear</span>
++            <span><i class="dot danger"></i> Weed detected</span>
++            <span><i class="dot active"></i> Robot here</span>
++          </div>
++        </div>
++
++        <div class="rc-side">
++          <div class="panel">
++            <div class="panel-header"><p class="panel-title">Robot Position Info</p></div>
++            <ul class="status-list">
++              <li><span class="status-label">Current Command</span><span class="status-value" id="pos-command">--</span></li>
++              <li><span class="status-label">Mode</span><span class="status-value" id="pos-mode">--</span></li>
++              <li><span class="status-label">Obstacle</span><span class="status-value" id="pos-obstacle">--</span></li>
++              <li><span class="status-label">Distance</span><span class="status-value" id="pos-distance">-- cm</span></li>
++            </ul>
++          </div>
++
++          <div class="panel">
++            <div class="panel-header"><p class="panel-title">Field Summary</p></div>
++            <ul class="status-list">
++              <li><span class="status-label">Zones monitored</span><span class="status-value">4</span></li>
++              <li><span class="status-label">Zones clear</span><span class="status-value ok" id="sum-clear">--</span></li>
++              <li><span class="status-label">Zones flagged</span><span class="status-value warn" id="sum-flagged">--</span></li>
++            </ul>
++          </div>
++        </div>
++
++      </div>
++    </div>
++  </div>
++</div>
++
++<script src="/js/field-map.js"></script>
++</body>
++</html>
+diff --git a/software/frontend/pages/logs.html b/software/frontend/pages/logs.html
+index 9b85e48..5502385 100644
+--- a/software/frontend/pages/logs.html
++++ b/software/frontend/pages/logs.html
+@@ -13,6 +13,10 @@
+     <nav>
+         <a href="/">Dashboard</a>
+         <a class="active" href="#">Logs</a>
++        <a href="/pages/field-map.html">Field Map</a>
++        <a href="/pages/analytics.html">Analytics</a>
++        <a href="/pages/robot-control.html">Robot Control</a>
++        <a href="/pages/alerts.html">Alerts</a>
+         <a href="/pages/settings.html">Settings</a>
+     </nav>
+ </header>
+diff --git a/software/frontend/pages/robot-control.html b/software/frontend/pages/robot-control.html
+new file mode 100644
+index 0000000..5c63394
+--- /dev/null
++++ b/software/frontend/pages/robot-control.html
+@@ -0,0 +1,138 @@
++<!DOCTYPE html>
++<html lang="en">
++<head>
++  <meta charset="UTF-8"/>
++  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
++  <title>Robot Control - WeedGuard</title>
++  <link rel="stylesheet" href="/css/style.css"/>
++  <link rel="stylesheet" href="/css/robot-control.css"/>
++  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
++</head>
++<body>
++
++<div class="layout">
++
++  <!-- SIDEBAR -->
++  <aside class="sidebar">
++    <div class="sidebar-brand">
++      <div class="brand-icon">🌿</div>
++      <div>
++        <p class="brand-name">WeedGuard</p>
++        <p class="brand-sub">IoT Detection System</p>
++      </div>
++    </div>
++
++    <nav class="sidebar-nav">
++      <p class="nav-section-label">MAIN</p>
++      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
++      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
++      <a href="/pages/field-map.html" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
++      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
++
++      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
++      <a href="/pages/robot-control.html" class="nav-item active"><span class="nav-item-icon">🤖</span> Robot Control</a>
++      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
++      <a href="/pages/alerts.html" class="nav-item">
++        <span class="nav-item-icon">🔔</span> Alerts
++        <span class="nav-badge" id="alert-badge">0</span>
++      </a>
++    </nav>
++
++    <div class="sidebar-device">
++      <div class="device-dot" id="device-dot"></div>
++      <div>
++        <p class="device-name">ESP32 Module</p>
++        <p class="device-status" id="device-status-text">Connecting...</p>
++      </div>
++    </div>
++  </aside>
++
++  <!-- MAIN -->
++  <div class="main">
++
++    <!-- TOPBAR -->
++    <header class="topbar">
++      <div>
++        <h1 class="topbar-title">Robot Control</h1>
++        <p class="topbar-sub">Manual & autonomous driving · Cutter · Obstacle status</p>
++      </div>
++      <div class="topbar-right">
++        <div class="topbar-time" id="clock">--:--:-- --</div>
++        <span class="sys-badge online" id="sys-badge">● Checking...</span>
++      </div>
++    </header>
++
++    <!-- CONTENT -->
++    <div class="content">
++
++      <!-- MODE SWITCH BAR -->
++      <div class="panel mode-panel">
++        <div class="mode-panel-left">
++          <p class="panel-title">Operating Mode</p>
++          <p class="mode-desc" id="mode-desc">Manual — you're driving the robot directly.</p>
++        </div>
++        <div class="mode-switch" id="mode-switch">
++          <button class="mode-btn active" id="btn-manual" data-mode="manual">🕹 Manual</button>
++          <button class="mode-btn" id="btn-autonomous" data-mode="autonomous">🤖 Autonomous</button>
++        </div>
++      </div>
++
++      <div class="rc-grid">
++
++        <!-- MOVEMENT D-PAD -->
++        <div class="panel">
++          <div class="panel-header">
++            <p class="panel-title">Movement</p>
++            <span class="panel-chip" id="dpad-chip">MANUAL</span>
++          </div>
++
++          <div class="dpad" id="dpad">
++            <button class="dpad-btn dpad-forward"  id="btn-forward"  data-cmd="forward"  title="Forward">▲</button>
++            <button class="dpad-btn dpad-left"     id="btn-left"     data-cmd="left"     title="Turn Left">◀</button>
++            <button class="dpad-btn dpad-stop"     id="btn-stop"                          title="Stop">■</button>
++            <button class="dpad-btn dpad-right"    id="btn-right"    data-cmd="right"    title="Turn Right">▶</button>
++            <button class="dpad-btn dpad-backward" id="btn-backward" data-cmd="backward" title="Backward">▼</button>
++          </div>
++
++          <p class="dpad-hint" id="dpad-hint">Use the arrows to drive. Stop always works.</p>
++        </div>
++
++        <!-- CUTTER + LIVE STATUS -->
++        <div class="rc-side">
++
++          <div class="panel">
++            <div class="panel-header">
++              <p class="panel-title">Cutter (RS775)</p>
++              <span class="panel-chip" id="cutter-chip">OFF</span>
++            </div>
++            <div class="cutter-controls">
++              <button class="cutter-btn on"  id="btn-cutter-on">🔪 Cutter ON</button>
++              <button class="cutter-btn off" id="btn-cutter-off">⏹ Cutter OFF</button>
++            </div>
++          </div>
++
++          <div class="panel">
++            <div class="panel-header">
++              <p class="panel-title">Live Status</p>
++              <span class="panel-chip" id="conn-chip">--</span>
++            </div>
++            <ul class="status-list">
++              <li><span class="status-label">Mode</span><span class="status-value" id="st-mode">--</span></li>
++              <li><span class="status-label">Current Action</span><span class="status-value" id="st-action">--</span></li>
++              <li><span class="status-label">Distance</span><span class="status-value" id="st-distance">-- cm</span></li>
++              <li><span class="status-label">Obstacle</span><span class="status-value" id="st-obstacle">--</span></li>
++              <li><span class="status-label">Battery</span><span class="status-value" id="st-battery">--%</span></li>
++              <li><span class="status-label">ESP32 Link</span><span class="status-value" id="st-link">--</span></li>
++            </ul>
++          </div>
++
++        </div>
++      </div>
++
++    </div>
++  </div>
++</div>
++
++<script src="/js/robot-control.js"></script>
++</body>
++</html>
+diff --git a/software/frontend/pages/settings.html b/software/frontend/pages/settings.html
+index abd1ca9..0ae9bac 100644
+--- a/software/frontend/pages/settings.html
++++ b/software/frontend/pages/settings.html
+@@ -13,6 +13,10 @@
+     <nav>
+         <a href="/index.html">Dashboard</a>
+         <a href="/pages/logs.html">Logs</a>
++        <a href="/pages/field-map.html">Field Map</a>
++        <a href="/pages/analytics.html">Analytics</a>
++        <a href="/pages/robot-control.html">Robot Control</a>
++        <a href="/pages/alerts.html">Alerts</a>
+         <a class="active" href="#">Settings</a>
+     </nav>
+ </header>
+@@ -69,6 +73,50 @@
+         </div>
+     </div>
+ 
++    <!-- Robot Configuration -->
++    <div class="card">
++        <h3>Robot Configuration</h3>
++
++        <div class="setting" style="flex-direction:column;align-items:stretch;gap:8px">
++            <div class="setting-content">
++                <div class="setting-icon">🚗</div>
++                <div class="setting-text">
++                    <strong>Robot Speed</strong>
++                    <p>Motor PWM value (0–255)</p>
++                </div>
++            </div>
++            <div style="display:flex;align-items:center;gap:12px">
++                <input type="range" id="robotSpeed" min="0" max="255" step="1" value="200" style="flex:1">
++                <span id="robotSpeedValue" style="font-family:'Space Mono',monospace;min-width:36px;text-align:right">200</span>
++            </div>
++        </div>
++
++        <div class="setting" style="flex-direction:column;align-items:stretch;gap:8px">
++            <div class="setting-content">
++                <div class="setting-icon">📏</div>
++                <div class="setting-text">
++                    <strong>Obstacle Threshold</strong>
++                    <p>Stop if an obstacle is closer than this (cm)</p>
++                </div>
++            </div>
++            <div style="display:flex;align-items:center;gap:12px">
++                <input type="number" id="obstacleThresholdCm" min="5" max="100" step="1" value="25" style="width:100px;font-family:'Space Mono',monospace;padding:6px 10px;border-radius:6px;border:1px solid #ddd">
++                <span style="color:#666;font-size:13px">cm</span>
++            </div>
++        </div>
++
++        <div class="setting" style="flex-direction:column;align-items:stretch;gap:8px">
++            <div class="setting-content">
++                <div class="setting-icon">📡</div>
++                <div class="setting-text">
++                    <strong>Wi-Fi Network (ESP32)</strong>
++                    <p>SSID the robot's firmware is configured to join. Editing this here does not reflash the ESP32 — you'll still need to update and re-upload the .ino if it changes.</p>
++                </div>
++            </div>
++            <input type="text" id="wifiSSID" placeholder="Network SSID" value="meowww" style="padding:8px 10px;border-radius:6px;border:1px solid #ddd;font-family:'Space Mono',monospace">
++        </div>
++    </div>
++
+     <!-- System Info -->
+     <div class="card">
+         <h3>System Information</h3>
+@@ -106,6 +154,6 @@
+     <p>© 2024 IoT-Based Weed Detection & Removal System</p>
+ </footer>
+ 
+-<script src="/software/frontend/js/settings.js"></script>
++<script src="/js/settings.js"></script>
+ </body>
+ </html>
+\ No newline at end of file
+-- 
+2.47.0.windows.2
+

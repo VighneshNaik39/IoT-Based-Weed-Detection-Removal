@@ -1,402 +1,129 @@
-/* ==========================================
-   GLOBAL
-========================================== */
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:'Poppins',sans-serif;
+.map-note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--green-50);
+  border-color: var(--green-200);
 }
 
-body{
-    background:#0B1220;
-    color:#fff;
+.map-note-icon {
+  font-size: 16px;
+  color: var(--green-600);
+  flex-shrink: 0;
 }
 
-/* ==========================================
-   HEADER
-========================================== */
-
-header{
-
-    background:#161B22;
-
-    padding:20px 40px;
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    box-shadow:0 4px 15px rgba(0,0,0,.4);
-
+.map-note p {
+  font-size: 12.5px;
+  color: var(--gray-700);
+  line-height: 1.6;
 }
 
-header h1{
-
-    color:#00E676;
-
+.rc-grid {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 20px;
+  align-items: start;
 }
 
-nav{
-
-    display:flex;
-
-    gap:15px;
-
+.rc-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-nav a{
-
-    text-decoration:none;
-
-    color:white;
-
-    padding:10px 18px;
-
-    border-radius:8px;
-
-    transition:.3s;
-
+/* ==============================
+   FIELD GRID — signature element
+============================== */
+.field-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
+  aspect-ratio: 4 / 3;
+  padding: 14px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--green-50),
+    var(--green-50) 10px,
+    #ecf7ef 10px,
+    #ecf7ef 20px
+  );
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
 }
 
-nav a:hover,
-nav .active{
-
-    background:#00E676;
-
-    color:black;
-
+.field-zone {
+  border-radius: var(--radius-md);
+  background: var(--white);
+  border: 2px solid var(--green-200);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: border-color 0.3s, background 0.3s;
 }
 
-/* ==========================================
-   MAIN CONTAINER
-========================================== */
-
-.container{
-
-    width:95%;
-
-    margin:30px auto;
-
-    display:grid;
-
-    grid-template-columns:2fr 1fr;
-
-    gap:25px;
-
+.field-zone-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gray-500);
+  letter-spacing: 0.04em;
 }
 
-/* ==========================================
-   FIELD GRID
-========================================== */
-
-.left{
-
-    background:#161B22;
-
-    padding:25px;
-
-    border-radius:15px;
-
+.field-zone-status {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--green-100);
+  color: var(--green-600);
 }
 
-.left h2{
-
-    margin-bottom:20px;
-
-    color:#00E676;
-
+.field-zone.danger {
+  border-color: var(--red-600);
+  background: var(--red-100);
+}
+.field-zone.danger .field-zone-status {
+  background: var(--red-600);
+  color: #fff;
 }
 
-#fieldGrid{
-
-    display:grid;
-
-    grid-template-columns:repeat(10,60px);
-
-    grid-template-rows:repeat(10,60px);
-
-    gap:6px;
-
-    justify-content:center;
-
+.field-zone.active-zone {
+  border-color: var(--green-600);
+  box-shadow: 0 0 0 3px rgba(45,106,79,0.18);
 }
 
-/* ==========================================
-   GRID CELL
-========================================== */
-
-.cell{
-
-    width:60px;
-
-    height:60px;
-
-    background:#1F2937;
-
-    border:1px solid #2D3748;
-
-    display:flex;
-
-    justify-content:center;
-
-    align-items:center;
-
-    font-size:24px;
-
-    border-radius:6px;
-
-    transition:.3s;
-
+.field-robot {
+  position: absolute;
+  font-size: 26px;
+  transition: top 0.5s ease, left 0.5s ease;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+  pointer-events: none;
 }
 
-.cell:hover{
-
-    background:#2C3E50;
-
+.field-legend {
+  display: flex;
+  gap: 18px;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--gray-500);
 }
 
-/* ==========================================
-   ROBOT
-========================================== */
-
-.robot{
-
-    background:#00E676 !important;
-
-    color:#000;
-
-    animation:pulse 1s infinite;
-
+.field-legend .dot {
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
 }
 
-/* ==========================================
-   WEED
-========================================== */
-
-.weed{
-
-    background:#43A047 !important;
-
-}
-
-/* ==========================================
-   PATH
-========================================== */
-
-.path{
-
-    background:#2196F3 !important;
-
-}
-
-/* ==========================================
-   OBSTACLE
-========================================== */
-
-.obstacle{
-
-    background:#E53935 !important;
-
-}
-
-/* ==========================================
-   RIGHT PANEL
-========================================== */
-
-.right{
-
-    display:flex;
-
-    flex-direction:column;
-
-    gap:20px;
-
-}
-
-/* ==========================================
-   CARD
-========================================== */
-
-.card{
-
-    background:#161B22;
-
-    padding:20px;
-
-    border-radius:15px;
-
-    text-align:center;
-
-    border:1px solid rgba(255,255,255,.08);
-
-    transition:.3s;
-
-}
-
-.card:hover{
-
-    transform:translateY(-4px);
-
-    box-shadow:0 0 15px rgba(0,230,118,.25);
-
-}
-
-.card h3{
-
-    color:#00E676;
-
-    margin-bottom:15px;
-
-}
-
-.card p{
-
-    font-size:24px;
-
-    font-weight:bold;
-
-}
-
-.card ul{
-
-    list-style:none;
-
-    text-align:left;
-
-    margin-top:10px;
-
-}
-
-.card li{
-
-    padding:6px 0;
-
-}
-
-/* ==========================================
-   FOOTER
-========================================== */
-
-footer{
-
-    margin-top:35px;
-
-    padding:20px;
-
-    text-align:center;
-
-    background:#161B22;
-
-    color:#aaa;
-
-}
-
-/* ==========================================
-   ANIMATION
-========================================== */
-
-@keyframes pulse{
-
-0%{
-
-transform:scale(1);
-
-}
-
-50%{
-
-transform:scale(1.08);
-
-}
-
-100%{
-
-transform:scale(1);
-
-}
-
-}
-
-/* ==========================================
-   RESPONSIVE
-========================================== */
-
-@media(max-width:1100px){
-
-.container{
-
-grid-template-columns:1fr;
-
-}
-
-}
-
-@media(max-width:768px){
-
-header{
-
-flex-direction:column;
-
-gap:20px;
-
-}
-
-nav{
-
-flex-wrap:wrap;
-
-justify-content:center;
-
-}
-
-#fieldGrid{
-
-grid-template-columns:repeat(10,42px);
-
-grid-template-rows:repeat(10,42px);
-
-}
-
-.cell{
-
-width:42px;
-
-height:42px;
-
-font-size:18px;
-
-}
-
-}
-
-@media(max-width:480px){
-
-#fieldGrid{
-
-grid-template-columns:repeat(10,32px);
-
-grid-template-rows:repeat(10,32px);
-
-}
-
-.cell{
-
-width:32px;
-
-height:32px;
-
-font-size:14px;
-
-}
-
-header h1{
-
-font-size:22px;
-
-}
-
+.dot.safe   { background: var(--green-500); }
+.dot.danger { background: var(--red-600); }
+.dot.active { background: var(--green-700); box-shadow: 0 0 0 3px rgba(45,106,79,0.2); }
+
+@media (max-width: 1100px) {
+  .rc-grid { grid-template-columns: 1fr; }
 }

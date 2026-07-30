@@ -1,154 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Alerts Dashboard</title>
-
-<link rel="stylesheet" href="../css/alerts.css">
-
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-<link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
-
-<script defer src="../js/alerts.js"></script>
-
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Alerts - WeedGuard</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="stylesheet" href="/css/alerts.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
-
 <body>
 
-<header>
+<div class="layout">
 
-<div class="logo">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌿</div>
+      <div>
+        <p class="brand-name">WeedGuard</p>
+        <p class="brand-sub">IoT Detection System</p>
+      </div>
+    </div>
 
-<i class="fa-solid fa-triangle-exclamation"></i>
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">MAIN</p>
+      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
+      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
+      <a href="/pages/field-map.html" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
+      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
 
-<span>Robot Alerts</span>
+      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
+      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
+      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
+      <a href="/pages/alerts.html" class="nav-item active">
+        <span class="nav-item-icon">🔔</span> Alerts
+        <span class="nav-badge" id="alert-badge">0</span>
+      </a>
+    </nav>
 
+    <div class="sidebar-device">
+      <div class="device-dot" id="device-dot"></div>
+      <div>
+        <p class="device-name">ESP32 Module</p>
+        <p class="device-status" id="device-status-text">Connecting...</p>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+
+    <header class="topbar">
+      <div>
+        <h1 class="topbar-title">Alerts</h1>
+        <p class="topbar-sub">Connection, obstacle & system events</p>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-time" id="clock">--:--:-- --</div>
+        <span class="sys-badge online" id="sys-badge">● Checking...</span>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <div class="kpi-row alerts-kpi-row">
+        <div class="kpi-card">
+          <p class="kpi-label">Active Alerts</p>
+          <p class="kpi-value red" id="al-active">--</p>
+          <p class="kpi-delta negative">Needs attention</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">Backend</p>
+          <p class="kpi-value" id="al-backend">--</p>
+          <p class="kpi-delta positive">Node.js API</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">ESP32 Link</p>
+          <p class="kpi-value" id="al-esp32">--</p>
+          <p class="kpi-delta">Firmware heartbeat</p>
+        </div>
+        <div class="kpi-card">
+          <p class="kpi-label">Obstacle Sensor</p>
+          <p class="kpi-value" id="al-obstacle">--</p>
+          <p class="kpi-delta">HC-SR04</p>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <p class="panel-title">Alert Feed</p>
+          <span class="panel-chip clear-chip">Auto-refreshing</span>
+        </div>
+        <ul class="alert-feed" id="alert-feed">
+          <li class="alert-empty">Checking system status...</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
 </div>
 
-<nav>
-
-<a href="../index.html">Dashboard</a>
-
-<a href="robot-control.html">Robot Control</a>
-
-<a href="field-map.html">Field Map</a>
-
-<a href="analytics.html">Analytics</a>
-
-<a href="logs.html">Logs</a>
-
-<a class="active" href="alerts.html">Alerts</a>
-
-<a href="settings.html">Settings</a>
-
-</nav>
-
-</header>
-
-<div class="container">
-
-<div class="summary">
-
-<div class="card danger">
-
-<h2>Critical Alerts</h2>
-
-<h1 id="criticalCount">0</h1>
-
-</div>
-
-<div class="card warning">
-
-<h2>Warnings</h2>
-
-<h1 id="warningCount">0</h1>
-
-</div>
-
-<div class="card success">
-
-<h2>System Status</h2>
-
-<h1 id="systemStatus">Healthy</h1>
-
-</div>
-
-</div>
-
-<div class="alerts-section">
-
-<h2>Live Alerts</h2>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Time</th>
-
-<th>Type</th>
-
-<th>Message</th>
-
-<th>Status</th>
-
-</tr>
-
-</thead>
-
-<tbody id="alertTable">
-
-<tr>
-
-<td colspan="4">
-
-No Alerts
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-<div class="buttons">
-
-<button id="clearAlerts">
-
-<i class="fa-solid fa-trash"></i>
-
-Clear Alerts
-
-</button>
-
-<button id="refreshAlerts">
-
-<i class="fa-solid fa-rotate"></i>
-
-Refresh
-
-</button>
-
-</div>
-
-</div>
-
-<footer>
-
-IoT Weed Detection & Robotic Weed Removal System
-
-</footer>
-
+<script src="/js/alerts.js"></script>
 </body>
-
 </html>
