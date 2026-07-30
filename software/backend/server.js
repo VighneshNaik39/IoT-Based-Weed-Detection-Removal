@@ -1,12 +1,34 @@
+const movementRoutes    = require("./routes/movement");
+const modeRoutes        = require("./routes/mode");
+const cutterRoutes      = require("./routes/cutter");
+const stopRoutes        = require("./routes/stop");
+const robotRoutes       = require("./routes/robot");
+const settingsRoutes    = require("./routes/settings");
+const logsRoutes        = require("./routes/logs");
+const apiContractRoutes = require("./routes/apiContract");
 const express = require("express");
 const cors = require("cors");
 const fs = require("fs");
 const path = require("path");
 
+const loggerService = require("./services/loggerService");
+
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use("/api/move", movementRoutes);
+app.use("/api/stop", stopRoutes);
+app.use("/api/mode", modeRoutes);
+app.use("/api/cutter", cutterRoutes);
+// NOTE: robot status/mode live under /api/robot/*, NOT /api/status —
+// mounting the ESP32 status proxy at /api/status previously shadowed
+// the weed-detection status handler further down in this file, since
+// Express matches the first registered route. Keep these separate.
+app.use("/api/robot", robotRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/logs", logsRoutes);
+app.use("/api", apiContractRoutes);
 app.use(express.static(__dirname + "/../frontend"));
 
 // =============================
@@ -24,18 +46,9 @@ if (!fs.existsSync(sessionFilePath)) fs.writeFileSync(sessionFilePath, "[]");
 // =============================
 // 📁 READ / WRITE HELPERS
 // =============================
-function readLogs() {
-  try { return JSON.parse(fs.readFileSync(logFilePath, "utf8")); }
-  catch { return []; }
-}
-
-function writeLogs(logs) {
-
-  try { fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2)); }
-  catch (err) { console.error("❌ Error writing logs:", err); }
-
- 
-}
+// readLogs/writeLogs now live in services/loggerService.js (also used by
+// routes/logs.js -> controllers/logController.js for GET /api/logs).
+const { readLogs, writeLogs } = loggerService;
 
 function readSessions() {
   try { return JSON.parse(fs.readFileSync(sessionFilePath, "utf8")); }
@@ -61,14 +74,7 @@ function isESP32Connected() {
 
 let sessionStats = { scansToday: 0, weedsDetected: 0, weedsRemoved: 0 };
 let control      = { autoMode: true, removal: false };
-// =============================
-// 🤖 ROBOT STATE
-// =============================
-let robotState = {
-  movement: "STOP",
-  mode: "AUTO",
-  cutter: false
-};
+
 // =============================
 // 🌿 CURRENT SESSION (in-memory)
 // =============================
@@ -230,39 +236,8 @@ app.get("/api/status", (req, res) => {
     esp32Connected: isESP32Connected()
   });
 });
-// =============================
-// 🤖 COMPLETE ROBOT STATUS
-// =============================
-app.get("/api/robot/status", (req, res) => {
 
-  const logs = readLogs();
-  const currentData = logs.length > 0 ? logs[0] : latestData;
-
-  res.json({
-
-    movement: robotState.movement,
-    mode: robotState.mode,
-    cutter: robotState.cutter,
-
-    weedStatus: currentData.status,
-    moisture: currentData.moisture,
-    time: currentData.time,
-
-    scansToday: sessionStats.scansToday,
-    weedsDetected: sessionStats.weedsDetected,
-    weedsRemoved: sessionStats.weedsRemoved,
-
-    battery: 80,
-
-    esp32Connected: isESP32Connected()
-
-  });
-
-});
-
-app.get("/api/logs", (req, res) => {
-  res.json(readLogs());
-});
+// GET /api/logs is now handled by routes/logs.js -> controllers/logController.js
 
 // =============================
 // ✅ GET SESSIONS
@@ -350,153 +325,7 @@ app.post("/api/control", (req, res) => {
   console.log("⚙️ CONTROL UPDATED:", control);
   res.json({ success: true, control });
 });
-// =============================
-// 🚗 MOVE FORWARD
-// =============================
-app.post("/api/movement/forward", (req, res) => {
 
-  robotState.movement = "FORWARD";
- 
-
-
-  console.log("⬆ Robot moving FORWARD");
-
-  res.json({
-    success: true,
-    movement: robotState.movement,
-    message: "Robot moving forward"
-  });
-
-});
-// =============================
-// 🚗 MOVE BACKWARD
-// =============================
-app.post("/api/movement/backward", (req, res) => {
-
-  robotState.movement = "BACKWARD";
-  
-
-  console.log("⬇ Robot moving BACKWARD");
-
-  res.json({
-    success: true,
-    movement: robotState.movement,
-    message: "Robot moving backward"
-  });
-
-});
-// =============================
-// ⬅ MOVE LEFT
-// =============================
-app.post("/api/movement/left", (req, res) => {
-
-  robotState.movement = "LEFT";
- 
-
-  console.log("⬅ Robot moving LEFT");
-
-  res.json({
-    success: true,
-    movement: robotState.movement,
-    message: "Robot moving left"
-  });
-
-});
-// =============================
-// ➡ MOVE RIGHT
-// =============================
-app.post("/api/movement/right", (req, res) => {
-
-  robotState.movement = "RIGHT";
- 
-  console.log("➡ Robot moving RIGHT");
-
-  res.json({
-    success: true,
-    movement: robotState.movement,
-    message: "Robot moving right"
-  });
-
-});
-// =============================
-// 🛑 STOP ROBOT
-// =============================
-app.post("/api/movement/stop", (req, res) => {
-
-  robotState.movement = "STOP";
-  
-
-  console.log("🛑 Robot STOPPED");
-
-  res.json({
-    success: true,
-    movement: robotState.movement,
-    message: "Robot stopped"
-  });
-
-});
-// =============================
-// 🤖 ROBOT MODE
-// =============================
-app.post("/api/robot/mode", (req, res) => {
-if (!req.body) {
-  return res.status(400).json({
-    success: false,
-    message: "Request body missing"
-  });
-}
-
-const { mode } = req.body;
-
-  if (mode !== "AUTO" && mode !== "MANUAL") {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid mode"
-    });
-  }
-
-  robotState.mode = mode;
-
-  console.log(`🤖 Robot mode changed to ${mode}`);
-
-  res.json({
-    success: true,
-    mode: robotState.mode
-  });
-
-});
-// =============================
-// ✂️ START CUTTER
-// =============================
-app.post("/api/cutter/start", (req, res) => {
-
-  robotState.cutter = true;
-
-  console.log("✂️ Cutter STARTED");
-
-  res.json({
-    success: true,
-    cutter: robotState.cutter,
-    message: "Cutter started"
-  });
-
-});
-// =============================
-// 🛑 STOP CUTTER
-// =============================
-app.post("/api/cutter/stop", (req, res) => {
-
-  robotState.cutter = false;
-
-  console.log("🛑 Cutter STOPPED");
-
-  res.json({
-    success: true,
-    cutter: robotState.cutter,
-    message: "Cutter stopped"
-  });
-
-});
 // =============================
 // 🚀 START
 // =============================
@@ -505,137 +334,3 @@ onStartup();
 app.listen(5000, "0.0.0.0", () => {
   console.log("🚀 Server running on http://localhost:5000");
 });
-// =============================
-// 📊 ANALYTICS API
-// =============================
-app.get("/api/analytics", (req, res) => {
-
-    res.json({
-
-        weedsDetected: sessionStats.weedsDetected,
-
-        weedsRemoved: sessionStats.weedsRemoved,
-
-        scansToday: sessionStats.scansToday,
-
-        battery: 80,
-
-        runtime: Math.floor(process.uptime() / 60),
-
-        distance: sessionStats.scansToday * 0.5,
-
-        obstacles: Math.floor(sessionStats.scansToday / 10)
-
-    });
-
-});
-// =============================
-// 🚨 ALERTS API
-// =============================
-app.get("/api/alerts", (req, res) => {
-
-    const alerts = [];
-
-    if (!isESP32Connected()) {
-
-        alerts.push({
-            time: new Date().toLocaleTimeString(),
-            type: "ESP32",
-            message: "ESP32 Disconnected",
-            status: "Critical"
-        });
-
-    }
-
-    if (80 < 20) {
-
-        alerts.push({
-            time: new Date().toLocaleTimeString(),
-            type: "Battery",
-            message: "Battery Low",
-            status: "Warning"
-        });
-
-    }
-
-    if (robotState.cutter) {
-
-        alerts.push({
-            time: new Date().toLocaleTimeString(),
-            type: "Cutter",
-            message: "Cutter Running",
-            status: "OK"
-        });
-
-    }
-
-    res.json(alerts);
-
-});
-// =============================
-// 🗑 CLEAR ALERTS
-// =============================
-app.delete("/api/alerts/clear", (req, res) => {
-
-    res.json({
-
-        success: true,
-
-        message: "Alerts Cleared"
-
-    });
-
-});
-// =============================
-// 🗺 FIELD MAP
-// =============================
-
-let robotPosition = {
-
-    x: 0,
-
-    y: 0
-
-};
-
-app.get("/api/field-map", (req, res) => {
-
-    res.json({
-
-        x: robotPosition.x,
-
-        y: robotPosition.y,
-
-        direction: robotState.movement,
-
-        distance: sessionStats.scansToday * 0.5,
-
-        weeds: [
-
-            {x:2,y:3},
-
-            {x:4,y:5},
-
-            {x:6,y:2}
-
-        ]
-
-    });
-
-});
-app.post("/api/movement/forward",(req,res)=>{
-
-robotState.movement="FORWARD";
-
-robotPosition.x--;
-
-res.json({
-
-success:true
-
-});
-
-});
-robotPosition.x++;
-robotPosition.y--;
-robotPosition.y++;
