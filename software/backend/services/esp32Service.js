@@ -5,7 +5,12 @@ const api = axios.create({
     baseURL: esp32.baseURL,
     timeout: 10000,
     headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        // Must match API_KEY in the drive ESP32's firmware (ESP32_WeedRobot_v6.ino).
+        // Sent on every request; the ESP32 only actually checks it on the
+        // command endpoints (/move, /stop, /speed, /relay, /mode) -- /status
+        // and /ping stay open and ignore it.
+        "X-API-Key": esp32.apiKey
     }
 });
 
