@@ -3,6 +3,11 @@
 // Member 3 — ESP32 Developer
 // Implements Parts 1–4 of the Firmware Upgrade Guide
 // No external libraries required
+//
+// FIX APPLIED: Backend IP was inconsistent — serverBase used
+// 192.168.48.135 while pushStatus() hardcoded 192.168.218.135.
+// Both now use a single backendIP/backendPort pair so they can
+// never drift out of sync again.
 // ============================================================
 
 #include <WiFi.h>
@@ -11,9 +16,15 @@
 // ============================================================
 // Wi-Fi CONFIG — update these if network changes
 // ============================================================
-const char* ssid       = "meowww";
-const char* password   = "capital v";
-const char* serverBase = "http://192.168.48.135:5000";
+const char* ssid       = "rcb";
+const char* password   = "987654321";
+
+// ⚠️ UPDATE THIS to your backend machine's actual current IP.
+// Run `ipconfig` (Windows) on the backend machine and copy the
+// IPv4 Address of the active Wi-Fi adapter. Both must be on the
+// SAME subnet as the ESP32 (check the ESP32 IP printed on boot).
+const char* backendIP   = "10.15.101.135";
+const int   backendPort = 5000;
 
 WebServer server(80);
 
@@ -302,6 +313,8 @@ void checkObstacle() {
 // ============================================================
 // Part 2: pushStatus()
 // Now includes "mode" and "distanceCm" fields.
+// FIX: now uses backendIP/backendPort consistently instead of
+// a separate hardcoded IP that had drifted out of sync.
 // ============================================================
 void pushStatus() {
   if (WiFi.status() != WL_CONNECTED) return;
@@ -309,7 +322,10 @@ void pushStatus() {
   float dist = getDistanceCm();
 
   WiFiClient client;
-  if (!client.connect("192.168.218.135", 5000)) return;
+  if (!client.connect(backendIP, backendPort)) {
+    Serial.println("❌ pushStatus: could not connect to backend");
+    return;
+  }
 
   String modeStr = autonomousMode ? "autonomous" : "manual";
 
@@ -322,7 +338,7 @@ void pushStatus() {
               + "\"connected\":true}";
 
   client.println("POST /api/esp32/status HTTP/1.1");
-  client.println("Host: 192.168.218.135:5000");
+  client.println("Host: " + String(backendIP) + ":" + String(backendPort));
   client.println("Content-Type: application/json");
   client.println("Connection: close");
   client.println("Content-Length: " + String(body.length()));
@@ -512,7 +528,11 @@ void setup() {
     Serial.println("\n✅ Wi-Fi Connected!");
     Serial.print("📡 ESP32 IP: ");
     Serial.println(WiFi.localIP());
-    Serial.println("👆 Give this IP to Member 1 for backend config");
+    Serial.print("🎯 Backend target: ");
+    Serial.print(backendIP);
+    Serial.print(":");
+    Serial.println(backendPort);
+    Serial.println("👆 Confirm this backend IP matches Member 1's machine");
   } else {
     Serial.println("\n❌ Wi-Fi failed — running offline");
   }
