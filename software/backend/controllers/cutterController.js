@@ -1,7 +1,9 @@
 const esp32 = require("../services/esp32Service");
 
 exports.setCutter = async (req, res) => {
+
     try {
+
         const { state } = req.body;
 
         if (typeof state !== "boolean") {
@@ -11,17 +13,22 @@ exports.setCutter = async (req, res) => {
             });
         }
 
-        const response = await esp32.cutter(state);
+        const data = await esp32.relay(state ? "on" : "off");
 
         res.json({
             success: true,
-            data: response.data
+            data
         });
 
     } catch (err) {
-        res.status(503).json({
+
+        console.error(err.message);
+
+        res.status(500).json({
             success: false,
             message: err.message
         });
+
     }
+
 };

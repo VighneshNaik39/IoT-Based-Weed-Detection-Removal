@@ -1,13 +1,25 @@
 const express = require("express");
 const router = express.Router();
 
+const robotController = require("../controllers/robotController");
 const statusController = require("../controllers/statusController");
-const modeController   = require("../controllers/modeController");
 
-// GET /api/robot/status  -> live ESP32 state (mode, command, distanceCm, obstacle, cutter, connected)
+// Robot Status
 router.get("/status", statusController.getStatus);
 
-// POST /api/robot/mode   -> body: { "mode": "manual" | "autonomous" }
-router.post("/mode", modeController.setMode);
+// Move Robot
+router.post("/move", robotController.move);
+
+// Stop Robot
+router.post("/stop", robotController.stop);
+
+// Change Mode
+router.post("/mode", robotController.mode);
+
+// Relay (Cutter)
+router.post("/relay", robotController.relay);
+
+// Ping ESP32
+router.get("/ping", robotController.ping);
 
 module.exports = router;
