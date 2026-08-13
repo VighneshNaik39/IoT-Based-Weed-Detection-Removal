@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Robot Control - WeedGuard</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="stylesheet" href="/css/robot-control.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌿</div>
+      <div>
+        <p class="brand-name">WeedGuard</p>
+        <p class="brand-sub">IoT Detection System</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">MAIN</p>
+      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
+      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
+      <a href="/pages/field-map.html" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
+      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
+
+      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
+      <a href="/pages/robot-control.html" class="nav-item active"><span class="nav-item-icon">🤖</span> Robot Control</a>
+      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
+      <a href="/pages/alerts.html" class="nav-item">
+        <span class="nav-item-icon">🔔</span> Alerts
+        <span class="nav-badge" id="alert-badge">0</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-device">
+      <div class="device-dot" id="device-dot"></div>
+      <div>
+        <p class="device-name">ESP32 Module</p>
+        <p class="device-status" id="device-status-text">Connecting...</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div>
+        <h1 class="topbar-title">Robot Control</h1>
+        <p class="topbar-sub">Manual & autonomous driving · Cutter · Obstacle status</p>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-time" id="clock">--:--:-- --</div>
+        <span class="sys-badge online" id="sys-badge">● Checking...</span>
+      </div>
+    </header>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- MODE SWITCH BAR -->
+      <div class="panel mode-panel">
+        <div class="mode-panel-left">
+          <p class="panel-title">Operating Mode</p>
+          <p class="mode-desc" id="mode-desc">Manual — you're driving the robot directly.</p>
+        </div>
+        <div class="mode-switch" id="mode-switch">
+          <button class="mode-btn active" id="btn-manual" data-mode="manual">🕹 Manual</button>
+          <button class="mode-btn" id="btn-autonomous" data-mode="autonomous">🤖 Autonomous</button>
+        </div>
+      </div>
+
+      <div class="rc-grid">
+
+        <!-- MOVEMENT D-PAD -->
+        <div class="panel">
+          <div class="panel-header">
+            <p class="panel-title">Movement</p>
+            <span class="panel-chip" id="dpad-chip">MANUAL</span>
+          </div>
+
+          <div class="dpad" id="dpad">
+            <button class="dpad-btn dpad-forward"  id="btn-forward"  data-cmd="forward"  title="Forward">▲</button>
+            <button class="dpad-btn dpad-left"     id="btn-left"     data-cmd="left"     title="Turn Left">◀</button>
+            <button class="dpad-btn dpad-stop"     id="btn-stop"                          title="Stop">■</button>
+            <button class="dpad-btn dpad-right"    id="btn-right"    data-cmd="right"    title="Turn Right">▶</button>
+            <button class="dpad-btn dpad-backward" id="btn-backward" data-cmd="backward" title="Backward">▼</button>
+          </div>
+
+          <p class="dpad-hint" id="dpad-hint">Use the arrows to drive. Stop always works.</p>
+        </div>
+
+        <!-- CUTTER + LIVE STATUS -->
+        <div class="rc-side">
+
+          <div class="panel">
+            <div class="panel-header">
+              <p class="panel-title">Cutter (RS775)</p>
+              <span class="panel-chip" id="cutter-chip">OFF</span>
+            </div>
+            <div class="cutter-controls">
+              <button class="cutter-btn on"  id="btn-cutter-on">🔪 Cutter ON</button>
+              <button class="cutter-btn off" id="btn-cutter-off">⏹ Cutter OFF</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <p class="panel-title">Live Status</p>
+              <span class="panel-chip" id="conn-chip">--</span>
+            </div>
+            <ul class="status-list">
+              <li><span class="status-label">Mode</span><span class="status-value" id="st-mode">--</span></li>
+              <li><span class="status-label">Current Action</span><span class="status-value" id="st-action">--</span></li>
+              <li><span class="status-label">Distance</span><span class="status-value" id="st-distance">-- cm</span></li>
+              <li><span class="status-label">Obstacle</span><span class="status-value" id="st-obstacle">--</span></li>
+              <li><span class="status-label">Battery</span><span class="status-value" id="st-battery">--%</span></li>
+              <li><span class="status-label">ESP32 Link</span><span class="status-value" id="st-link">--</span></li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="/js/robot-control.js"></script>
+</body>
+</html>

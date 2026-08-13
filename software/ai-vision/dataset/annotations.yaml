@@ -1,0 +1,35 @@
+# WeedGuard Phase 5 -- YOLOv8 dataset config
+#
+# Points Ultralytics at the labeled/split dataset. Paths are relative
+# to this file's location (software/ai-vision/dataset/).
+#
+# Expected layout after labeling + splitting (see
+# scripts/prepare_dataset.py or do it by hand with LabelImg's
+# "auto-split" export, whichever you're more comfortable with):
+#
+#   dataset/labeled/
+#     images/train/*.jpg
+#     images/val/*.jpg
+#     images/test/*.jpg
+#     labels/train/*.txt   <- YOLO format: class cx cy w h (normalized)
+#     labels/val/*.txt
+#     labels/test/*.txt
+
+path: labeled          # dataset root, relative to this file
+train: images/train
+val: images/val
+test: images/test
+
+# Class indices MUST match what you use when labeling in LabelImg /
+# any other tool -- class 0 first, in this exact order.
+names:
+  0: crop
+  1: weed
+
+# Notes for whoever is labeling:
+# - Only two classes for Phase 5. If a frame has neither a clear crop
+#   nor a clear weed in it (e.g. bare soil), don't box it -- YOLO
+#   trains fine on partially-annotated frames as long as every WEED
+#   and CROP that IS visible gets a box.
+# - Keep box tightness consistent across the dataset; loose/inconsistent
+#   boxes hurt precision/recall more than a slightly smaller dataset.

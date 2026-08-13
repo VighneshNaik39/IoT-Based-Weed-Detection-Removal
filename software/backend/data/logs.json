@@ -1,0 +1,725 @@
+[
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-08-05T09:33:58.043Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-05T09:33:51.461Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-05T09:33:02.241Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-05T09:33:00.565Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-05T09:20:33.862Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-05T09:20:12.189Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-08-01T13:44:14.628Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-01T13:44:13.671Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-01T13:44:13.522Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-01T13:44:13.405Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:08.547Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:08.325Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:08.152Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:08.002Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:07.822Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:06.481Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:06.267Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:06.064Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:05.899Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:05.733Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:05.555Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:13:05.398Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:15.347Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:15.130Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:14.923Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:12.096Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:11.870Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:11.712Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:11.549Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T09:12:11.445Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:47:33.243Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:47:33.026Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:47:32.895Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:47:31.826Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:47:31.608Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:47:31.426Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:47:30.846Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:01:10.025Z"
+  },
+  {
+    "status": "Weed detected",
+    "moisture": 45,
+    "time": "2026-07-30T07:01:09.859Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:54.484Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:49.518Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:45.600Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:39.686Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:35.182Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:32.329Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:24.752Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:19.944Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:15.740Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:09.763Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:47:04.961Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:59.873Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:54.635Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:49.840Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:45.323Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:39.475Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:34.458Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:29.451Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:24.527Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:19.730Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:15.106Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:09.962Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:46:07.749Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:59.427Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:55.056Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:49.506Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:44.660Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:39.428Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:34.632Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:29.441Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:24.512Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:19.617Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:14.548Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:09.571Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:45:04.869Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:59.947Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:54.621Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:49.508Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:44.440Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:39.874Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:34.554Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:29.452Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:24.379Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:19.404Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:14.740Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:09.383Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:44:04.393Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:59.631Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:54.377Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:49.599Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:44.588Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:39.561Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:34.547Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:29.528Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:24.715Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:19.506Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:14.773Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:09.518Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:43:04.643Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": 45,
+    "time": "2026-08-06T06:42:59.417Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:16:09.401Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:16:06.396Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:16:03.379Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:16:00.378Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:57.376Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:54.391Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:51.365Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:48.428Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:45.368Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:42.339Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:39.307Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:36.300Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:33.287Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:30.312Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:27.333Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:24.261Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:21.259Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:18.256Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:15.231Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:12.256Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:09.221Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:06.243Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:03.230Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:15:00.217Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:57.218Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:54.174Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:51.165Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:48.170Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:45.158Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:42.149Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:39.166Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:36.142Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:33.129Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:30.101Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:27.102Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:24.108Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:21.098Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:18.088Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:15.102Z"
+  },
+  {
+    "status": "No weed detected",
+    "moisture": null,
+    "time": "2026-07-30T06:14:12.097Z"
+  },
+  {
+    "timestamp": "2026-08-11T15:30:00Z",
+    "status": "Weed detected",
+    "confidence": 0.87,
+    "frame_id": 100,
+    "source": "ai-vision"
+  },
+  {
+    "timestamp": "2026-08-11T15:35:00Z",
+    "status": "Weed detected",
+    "confidence": 0.91,
+    "frame_id": 101,
+    "source": "ai-vision"
+  },
+  {
+    "timestamp": "2026-08-11T15:40:00Z",
+    "status": "Weed detected",
+    "confidence": 0.91,
+    "frame_id": 102,
+    "source": "ai-vision"
+  },
+  {
+    "timestamp": "2026-08-12T10:18:58.6963256Z",
+    "status": "Weed detected",
+    "confidence": 0.91,
+    "frame_id": 103,
+    "source": "ai-vision"
+  }
+]

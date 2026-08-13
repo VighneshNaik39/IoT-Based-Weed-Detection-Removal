@@ -1,0 +1,19 @@
+# WeedGuard Phase 5 -- ai-vision dependencies
+# Tested against: Python 3.10/3.11, on the HP Victus (RTX 3050) laptop.
+#
+# Install with:
+#   pip install -r requirements.txt
+#
+# For GPU-accelerated training/inference on the RTX 3050, install the
+# CUDA build of torch BEFORE this file (ultralytics will otherwise pull
+# the CPU-only wheel by default on some platforms):
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# then run this requirements.txt install.
+
+ultralytics>=8.1.0        # YOLOv8 (train.py, detect_stream.py)
+opencv-python>=4.9.0.80   # MJPEG stream reading, frame handling
+requests>=2.31.0          # POST /api/detection/weed to the backend
+numpy>=1.26.0
+Pillow>=10.2.0
+python-dotenv>=1.0.1      # optional: load config from a .env file
+PyYAML>=6.0.1              # annotations.yaml handling
