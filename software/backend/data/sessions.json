@@ -631,12 +631,121 @@
   },
   {
     "sessionNumber": 64,
+<<<<<<< HEAD
     "startTime": "2026-08-09T16:55:30.377Z",
     "endTime": "2026-08-09T16:56:25.766Z",
     "durationMs": 55389,
+=======
+    "startTime": "2026-08-11T09:33:25.810Z",
+    "endTime": "2026-08-11T09:42:47.105Z",
+    "durationMs": 561295,
+>>>>>>> 03c3b0c8a8d7e895174bacb9d43f511c407a9047
     "totalDetections": 0,
     "executions": 0,
     "avgMoisture": null,
     "completed": true
+<<<<<<< HEAD
+=======
+  },
+  {
+    "sessionNumber": 65,
+    "startTime": "2026-08-11T09:42:50.647Z",
+    "endTime": "2026-08-11T09:47:19.940Z",
+    "durationMs": 269293,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 66,
+    "startTime": "2026-08-11T09:47:22.908Z",
+    "endTime": "2026-08-11T10:03:01.401Z",
+    "durationMs": 938493,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 67,
+    "startTime": "2026-08-11T10:04:52.494Z",
+    "endTime": "2026-08-11T10:07:32.672Z",
+    "durationMs": 160178,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 68,
+    "startTime": "2026-08-11T10:07:35.493Z",
+    "endTime": "2026-08-11T10:23:28.022Z",
+    "durationMs": 952529,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 69,
+    "startTime": "2026-08-11T10:23:31.459Z",
+    "endTime": "2026-08-11T10:42:44.741Z",
+    "durationMs": 1153283,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 70,
+    "startTime": "2026-08-12T08:48:32.140Z",
+    "endTime": "2026-08-12T09:02:00.307Z",
+    "durationMs": 808167,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 71,
+    "startTime": "2026-08-12T09:15:04.489Z",
+    "endTime": "2026-08-12T09:25:05.089Z",
+    "durationMs": 600600,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 72,
+    "startTime": "2026-08-12T09:25:07.332Z",
+    "endTime": "2026-08-12T10:01:34.392Z",
+    "durationMs": 2187060,
+    "totalDetections": 1,
+    "executions": 1,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 73,
+    "startTime": "2026-08-12T10:01:37.538Z",
+    "endTime": "2026-08-12T10:21:10.578Z",
+    "durationMs": 1173041,
+    "totalDetections": 1,
+    "executions": 1,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 74,
+    "startTime": "2026-08-13T05:07:48.066Z",
+    "endTime": "2026-08-13T05:07:48.069Z",
+    "durationMs": 3,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": false
+>>>>>>> 03c3b0c8a8d7e895174bacb9d43f511c407a9047
   }
 ]

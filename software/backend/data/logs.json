@@ -693,5 +693,33 @@
     "status": "No weed detected",
     "moisture": null,
     "time": "2026-07-30T06:14:12.097Z"
+  },
+  {
+    "timestamp": "2026-08-11T15:30:00Z",
+    "status": "Weed detected",
+    "confidence": 0.87,
+    "frame_id": 100,
+    "source": "ai-vision"
+  },
+  {
+    "timestamp": "2026-08-11T15:35:00Z",
+    "status": "Weed detected",
+    "confidence": 0.91,
+    "frame_id": 101,
+    "source": "ai-vision"
+  },
+  {
+    "timestamp": "2026-08-11T15:40:00Z",
+    "status": "Weed detected",
+    "confidence": 0.91,
+    "frame_id": 102,
+    "source": "ai-vision"
+  },
+  {
+    "timestamp": "2026-08-12T10:18:58.6963256Z",
+    "status": "Weed detected",
+    "confidence": 0.91,
+    "frame_id": 103,
+    "source": "ai-vision"
   }
 ]
