@@ -1,0 +1,92 @@
+[
+  {
+    "sessionNumber": 1,
+    "startTime": "2026-08-15T05:24:11.946Z",
+    "endTime": "2026-08-15T05:45:07.320Z",
+    "durationMs": 1255374,
+    "totalDetections": 1,
+    "executions": 1,
+    "avgMoisture": null,
+    "completed": false
+  },
+  {
+    "sessionNumber": 2,
+    "startTime": "2026-08-15T05:38:50.831Z",
+    "endTime": "2026-08-15T05:38:50.832Z",
+    "durationMs": 1,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 3,
+    "startTime": "2026-08-15T05:44:06.769Z",
+    "endTime": "2026-08-15T05:44:06.770Z",
+    "durationMs": 1,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 4,
+    "startTime": "2026-08-15T05:52:59.977Z",
+    "endTime": "2026-08-15T05:52:59.979Z",
+    "durationMs": 2,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 5,
+    "startTime": "2026-08-15T06:09:59.951Z",
+    "endTime": "2026-08-15T06:09:59.952Z",
+    "durationMs": 1,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 6,
+    "startTime": "2026-08-15T06:12:28.341Z",
+    "endTime": "2026-08-15T06:12:28.342Z",
+    "durationMs": 1,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 7,
+    "startTime": "2026-08-15T06:14:52.430Z",
+    "endTime": "2026-08-15T06:14:52.432Z",
+    "durationMs": 2,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 8,
+    "startTime": "2026-08-15T06:18:26.884Z",
+    "endTime": "2026-08-15T06:30:48.486Z",
+    "durationMs": 741602,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 9,
+    "startTime": "2026-08-15T06:30:53.695Z",
+    "endTime": "2026-08-15T06:35:40.271Z",
+    "durationMs": 286576,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  }
+]

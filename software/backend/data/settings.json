@@ -1,0 +1,8 @@
+{
+  "autoDetect": true,
+  "alerts": true,
+  "autoRemove": false,
+  "robotSpeed": 200,
+  "obstacleThresholdCm": 25,
+  "wifiSSID": "meowww"
+}

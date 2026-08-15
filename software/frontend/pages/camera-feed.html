@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Camera Feed - WeedGuard</title>
+
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/camera-feed.css" />
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet"
+    />
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- ==========================================
+         SIDEBAR
+         ========================================== -->
+
+    <aside class="sidebar">
+
+        <div class="sidebar-brand">
+
+            <div class="brand-icon">🌿</div>
+
+            <div>
+                <p class="brand-name">WeedGuard</p>
+                <p class="brand-sub">IoT Detection System</p>
+            </div>
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+            <p class="nav-section-label">MAIN</p>
+
+            <a href="/index.html" class="nav-item">
+                <span class="nav-item-icon">⊞</span>
+                Dashboard
+            </a>
+
+            <a href="/pages/logs.html" class="nav-item">
+                <span class="nav-item-icon">📋</span>
+                Activity Logs
+            </a>
+
+            <a href="/pages/field-map.html" class="nav-item">
+                <span class="nav-item-icon">🗺</span>
+                Field Map
+            </a>
+
+            <a href="/pages/analytics.html" class="nav-item">
+                <span class="nav-item-icon">📊</span>
+                Analytics
+            </a>
+
+            <a
+                href="/pages/camera-feed.html"
+                class="nav-item active"
+            >
+                <span class="nav-item-icon">📹</span>
+                Camera Feed
+            </a>
+
+
+            <p
+                class="nav-section-label"
+                style="margin-top:24px"
+            >
+                SYSTEM
+            </p>
+
+
+            <a
+                href="/pages/robot-control.html"
+                class="nav-item"
+            >
+                <span class="nav-item-icon">🤖</span>
+                Robot Control
+            </a>
+
+            <a
+                href="/pages/settings.html"
+                class="nav-item"
+            >
+                <span class="nav-item-icon">⚙</span>
+                Settings
+            </a>
+
+            <a
+                href="/pages/alerts.html"
+                class="nav-item"
+            >
+                <span class="nav-item-icon">🔔</span>
+                Alerts
+
+                <span
+                    class="nav-badge"
+                    id="alert-badge"
+                >
+                    0
+                </span>
+            </a>
+
+        </nav>
+
+
+        <!-- ==========================================
+             DEVICE STATUS
+             ========================================== -->
+
+        <div class="sidebar-device">
+
+            <div
+                class="device-dot"
+                id="device-dot"
+            ></div>
+
+            <div>
+
+                <p class="device-name">
+                    ESP32-S3 Camera
+                </p>
+
+                <p
+                    class="device-status"
+                    id="device-status-text"
+                >
+                    Checking...
+                </p>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ==========================================
+         MAIN CONTENT
+         ========================================== -->
+
+    <div class="main">
+
+        <!-- ==========================================
+             TOPBAR
+             ========================================== -->
+
+        <header class="topbar">
+
+            <div>
+
+                <h1 class="topbar-title">
+                    Camera Feed
+                </h1>
+
+                <p class="topbar-sub">
+                    Live T-SIMCAM stream · YOLOv8 weed detection
+                </p>
+
+            </div>
+
+
+            <div class="topbar-right">
+
+                <div
+                    class="topbar-time"
+                    id="clock"
+                >
+                    --:--:-- --
+                </div>
+
+
+                <span
+                    class="sys-badge online"
+                    id="sys-badge"
+                >
+                    ● Checking...
+                </span>
+
+
+                <button
+                    class="topbar-btn"
+                    onclick="refreshCameraFeed()"
+                >
+                    ↻ Refresh
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- ==========================================
+             PAGE CONTENT
+             ========================================== -->
+
+        <div class="content camera-content">
+
+            <!-- ======================================
+                 CAMERA + DETECTION
+                 ====================================== -->
+
+            <div class="camera-grid">
+
+
+                <!-- ==================================
+                     LIVE CAMERA
+                     ================================== -->
+
+                <section class="panel camera-panel">
+
+                    <div class="panel-header">
+
+                        <p class="panel-title">
+                            Live Camera
+                        </p>
+
+                        <span
+                            class="panel-chip stream-chip"
+                            id="stream-chip"
+                        >
+                            CONNECTING
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="camera-frame"
+                        id="camera-frame"
+                    >
+
+                        <img
+                            id="camera-stream"
+                            class="camera-stream"
+                            alt="Live T-SIMCAM video stream"
+                            src="/api/detection/stream"
+                        />
+
+
+                        <!-- CAMERA PLACEHOLDER -->
+
+                        <div
+                            class="camera-placeholder"
+                            id="camera-placeholder"
+                        >
+
+                            <div class="placeholder-icon">
+                                📹
+                            </div>
+
+                            <strong>
+                                Waiting for camera stream
+                            </strong>
+
+                            <span>
+                                Check the T-SIMCAM Wi-Fi connection and CAMERA_STREAM_URL.
+                            </span>
+
+                        </div>
+
+
+                        <!-- DETECTION OVERLAY -->
+
+                        <div
+                            class="detection-overlay clear"
+                            id="detection-overlay"
+                        >
+
+                            <span class="overlay-dot"></span>
+
+                            <span id="overlay-label">
+                                CLEAR
+                            </span>
+
+                        </div>
+
+
+                        <!-- STREAM INFORMATION -->
+
+                        <div class="stream-info">
+
+                            <span id="frame-state">
+                                Live stream
+                            </span>
+
+                            <span id="stream-url">
+                                /api/detection/stream
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ==================================
+                     DETECTION STATUS
+                     ================================== -->
+
+                <section class="panel detection-panel">
+
+                    <div class="panel-header">
+
+                        <p class="panel-title">
+                            Detection Status
+                        </p>
+
+                        <span
+                            class="panel-chip clear-chip"
+                            id="detection-chip"
+                        >
+                            CLEAR
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        class="detection-state clear"
+                        id="detection-state"
+                    >
+
+                        <div
+                            class="detection-icon"
+                            id="detection-icon"
+                        >
+                            ✔
+                        </div>
+
+                        <div>
+
+                            <h2 id="detection-headline">
+                                No Weed Detected
+                            </h2>
+
+                            <p id="detection-description">
+                                YOLOv8 is monitoring the camera feed.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- DETECTION STATS -->
+
+                    <div class="detection-stats">
+
+                        <div class="stat-box">
+
+                            <span class="stat-label">
+                                Confidence
+                            </span>
+
+                            <strong id="confidence-value">
+                                --
+                            </strong>
+
+                        </div>
+
+
+                        <div class="stat-box">
+
+                            <span class="stat-label">
+                                Last Detection
+                            </span>
+
+                            <strong id="detection-time">
+                                --
+                            </strong>
+
+                        </div>
+
+
+                        <div class="stat-box">
+
+                            <span class="stat-label">
+                                Frame ID
+                            </span>
+
+                            <strong id="frame-id">
+                                --
+                            </strong>
+
+                        </div>
+
+
+                        <div class="stat-box">
+
+                            <span class="stat-label">
+                                Model
+                            </span>
+
+                            <strong id="model-version">
+                                YOLOv8
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CONFIDENCE -->
+
+                    <div class="confidence-wrap">
+
+                        <div class="confidence-header">
+
+                            <span>
+                                Detection confidence
+                            </span>
+
+                            <span id="confidence-percent">
+                                0%
+                            </span>
+
+                        </div>
+
+
+                        <div class="confidence-bar">
+
+                            <div
+                                class="confidence-fill"
+                                id="confidence-fill"
+                                style="width:0%"
+                            ></div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+
+            <!-- ======================================
+                 BOTTOM SECTION
+                 ====================================== -->
+
+            <div class="camera-bottom-grid">
+
+
+                <!-- ==================================
+                     AI PIPELINE
+                     ================================== -->
+
+                <section class="panel">
+
+                    <div class="panel-header">
+
+                        <p class="panel-title">
+                            AI Pipeline
+                        </p>
+
+                        <span class="panel-chip clear-chip">
+                            PHASE 5
+                        </span>
+
+                    </div>
+
+
+                    <div class="pipeline">
+
+
+                        <div class="pipeline-step active">
+
+                            <span>1</span>
+
+                            <div>
+                                <strong>Camera</strong>
+                                <small>T-SIMCAM / OV5640</small>
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-arrow">
+                            →
+                        </div>
+
+
+                        <div class="pipeline-step active">
+
+                            <span>2</span>
+
+                            <div>
+                                <strong>YOLOv8</strong>
+                                <small>Live inference</small>
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-arrow">
+                            →
+                        </div>
+
+
+                        <div
+                            class="pipeline-step"
+                            id="backend-step"
+                        >
+
+                            <span>3</span>
+
+                            <div>
+                                <strong>Backend</strong>
+                                <small>Detection API</small>
+                            </div>
+
+                        </div>
+
+
+                        <div class="pipeline-arrow">
+                            →
+                        </div>
+
+
+                        <div
+                            class="pipeline-step"
+                            id="cutter-step"
+                        >
+
+                            <span>4</span>
+
+                            <div>
+                                <strong>Cutter</strong>
+                                <small>ESP32 trigger</small>
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+
+                <!-- ==================================
+                     LATEST AI EVENT
+                     ================================== -->
+
+                <section class="panel activity-panel">
+
+                    <div class="panel-header">
+
+                        <p class="panel-title">
+                            Latest AI Event
+                        </p>
+
+                        <span
+                            class="panel-chip clear-chip"
+                            id="event-source"
+                        >
+                            AI-VISION
+                        </span>
+
+                    </div>
+
+
+                    <div
+                        id="latest-event"
+                        class="latest-event clear-event"
+                    >
+
+                        <span class="event-icon">
+                            ℹ
+                        </span>
+
+                        <div>
+
+                            <strong>
+                                Waiting for a YOLOv8 detection
+                            </strong>
+
+                            <p>
+                                Detection events from the vision pipeline will appear here.
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+     JAVASCRIPT
+     IMPORTANT: api.js MUST load first
+     ========================================== -->
+
+<script src="/js/api.js"></script>
+<script src="/js/camera-feed.js"></script>
+
+</body>
+</html>

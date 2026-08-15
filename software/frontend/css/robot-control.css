@@ -1,0 +1,201 @@
+/* ==============================
+   MODE PANEL
+============================== */
+.mode-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.mode-panel-left .panel-title { margin-bottom: 4px; }
+
+.mode-desc {
+  font-size: 12.5px;
+  color: var(--gray-500);
+}
+
+.mode-switch {
+  display: flex;
+  background: var(--gray-100);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.mode-btn {
+  border: none;
+  background: transparent;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-500);
+  padding: 9px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s, transform 0.15s;
+}
+
+.mode-btn:hover { color: var(--gray-700); }
+
+.mode-btn.active {
+  background: var(--green-700);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.mode-btn#btn-autonomous.active { background: var(--amber-500); }
+
+/* ==============================
+   TWO-COLUMN CONTROL LAYOUT
+============================== */
+.rc-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 20px;
+  align-items: start;
+}
+
+.rc-side {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ==============================
+   D-PAD — signature control element
+============================== */
+.dpad {
+  display: grid;
+  grid-template-columns: 76px 76px 76px;
+  grid-template-rows: 76px 76px 76px;
+  grid-template-areas:
+    ".    fwd  ."
+    "left stop right"
+    ".    back .";
+  gap: 10px;
+  justify-content: center;
+  margin: 12px auto 6px;
+}
+
+.dpad-btn {
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 24px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.12s, box-shadow 0.12s, background 0.15s;
+  box-shadow: var(--shadow-sm);
+  color: #fff;
+  background: var(--green-600);
+}
+
+.dpad-btn:hover  { background: var(--green-500); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.dpad-btn:active { transform: translateY(0) scale(0.96); }
+
+.dpad-btn:disabled {
+  background: var(--gray-200);
+  color: var(--gray-400);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.dpad-forward  { grid-area: fwd;  }
+.dpad-left     { grid-area: left; }
+.dpad-right    { grid-area: right; }
+.dpad-backward { grid-area: back; }
+
+.dpad-stop {
+  grid-area: stop;
+  background: var(--red-600);
+  font-size: 20px;
+}
+.dpad-stop:hover { background: #a8332a; }
+.dpad-stop:disabled { background: var(--red-600); color: #fff; opacity: 0.55; } /* Stop always usable, dim only if unreachable */
+
+.dpad-hint {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--gray-400);
+  margin-top: 4px;
+}
+
+/* ==============================
+   CUTTER CONTROLS
+============================== */
+.cutter-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.cutter-btn {
+  flex: 1;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 14px 10px;
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+}
+
+.cutter-btn.on  { background: var(--red-600); color: #fff; }
+.cutter-btn.off { background: var(--gray-200); color: var(--gray-700); }
+
+.cutter-btn:hover  { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+.cutter-btn:active { transform: translateY(0); }
+
+.cutter-btn.on.armed  { box-shadow: 0 0 0 3px rgba(192,57,43,0.25); }
+.cutter-btn.off.armed { background: var(--green-600); color: #fff; }
+
+/* ==============================
+   STATUS LIST
+============================== */
+.status-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--gray-200);
+}
+
+.status-list li:last-child { border-bottom: none; padding-bottom: 0; }
+
+.status-label { color: var(--gray-500); }
+
+.status-value {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.status-value.warn { color: var(--red-600); }
+.status-value.ok   { color: var(--green-600); }
+.status-value.amber{ color: var(--amber-500); }
+
+/* ==============================
+   RESPONSIVE
+============================== */
+@media (max-width: 1100px) {
+  .rc-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .mode-panel { flex-direction: column; align-items: flex-start; }
+  .dpad {
+    grid-template-columns: 64px 64px 64px;
+    grid-template-rows: 64px 64px 64px;
+  }
+  .dpad-btn { font-size: 20px; }
+}
