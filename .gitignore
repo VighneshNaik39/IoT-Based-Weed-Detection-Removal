@@ -1,5 +1,6 @@
 node_modules/
 .env
+<<<<<<< HEAD
 .env.*
 !.env.example
 *.log
@@ -8,3 +9,25 @@ __pycache__/
 runs/
 *.pt
 *.onnx
+=======
+>>>>>>> 40d72bc8b0c9447732f779376e0c2f340518672d
+node_modules/
+.env
+.env.*
+!.env.example
+
+__pycache__/
+*.pyc
+
+runs/
+**/runs/
+
+*.pt
+*.onnx
+
+software/ai-vision/scripts/runs/
+software/ai-vision/models/runs/
+software/ai-vision/models/*.pt
+software/ai-vision/scripts/runs/
+software/ai-vision/scripts/*.pt
+software/ai-vision.zip
