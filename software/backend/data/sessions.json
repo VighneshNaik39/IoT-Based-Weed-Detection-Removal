@@ -88,5 +88,25 @@
     "executions": 0,
     "avgMoisture": null,
     "completed": true
+  },
+  {
+    "sessionNumber": 10,
+    "startTime": "2026-08-17T14:58:56.306Z",
+    "endTime": "2026-08-17T14:58:56.308Z",
+    "durationMs": 2,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
+  },
+  {
+    "sessionNumber": 11,
+    "startTime": "2026-08-18T09:00:04.062Z",
+    "endTime": "2026-08-18T09:01:18.409Z",
+    "durationMs": 74347,
+    "totalDetections": 0,
+    "executions": 0,
+    "avgMoisture": null,
+    "completed": true
   }
 ]
