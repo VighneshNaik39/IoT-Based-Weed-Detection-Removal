@@ -137,6 +137,69 @@ function applyCutterUI(on) {
 }
 
 // ------------------------------
+// SPEED CONTROL
+// ------------------------------
+let currentSpeed = 60;
+let speedSendTimer = null;
+
+const speedSlider = document.getElementById("speed-slider");
+const speedReadout = document.getElementById("speed-readout");
+const speedChip = document.getElementById("speed-chip");
+const presetBtns = document.querySelectorAll(".speed-preset-btn");
+
+function setSpeedEnabled(enabled) {
+  speedSlider.disabled = !enabled;
+  presetBtns.forEach(btn => btn.disabled = !enabled);
+}
+
+function updateSpeedUI(pct) {
+  speedReadout.textContent = pct + "%";
+  speedChip.textContent = pct + "%";
+  presetBtns.forEach(btn => btn.classList.toggle("active", Number(btn.dataset.speed) === pct));
+}
+
+async function sendSpeed(pct) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/robot/speed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ speed: pct })
+    });
+    if (!res.ok) throw new Error("Speed command rejected");
+    currentSpeed = pct;
+  } catch (err) {
+    console.warn("Speed command failed:", err.message);
+    flashUnreachable();
+  }
+}
+
+// Live readout while dragging, throttled network send so we don't spam the ESP32
+speedSlider.addEventListener("input", () => {
+  const pct = Number(speedSlider.value);
+  updateSpeedUI(pct);
+  clearTimeout(speedSendTimer);
+  speedSendTimer = setTimeout(() => sendSpeed(pct), 200);
+});
+
+// Guarantee the final value lands even if the throttle window was interrupted
+speedSlider.addEventListener("change", () => {
+  clearTimeout(speedSendTimer);
+  sendSpeed(Number(speedSlider.value));
+});
+
+presetBtns.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const pct = Number(btn.dataset.speed);
+    speedSlider.value = pct;
+    updateSpeedUI(pct);
+    clearTimeout(speedSendTimer);
+    sendSpeed(pct);
+  });
+});
+
+updateSpeedUI(currentSpeed);
+
+// ------------------------------
 // LIVE STATUS POLLING
 // ------------------------------
 async function loadRobotStatus() {
@@ -211,6 +274,7 @@ function setLinkUI(reachable) {
 
   // Movement/cutter/mode only make sense to send when the ESP32 is reachable.
   setDpadEnabled(reachable && currentMode === "manual");
+  setSpeedEnabled(reachable);
 }
 
 function flashUnreachable() {

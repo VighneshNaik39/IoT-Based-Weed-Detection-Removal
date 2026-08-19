@@ -19,6 +19,9 @@ router.post("/mode", robotController.mode);
 // Relay (Cutter)
 router.post("/relay", robotController.relay);
 
+// Set Speed (0-100%)
+router.post("/speed", robotController.speed);
+
 // Ping ESP32
 router.get("/ping", robotController.ping);
 

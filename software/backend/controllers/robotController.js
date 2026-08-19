@@ -132,6 +132,45 @@ exports.relay = async (req, res) => {
 };
 
 // ========================================
+// Set Speed
+// Frontend sends 0-100 (%). ESP32 expects 0-255 (PWM).
+// ========================================
+exports.speed = async (req, res) => {
+    try {
+
+        const { speed } = req.body;
+
+        if (speed === undefined || speed === null || isNaN(speed)) {
+            return res.status(400).json({
+                success: false,
+                message: "Speed (0-100) is required"
+            });
+        }
+
+        const pct = Math.max(0, Math.min(100, Number(speed)));
+        const pwm = Math.round((pct / 100) * 255);
+
+        const data = await esp32.setSpeed(pwm);
+
+        res.json({
+            success: true,
+            message: "Speed updated",
+            data: { ...data, speedPct: pct, speedPwm: pwm }
+        });
+
+    } catch (err) {
+
+        console.error(err.message);
+
+        res.status(500).json({
+            success: false,
+            message: err.message
+        });
+
+    }
+};
+
+// ========================================
 // Robot Status
 // ========================================
 exports.status = async (req, res) => {

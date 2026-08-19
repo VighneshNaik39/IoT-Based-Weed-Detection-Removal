@@ -102,6 +102,26 @@
 
           <div class="panel">
             <div class="panel-header">
+              <p class="panel-title">Speed Control</p>
+              <span class="panel-chip" id="speed-chip">--%</span>
+            </div>
+            <div class="speed-controls">
+              <input type="range" min="0" max="100" step="5" value="60" id="speed-slider" class="speed-slider"/>
+              <div class="speed-labels">
+                <span>0%</span>
+                <span id="speed-readout">60%</span>
+                <span>100%</span>
+              </div>
+              <div class="speed-presets">
+                <button class="speed-preset-btn" data-speed="25">Slow</button>
+                <button class="speed-preset-btn" data-speed="60">Normal</button>
+                <button class="speed-preset-btn" data-speed="100">Full</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
               <p class="panel-title">Cutter (RS775)</p>
               <span class="panel-chip" id="cutter-chip">OFF</span>
             </div>
