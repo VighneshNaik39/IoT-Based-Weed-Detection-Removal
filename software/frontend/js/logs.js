@@ -16,7 +16,7 @@ async function loadLogs() {
         if (countEl) countEl.innerText = `${filtered.length} record${filtered.length !== 1 ? 's' : ''}`;
 
         if (filtered.length === 0) {
-            table.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#888;padding:30px">No logs yet. Waiting for ESP32 data...</td></tr>`;
+            table.innerHTML = `<tr><td colspan="5" class="logs-table-empty">No logs yet. Waiting for ESP32 data...</td></tr>`;
             return;
         }
 
@@ -36,14 +36,14 @@ async function loadLogs() {
 
             let row = `
                 <tr>
-                    <td style="color:#aaa;font-size:12px">${rowNumber}</td>
+                    <td class="logs-row-number">${rowNumber}</td>
                     <td>${timeStr}</td>
                     <td>
                         <span class="status ${isWeed ? 'danger' : 'success'}">
                             ${isWeed ? '⚠ Weed Detected' : '✔ Clear'}
                         </span>
                     </td>
-                    <td style="font-weight:600">${moisture}</td>
+                    <td class="logs-moisture">${moisture}</td>
                     <td>ESP32 Sensor</td>
                 </tr>`;
             table.innerHTML += row;
@@ -51,9 +51,9 @@ async function loadLogs() {
 
     } catch (error) {
         const table = document.getElementById("logTable");
-        table.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#c0392b;padding:30px">
+        table.innerHTML = `<tr><td colspan="5" class="logs-table-error">
             ⚠ Cannot reach backend<br>
-            <small style="color:#aaa">Make sure server is running on the same network</small>
+            <small>Make sure server is running on the same network</small>
         </td></tr>`;
     }
 }

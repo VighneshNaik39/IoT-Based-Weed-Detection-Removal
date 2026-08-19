@@ -8,7 +8,6 @@ async function saveSettings() {
         autoDetect: document.getElementById("autoDetect").checked,
         alerts: document.getElementById("alerts").checked,
         autoRemove: document.getElementById("autoRemove").checked,
-        robotSpeed: Number(document.getElementById("robotSpeed").value),
         obstacleThresholdCm: Number(document.getElementById("obstacleThresholdCm").value),
         wifiSSID: document.getElementById("wifiSSID").value.trim()
     };
@@ -47,10 +46,6 @@ async function loadSettings() {
         if (settings.alerts !== undefined) document.getElementById("alerts").checked = settings.alerts;
         if (settings.autoRemove !== undefined) document.getElementById("autoRemove").checked = settings.autoRemove;
 
-        if (settings.robotSpeed !== undefined) {
-            document.getElementById("robotSpeed").value = settings.robotSpeed;
-            document.getElementById("robotSpeedValue").textContent = settings.robotSpeed;
-        }
         if (settings.obstacleThresholdCm !== undefined) {
             document.getElementById("obstacleThresholdCm").value = settings.obstacleThresholdCm;
         }
@@ -64,9 +59,9 @@ async function loadSettings() {
 }
 
 // -------------------------
-// Connection status (System Information card)
+// Connection status (System Information card + sidebar device indicator)
 // -------------------------
-function updateConnectionStatus(isConnected) {
+function updateConnectionStatus(isConnected, esp32Connected) {
     const statusBadge = document.getElementById('connectionStatus');
     const deviceInfo = document.getElementById('deviceName');
 
@@ -83,6 +78,15 @@ function updateConnectionStatus(isConnected) {
     if (deviceInfo) {
         deviceInfo.textContent = isConnected ? 'ESP32-WROOM-32 Connected' : 'No device connected';
     }
+
+    // Keep the sidebar's device indicator in sync — it defaults to
+    // "Connecting..." and otherwise never updates on this page.
+    const sidebarDot = document.getElementById('device-dot');
+    const sidebarText = document.getElementById('device-status-text');
+    const online = isConnected && esp32Connected !== false;
+
+    if (sidebarDot) sidebarDot.style.background = online ? 'var(--green-400)' : 'var(--red-600)';
+    if (sidebarText) sidebarText.textContent = online ? 'Connected' : (isConnected ? 'ESP32 Idle' : 'Disconnected');
 }
 
 async function checkConnectionStatus() {
@@ -95,24 +99,16 @@ async function checkConnectionStatus() {
 
         console.log("Backend Status:", data);
 
-        updateConnectionStatus(true);
+        updateConnectionStatus(true, data.esp32Connected);
 
     } catch (err) {
         console.error(err);
-        updateConnectionStatus(false);
+        updateConnectionStatus(false, false);
     }
 }
 
 window.onload = function () {
     loadSettings();
-
-    // Live-update the speed slider's numeric readout as it's dragged
-    const speedSlider = document.getElementById("robotSpeed");
-    const speedValue = document.getElementById("robotSpeedValue");
-    speedSlider.addEventListener("input", () => {
-        speedValue.textContent = speedSlider.value;
-    });
-
     checkConnectionStatus();
     // Re-check every 5 seconds
     setInterval(checkConnectionStatus, 5000);

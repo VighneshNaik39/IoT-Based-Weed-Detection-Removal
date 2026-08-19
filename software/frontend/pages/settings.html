@@ -1,159 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Settings - WeedGuard</title>
-    <link rel="stylesheet" href="/css/settings.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Settings - WeedGuard</title>
+  <link rel="stylesheet" href="/css/style.css"/>
+  <link rel="stylesheet" href="/css/settings.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 </head>
 <body>
 
-<header class="navbar">
-    <div class="logo">🌿 WeedGuard</div>
-    <nav>
-        <a href="/index.html">Dashboard</a>
-        <a href="/pages/logs.html">Logs</a>
-        <a href="/pages/field-map.html">Field Map</a>
-        <a href="/pages/analytics.html">Analytics</a>
-        <a href="/pages/robot-control.html">Robot Control</a>
-        <a href="/pages/alerts.html">Alerts</a>
-        <a class="active" href="#">Settings</a>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌿</div>
+      <div>
+        <p class="brand-name">WeedGuard</p>
+        <p class="brand-sub">IoT Detection System</p>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <p class="nav-section-label">MAIN</p>
+      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
+      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
+      <a href="/pages/field-map.html" class="nav-item"><span class="nav-item-icon">🗺</span> Field Map</a>
+      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
+
+      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
+      <a href="/pages/camera-feed.html" class="nav-item"><span class="nav-item-icon">📹</span> Camera Feed</a>
+      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
+      <a href="/pages/settings.html" class="nav-item active"><span class="nav-item-icon">⚙</span> Settings</a>
+      <a href="/pages/alerts.html" class="nav-item">
+        <span class="nav-item-icon">🔔</span> Alerts
+        <span class="nav-badge" id="alert-badge">0</span>
+      </a>
     </nav>
-</header>
 
-<div class="container">
+    <div class="sidebar-device">
+      <div class="device-dot" id="device-dot"></div>
+      <div>
+        <p class="device-name">ESP32 Module</p>
+        <p class="device-status" id="device-status-text">Connecting...</p>
+      </div>
+    </div>
+  </aside>
 
-    <h1>⚙️ Settings</h1>
-    <p class="subtitle">Configure your system preferences</p>
+  <!-- MAIN -->
+  <div class="main">
 
-    <!-- Detection & Control -->
-    <div class="card">
-        <h3>Detection & Control</h3>
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div>
+        <h1 class="topbar-title">Settings</h1>
+        <p class="topbar-sub">Configure your system preferences</p>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-time" id="clock">--:--:-- --</div>
+        <button class="topbar-btn" onclick="saveSettings()">💾 Save Settings</button>
+      </div>
+    </header>
 
-        <div class="setting">
-            <div class="setting-content">
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="settings-grid">
+
+        <!-- MAIN COLUMN -->
+        <div class="settings-main">
+
+          <!-- Detection & Control -->
+          <div class="panel">
+            <p class="panel-title settings-card-title">Detection & Control</p>
+
+            <div class="setting">
+              <div class="setting-content">
                 <div class="setting-icon">⚙️</div>
                 <div class="setting-text">
-                    <strong>Automatic Weed Detection</strong>
-                    <p>Continuously monitor for weeds</p>
+                  <strong>Automatic Weed Detection</strong>
+                  <p>Continuously monitor for weeds</p>
                 </div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="autoDetect" checked>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="autoDetect" checked/>
                 <span class="slider"></span>
-            </label>
-        </div>
+              </label>
+            </div>
 
-        <div class="setting">
-            <div class="setting-content">
+            <div class="setting">
+              <div class="setting-content">
                 <div class="setting-icon">🔔</div>
                 <div class="setting-text">
-                    <strong>Alert Notifications</strong>
-                    <p>Show alerts when weeds are detected</p>
+                  <strong>Alert Notifications</strong>
+                  <p>Show alerts when weeds are detected</p>
                 </div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="alerts" checked>
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="alerts" checked/>
                 <span class="slider"></span>
-            </label>
-        </div>
+              </label>
+            </div>
 
-        <div class="setting">
-            <div class="setting-content">
+            <div class="setting">
+              <div class="setting-content">
                 <div class="setting-icon">🤖</div>
                 <div class="setting-text">
-                    <strong>Auto Weed Removal</strong>
-                    <p>Automatically activate removal mechanism</p>
+                  <strong>Auto Weed Removal</strong>
+                  <p>Automatically activate removal mechanism</p>
                 </div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="autoRemove">
+              </div>
+              <label class="switch">
+                <input type="checkbox" id="autoRemove"/>
                 <span class="slider"></span>
-            </label>
-        </div>
-    </div>
-
-    <!-- Robot Configuration -->
-    <div class="card">
-        <h3>Robot Configuration</h3>
-
-        <div class="setting" style="flex-direction:column;align-items:stretch;gap:8px">
-            <div class="setting-content">
-                <div class="setting-icon">🚗</div>
-                <div class="setting-text">
-                    <strong>Robot Speed</strong>
-                    <p>Motor PWM value (0–255)</p>
-                </div>
+              </label>
             </div>
-            <div style="display:flex;align-items:center;gap:12px">
-                <input type="range" id="robotSpeed" min="0" max="255" step="1" value="200" style="flex:1">
-                <span id="robotSpeedValue" style="font-family:'Space Mono',monospace;min-width:36px;text-align:right">200</span>
-            </div>
-        </div>
+          </div>
 
-        <div class="setting" style="flex-direction:column;align-items:stretch;gap:8px">
-            <div class="setting-content">
+          <!-- Robot Configuration -->
+          <div class="panel">
+            <p class="panel-title settings-card-title">Robot Configuration</p>
+
+            <div class="setting setting-stacked">
+              <div class="setting-content">
                 <div class="setting-icon">📏</div>
                 <div class="setting-text">
-                    <strong>Obstacle Threshold</strong>
-                    <p>Stop if an obstacle is closer than this (cm)</p>
+                  <strong>Obstacle Threshold</strong>
+                  <p>Stop if an obstacle is closer than this (cm)</p>
                 </div>
+              </div>
+              <div class="setting-inline">
+                <input type="number" id="obstacleThresholdCm" min="5" max="100" step="1" value="25" class="settings-number-input"/>
+                <span class="settings-unit-label">cm</span>
+              </div>
             </div>
-            <div style="display:flex;align-items:center;gap:12px">
-                <input type="number" id="obstacleThresholdCm" min="5" max="100" step="1" value="25" style="width:100px;font-family:'Space Mono',monospace;padding:6px 10px;border-radius:6px;border:1px solid #ddd">
-                <span style="color:#666;font-size:13px">cm</span>
-            </div>
-        </div>
 
-        <div class="setting" style="flex-direction:column;align-items:stretch;gap:8px">
-            <div class="setting-content">
+            <div class="setting setting-stacked">
+              <div class="setting-content">
                 <div class="setting-icon">📡</div>
                 <div class="setting-text">
-                    <strong>Wi-Fi Network (ESP32)</strong>
-                    <p>SSID the robot's firmware is configured to join. Editing this here does not reflash the ESP32 — you'll still need to update and re-upload the .ino if it changes.</p>
+                  <strong>Wi-Fi Network (ESP32)</strong>
+                  <p>SSID the robot's firmware is configured to join. Editing this here does not reflash the ESP32 — you'll still need to update and re-upload the .ino if it changes.</p>
                 </div>
+              </div>
+              <input type="text" id="wifiSSID" placeholder="Network SSID" value="meowww" class="settings-text-input"/>
             </div>
-            <input type="text" id="wifiSSID" placeholder="Network SSID" value="meowww" style="padding:8px 10px;border-radius:6px;border:1px solid #ddd;font-family:'Space Mono',monospace">
+          </div>
+
         </div>
-    </div>
 
-    <!-- System Info -->
-    <div class="card">
-        <h3>System Information</h3>
+        <!-- SIDE COLUMN -->
+        <div class="settings-side">
 
-        <div class="info">
-            <div class="info-content">
+          <!-- System Info -->
+          <div class="panel">
+            <p class="panel-title settings-card-title">System Information</p>
+
+            <div class="info">
+              <div class="info-content">
                 <div class="info-icon">🖥️</div>
                 <span>Device</span>
+              </div>
+              <span id="deviceName">Checking...</span>
             </div>
-            <span id="deviceName">Checking...</span>
-        </div>
 
-        <div class="info">
-            <div class="info-content">
+            <div class="info">
+              <div class="info-content">
                 <div class="info-icon">📶</div>
                 <span>Backend Status</span>
+              </div>
+              <span id="connectionStatus" class="status-badge disconnected">Checking...</span>
             </div>
-            <span id="connectionStatus" class="status-badge disconnected">Checking...</span>
-        </div>
 
-        <div class="info">
-            <div class="info-content">
+            <div class="info">
+              <div class="info-content">
                 <div class="info-icon">🌐</div>
                 <span>Backend URL</span>
+              </div>
+              <span class="settings-mono-readout">192.168.99.135:5000</span>
             </div>
-            <span style="font-family:'Space Mono',monospace;font-size:13px">192.168.99.135:5000</span>
+          </div>
+
+          <!-- Quick summary -->
+          <div class="panel settings-tip-panel">
+            <p class="panel-title settings-card-title">About These Settings</p>
+            <p class="settings-tip">Changes here are saved to the backend and applied on next read — they don't reflash the ESP32 directly. Live robot speed is controlled from the <a href="/pages/robot-control.html">Robot Control</a> page instead.</p>
+          </div>
+
         </div>
+
+      </div>
     </div>
-
-    <button class="save-btn" onclick="saveSettings()">💾 Save Settings</button>
-
+  </div>
 </div>
 
-<footer class="footer">
-    <p>© 2024 IoT-Based Weed Detection & Removal System</p>
-</footer>
-
 <script src="/js/settings.js"></script>
+<script>
+  function tickClock() {
+    const el = document.getElementById("clock");
+    if (el) el.textContent = new Date().toLocaleTimeString();
+  }
+  setInterval(tickClock, 1000);
+  tickClock();
+</script>
 </body>
 </html>

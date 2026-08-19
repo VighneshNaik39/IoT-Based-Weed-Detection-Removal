@@ -1,38 +1,36 @@
 // ============================================================
-// WEEDGUARD - CAMERA FEED
-// ESP32-S3 N16R8 + OV5640
-// DIRECT MJPEG STREAM
+// WEEDGUARD CAMERA FEED
+// ESP32-S3 + OV5640
 // ============================================================
 
 
 // ============================================================
-// ESP32 CAMERA CONFIGURATION
+// ESP32 CAMERA
 // ============================================================
 
-const ESP32_CAMERA_IP = "10.128.75.113";
+const ESP32_CAMERA_IP =
+    "10.128.75.113";
+
 
 const ESP32_STREAM_URL =
-    `http://${ESP32_CAMERA_IP}:81/stream`;
+    "http://10.128.75.113/stream";
 
 
 // ============================================================
-// DETECTION CONFIGURATION
+// YOLO
 // ============================================================
 
-const DETECTION_API_URL =
+const DETECTION_STATUS_URL =
     "/api/detection/status";
+
 
 const DETECTION_POLL_MS =
     2500;
 
 
 // ============================================================
-// STATE
+// TIMERS
 // ============================================================
-
-let cameraConnected = false;
-
-let lastDetection = null;
 
 let detectionTimer = null;
 
@@ -43,18 +41,20 @@ let clockTimer = null;
 // CLOCK
 // ============================================================
 
-function tickCameraClock() {
+function updateClock() {
 
     const clock =
         document.getElementById("clock");
+
 
     if (!clock) {
         return;
     }
 
+
     clock.textContent =
         new Date().toLocaleTimeString(
-            "en-US",
+            "en-IN",
             {
                 hour: "2-digit",
                 minute: "2-digit",
@@ -65,156 +65,244 @@ function tickCameraClock() {
 
 
 // ============================================================
-// CAMERA STATUS
+// CAMERA LIVE
 // ============================================================
 
-function setCameraStatus(
-    connected
-) {
+function setCameraLive() {
 
-    cameraConnected =
-        connected;
-
-
-    const streamChip =
+    const chip =
         document.getElementById(
             "stream-chip"
         );
 
-    const frameState =
+
+    const frame =
         document.getElementById(
             "frame-state"
         );
 
-    const deviceDot =
-        document.getElementById(
-            "device-dot"
-        );
 
-    const deviceStatus =
+    const device =
         document.getElementById(
             "device-status-text"
         );
 
-    const streamUrl =
-        document.getElementById(
-            "stream-url"
-        );
 
-    const placeholder =
+    const badge =
         document.getElementById(
-            "camera-placeholder"
+            "sys-badge"
         );
 
 
-    if (connected) {
-
-        // ----------------------------------------
-        // LIVE
-        // ----------------------------------------
-
-        if (streamChip) {
-
-            streamChip.textContent =
-                "LIVE";
-
-            streamChip.className =
-                "panel-chip clear-chip";
-        }
+    const dot =
+        document.getElementById(
+            "device-dot"
+        );
 
 
-        if (frameState) {
-
-            frameState.textContent =
-                "● Live stream";
-        }
-
-
-        if (deviceDot) {
-
-            deviceDot.style.background =
-                "var(--green-400)";
-        }
+    const error =
+        document.getElementById(
+            "camera-error"
+        );
 
 
-        if (deviceStatus) {
+    if (chip) {
 
-            deviceStatus.textContent =
-                "Connected · Live";
-        }
+        chip.textContent =
+            "LIVE";
 
-
-        if (streamUrl) {
-
-            streamUrl.textContent =
-                `ESP32 · ${ESP32_CAMERA_IP}`;
-        }
+        chip.className =
+            "panel-chip clear-chip";
+    }
 
 
-        if (placeholder) {
+    if (frame) {
 
-            placeholder.style.display =
-                "none";
-        }
-
-    } else {
-
-        // ----------------------------------------
-        // CONNECTING / OFFLINE
-        // ----------------------------------------
-
-        if (streamChip) {
-
-            streamChip.textContent =
-                "CONNECTING";
-
-            streamChip.className =
-                "panel-chip stream-chip";
-        }
+        frame.textContent =
+            "● LIVE";
+    }
 
 
-        if (frameState) {
+    if (device) {
 
-            frameState.textContent =
-                "Connecting...";
-        }
-
-
-        if (deviceDot) {
-
-            deviceDot.style.background =
-                "var(--yellow-400)";
-        }
+        device.textContent =
+            "Connected · Live";
+    }
 
 
-        if (deviceStatus) {
+    if (badge) {
 
-            deviceStatus.textContent =
-                "Connecting...";
-        }
+        badge.textContent =
+            "● Camera Online";
 
-
-        if (streamUrl) {
-
-            streamUrl.textContent =
-                `ESP32 · ${ESP32_CAMERA_IP}`;
-        }
+        badge.className =
+            "sys-badge online";
+    }
 
 
-        if (placeholder) {
+    if (dot) {
 
-            placeholder.style.display =
-                "flex";
-        }
+        dot.style.background =
+            "#35b86b";
+    }
+
+
+    if (error) {
+
+        error.style.display =
+            "none";
     }
 }
 
 
 // ============================================================
-// START ESP32 CAMERA STREAM
+// CAMERA CONNECTING
 // ============================================================
 
-function refreshCameraFeed() {
+function setCameraConnecting() {
+
+    const chip =
+        document.getElementById(
+            "stream-chip"
+        );
+
+
+    const frame =
+        document.getElementById(
+            "frame-state"
+        );
+
+
+    const device =
+        document.getElementById(
+            "device-status-text"
+        );
+
+
+    const badge =
+        document.getElementById(
+            "sys-badge"
+        );
+
+
+    if (chip) {
+
+        chip.textContent =
+            "CONNECTING";
+
+        chip.className =
+            "panel-chip stream-chip";
+    }
+
+
+    if (frame) {
+
+        frame.textContent =
+            "CONNECTING...";
+    }
+
+
+    if (device) {
+
+        device.textContent =
+            "Connecting...";
+    }
+
+
+    if (badge) {
+
+        badge.textContent =
+            "● Connecting";
+
+        badge.className =
+            "sys-badge refreshing";
+    }
+}
+
+
+// ============================================================
+// CAMERA OFFLINE
+// ============================================================
+
+function setCameraOffline() {
+
+    const chip =
+        document.getElementById(
+            "stream-chip"
+        );
+
+
+    const frame =
+        document.getElementById(
+            "frame-state"
+        );
+
+
+    const device =
+        document.getElementById(
+            "device-status-text"
+        );
+
+
+    const badge =
+        document.getElementById(
+            "sys-badge"
+        );
+
+
+    const error =
+        document.getElementById(
+            "camera-error"
+        );
+
+
+    if (chip) {
+
+        chip.textContent =
+            "OFFLINE";
+
+        chip.className =
+            "panel-chip stream-chip";
+    }
+
+
+    if (frame) {
+
+        frame.textContent =
+            "NO SIGNAL";
+    }
+
+
+    if (device) {
+
+        device.textContent =
+            "Camera unavailable";
+    }
+
+
+    if (badge) {
+
+        badge.textContent =
+            "● Camera Offline";
+
+        badge.className =
+            "sys-badge refreshing";
+    }
+
+
+    if (error) {
+
+        error.style.display =
+            "block";
+    }
+}
+
+
+// ============================================================
+// START ESP32 STREAM
+// ============================================================
+
+function startCameraStream() {
 
     const camera =
         document.getElementById(
@@ -225,7 +313,7 @@ function refreshCameraFeed() {
     if (!camera) {
 
         console.error(
-            "ERROR: #camera-stream not found"
+            "ERROR: camera-stream element not found"
         );
 
         return;
@@ -233,110 +321,134 @@ function refreshCameraFeed() {
 
 
     console.log(
-        "================================"
+        "===================================="
     );
 
-    console.log(
-        "Starting ESP32 camera stream"
-    );
 
     console.log(
+        "WEEDGUARD ESP32 CAMERA"
+    );
+
+
+    console.log(
+        "ESP32 IP:",
+        ESP32_CAMERA_IP
+    );
+
+
+    console.log(
+        "STREAM:",
         ESP32_STREAM_URL
     );
 
+
     console.log(
-        "================================"
+        "===================================="
     );
 
 
-    // ----------------------------------------
-    // Show connecting state
-    // ----------------------------------------
-
-    setCameraStatus(
-        false
-    );
+    setCameraConnecting();
 
 
-    // ----------------------------------------
-    // Camera image settings
-    // ----------------------------------------
-
-    camera.style.display =
-        "block";
-
-    camera.style.width =
-        "100%";
-
-    camera.style.height =
-        "100%";
-
-    camera.style.objectFit =
-        "contain";
-
-    camera.style.background =
-        "#000";
+    /*
+     * IMPORTANT:
+     *
+     * The ESP32 endpoint is MJPEG.
+     *
+     * Therefore use IMG.
+     *
+     * Do NOT use iframe.
+     */
 
 
-    // ----------------------------------------
-    // Remove previous stream
-    // ----------------------------------------
-
-    camera.src = "";
-
-
-    // Small delay prevents browser caching
-    // and allows the old connection to close.
-
-    setTimeout(
+    camera.onload =
         function () {
 
-            const url =
-                `${ESP32_STREAM_URL}?t=${Date.now()}`;
-
-
             console.log(
-                "Connecting:",
-                url
+                "CAMERA STREAM CONNECTED"
             );
 
 
-            camera.src =
-                url;
+            setCameraLive();
 
+        };
 
-            // ------------------------------------------------
-            // IMPORTANT:
-            //
-            // MJPEG is a continuous HTTP stream.
-            // Do NOT wait for img.onload to declare LIVE.
-            // ------------------------------------------------
-
-            setCameraStatus(
-                true
-            );
-
-        },
-        100
-    );
-
-
-    // ----------------------------------------
-    // Stream error
-    // ----------------------------------------
 
     camera.onerror =
         function () {
 
             console.error(
-                "ESP32 camera stream ERROR"
+                "CAMERA STREAM ERROR"
             );
 
 
-            setCameraStatus(
-                false
-            );
+            setCameraOffline();
+
         };
+
+
+    /*
+     * Cache buster.
+     *
+     * This forces a new connection
+     * when Refresh is pressed.
+     */
+
+    camera.src =
+        ESP32_STREAM_URL +
+        "?t=" +
+        Date.now();
+
+}
+
+
+// ============================================================
+// REFRESH CAMERA
+// ============================================================
+
+function refreshCameraFeed() {
+
+    console.log(
+        "Refreshing ESP32 camera..."
+    );
+
+
+    const camera =
+        document.getElementById(
+            "camera-stream"
+        );
+
+
+    if (!camera) {
+
+        return;
+    }
+
+
+    setCameraConnecting();
+
+
+    /*
+     * Close old stream.
+     */
+
+    camera.src =
+        "about:blank";
+
+
+    /*
+     * Reconnect.
+     */
+
+    setTimeout(
+        function () {
+
+            startCameraStream();
+
+        },
+        200
+    );
+
 }
 
 
@@ -350,10 +462,12 @@ async function loadDetectionStatus() {
 
         const response =
             await fetch(
-                DETECTION_API_URL,
+                DETECTION_STATUS_URL,
                 {
                     method: "GET",
+
                     cache: "no-store",
+
                     headers: {
                         "Accept":
                             "application/json"
@@ -375,92 +489,274 @@ async function loadDetectionStatus() {
 
 
         console.log(
-            "Detection API:",
+            "YOLO DATA:",
             data
         );
 
 
-        updateDetectionUI(
-            data
-        );
+        /*
+         * Your backend currently uses:
+         *
+         * {
+         *   status: "No weed detected"
+         * }
+         *
+         * or:
+         *
+         * {
+         *   status: "Weed detected",
+         *   confidence: 0.91
+         * }
+         */
 
 
-    } catch (error) {
+        const status =
+            String(
+                data.status || ""
+            ).toLowerCase();
+
+
+        if (
+            status.includes("weed")
+        ) {
+
+            updateWeedDetection({
+
+                confidence:
+                    data.confidence,
+
+                frame_id:
+                    data.frame_id ??
+                    data.frameId,
+
+                timestamp:
+                    data.time ??
+                    data.timestamp
+
+            });
+
+        }
+        else {
+
+            updateClearDetection();
+
+        }
+
+    }
+    catch (error) {
+
+        /*
+         * Detection API failure should
+         * NOT stop the camera.
+         */
 
         console.warn(
-            "Detection API unavailable:",
+            "YOLO API unavailable:",
             error.message
         );
 
-
-        // Camera can still be LIVE even
-        // if detection backend is offline.
-
-        setDetectionOffline();
     }
 }
 
 
 // ============================================================
-// UPDATE DETECTION UI
+// CLEAR
 // ============================================================
 
-function updateDetectionUI(
-    data
-) {
+function updateClearDetection() {
 
-    // --------------------------------------------------------
-    // Try different possible backend formats
-    // --------------------------------------------------------
-
-    let detection =
-        data?.detection ||
-        data?.result ||
-        data;
+    const chip =
+        document.getElementById(
+            "detection-chip"
+        );
 
 
-    if (
-        detection &&
-        detection.detection
-    ) {
+    const state =
+        document.getElementById(
+            "detection-state"
+        );
 
-        detection =
-            detection.detection;
+
+    const icon =
+        document.getElementById(
+            "detection-icon"
+        );
+
+
+    const headline =
+        document.getElementById(
+            "detection-headline"
+        );
+
+
+    const description =
+        document.getElementById(
+            "detection-description"
+        );
+
+
+    const confidence =
+        document.getElementById(
+            "confidence-value"
+        );
+
+
+    const percent =
+        document.getElementById(
+            "confidence-percent"
+        );
+
+
+    const fill =
+        document.getElementById(
+            "confidence-fill"
+        );
+
+
+    const overlay =
+        document.getElementById(
+            "detection-overlay"
+        );
+
+
+    const overlayLabel =
+        document.getElementById(
+            "overlay-label"
+        );
+
+
+    if (chip) {
+
+        chip.textContent =
+            "CLEAR";
+
+        chip.className =
+            "panel-chip clear-chip";
     }
 
 
-    lastDetection =
-        detection;
+    if (state) {
+
+        state.className =
+            "detection-state clear";
+    }
 
 
-    // --------------------------------------------------------
-    // Determine weed state
-    // --------------------------------------------------------
+    if (icon) {
 
-    const status =
-        String(
-            data?.status ||
-            detection?.status ||
-            detection?.label ||
-            ""
-        ).toLowerCase();
+        icon.textContent =
+            "✔";
+    }
 
 
-    const isWeed =
-        status.includes("weed");
+    if (headline) {
+
+        headline.textContent =
+            "No Weed Detected";
+    }
 
 
-    // --------------------------------------------------------
-    // Confidence
-    // --------------------------------------------------------
+    if (description) {
+
+        description.textContent =
+            "YOLOv8 is monitoring the camera feed.";
+    }
+
+
+    if (confidence) {
+
+        confidence.textContent =
+            "--";
+    }
+
+
+    if (percent) {
+
+        percent.textContent =
+            "0%";
+    }
+
+
+    if (fill) {
+
+        fill.style.width =
+            "0%";
+    }
+
+
+    if (overlay) {
+
+        overlay.className =
+            "detection-overlay clear";
+    }
+
+
+    if (overlayLabel) {
+
+        overlayLabel.textContent =
+            "CLEAR";
+    }
+
+
+    const latest =
+        document.getElementById(
+            "latest-event"
+        );
+
+
+    if (latest) {
+
+        latest.className =
+            "latest-event";
+
+
+        latest.innerHTML = `
+
+            <span class="event-icon">
+                ℹ
+            </span>
+
+            <div>
+
+                <strong>
+                    Waiting for a YOLOv8 detection
+                </strong>
+
+                <p>
+                    Detection events will appear here.
+                </p>
+
+            </div>
+
+        `;
+    }
+
+}
+
+
+// ============================================================
+// WEED DETECTED
+// ============================================================
+
+function updateWeedDetection(
+    detection
+) {
 
     let confidence =
         Number(
-            detection?.confidence ??
-            data?.confidence ??
-            0
+            detection.confidence
         );
 
+
+    if (!Number.isFinite(confidence)) {
+
+        confidence = 0;
+    }
+
+
+    /*
+     * 0.92 -> 92
+     */
 
     if (
         confidence > 0 &&
@@ -481,397 +777,290 @@ function updateDetectionUI(
         );
 
 
-    // --------------------------------------------------------
-    // Elements
-    // --------------------------------------------------------
-
-    const detectionChip =
+    const chip =
         document.getElementById(
             "detection-chip"
         );
 
-    const detectionState =
+
+    const state =
         document.getElementById(
             "detection-state"
         );
 
-    const detectionIcon =
+
+    const icon =
         document.getElementById(
             "detection-icon"
         );
 
-    const detectionHeadline =
+
+    const headline =
         document.getElementById(
             "detection-headline"
         );
 
-    const detectionDescription =
+
+    const description =
         document.getElementById(
             "detection-description"
         );
+
+
+    if (chip) {
+
+        chip.textContent =
+            "WEED DETECTED";
+
+        chip.className =
+            "panel-chip weed-chip";
+    }
+
+
+    if (state) {
+
+        state.className =
+            "detection-state weed";
+    }
+
+
+    if (icon) {
+
+        icon.textContent =
+            "⚠";
+    }
+
+
+    if (headline) {
+
+        headline.textContent =
+            "Weed Detected!";
+    }
+
+
+    if (description) {
+
+        description.textContent =
+            "YOLOv8 detected a weed in the camera frame.";
+    }
+
+
+    /*
+     * Confidence
+     */
 
     const confidenceValue =
         document.getElementById(
             "confidence-value"
         );
 
+
     const confidencePercent =
         document.getElementById(
             "confidence-percent"
         );
+
 
     const confidenceFill =
         document.getElementById(
             "confidence-fill"
         );
 
-    const frameId =
-        document.getElementById(
-            "frame-id"
-        );
-
-    const modelVersion =
-        document.getElementById(
-            "model-version"
-        );
-
-    const latestEvent =
-        document.getElementById(
-            "latest-event"
-        );
-
-
-    // ========================================================
-    // WEED DETECTED
-    // ========================================================
-
-    if (isWeed) {
-
-        if (detectionChip) {
-
-            detectionChip.textContent =
-                "WEED DETECTED";
-
-            detectionChip.className =
-                "panel-chip weed-chip";
-        }
-
-
-        if (detectionState) {
-
-            detectionState.className =
-                "detection-state weed";
-        }
-
-
-        if (detectionIcon) {
-
-            detectionIcon.textContent =
-                "⚠";
-        }
-
-
-        if (detectionHeadline) {
-
-            detectionHeadline.textContent =
-                "Weed Detected!";
-        }
-
-
-        if (detectionDescription) {
-
-            detectionDescription.textContent =
-                "YOLOv8 detected a weed in the camera frame.";
-        }
-
-
-        if (confidenceValue) {
-
-            confidenceValue.textContent =
-                `${confidence.toFixed(1)}%`;
-        }
-
-
-        if (confidencePercent) {
-
-            confidencePercent.textContent =
-                `${confidence.toFixed(1)}%`;
-        }
-
-
-        if (confidenceFill) {
-
-            confidenceFill.style.width =
-                `${confidence}%`;
-        }
-
-
-        if (frameId) {
-
-            frameId.textContent =
-                detection?.frame_id ??
-                detection?.frameId ??
-                data?.frame_id ??
-                "--";
-        }
-
-
-        if (modelVersion) {
-
-            modelVersion.textContent =
-                detection?.modelVersion ||
-                data?.model ||
-                "YOLOv8";
-        }
-
-
-        if (latestEvent) {
-
-            latestEvent.innerHTML = `
-                <span class="event-icon">⚠</span>
-
-                <div>
-
-                    <strong>
-                        Weed detected by YOLOv8
-                    </strong>
-
-                    <p>
-                        Confidence:
-                        ${confidence.toFixed(1)}%
-                    </p>
-
-                </div>
-            `;
-
-            latestEvent.className =
-                "latest-event weed-event";
-        }
-
-
-        return;
-    }
-
-
-    // ========================================================
-    // CLEAR
-    // ========================================================
-
-    if (detectionChip) {
-
-        detectionChip.textContent =
-            "CLEAR";
-
-        detectionChip.className =
-            "panel-chip clear-chip";
-    }
-
-
-    if (detectionState) {
-
-        detectionState.className =
-            "detection-state clear";
-    }
-
-
-    if (detectionIcon) {
-
-        detectionIcon.textContent =
-            "✓";
-    }
-
-
-    if (detectionHeadline) {
-
-        detectionHeadline.textContent =
-            "No Weed Detected";
-    }
-
-
-    if (detectionDescription) {
-
-        detectionDescription.textContent =
-            "YOLOv8 is monitoring the camera feed.";
-    }
-
 
     if (confidenceValue) {
 
         confidenceValue.textContent =
-            "--";
+            confidence.toFixed(1) +
+            "%";
     }
 
 
     if (confidencePercent) {
 
         confidencePercent.textContent =
-            "0%";
+            confidence.toFixed(1) +
+            "%";
     }
 
 
     if (confidenceFill) {
 
         confidenceFill.style.width =
-            "0%";
+            confidence +
+            "%";
     }
+
+
+    /*
+     * Frame
+     */
+
+    const frameId =
+        document.getElementById(
+            "frame-id"
+        );
 
 
     if (frameId) {
 
         frameId.textContent =
+            detection.frame_id ??
+            detection.frameId ??
             "--";
     }
 
 
-    if (modelVersion) {
+    /*
+     * Detection time
+     */
 
-        modelVersion.textContent =
-            data?.model ||
-            "YOLOv8";
+    const detectionTime =
+        document.getElementById(
+            "detection-time"
+        );
+
+
+    if (detectionTime) {
+
+        const value =
+            detection.timestamp ||
+            detection.time;
+
+
+        if (value) {
+
+            detectionTime.textContent =
+                new Date(value)
+                    .toLocaleTimeString(
+                        "en-IN"
+                    );
+
+        }
+        else {
+
+            detectionTime.textContent =
+                "--";
+        }
     }
 
 
-    if (latestEvent) {
+    /*
+     * Camera overlay
+     */
 
-        latestEvent.innerHTML = `
-            <span class="event-icon">✓</span>
+    const overlay =
+        document.getElementById(
+            "detection-overlay"
+        );
+
+
+    const overlayLabel =
+        document.getElementById(
+            "overlay-label"
+        );
+
+
+    if (overlay) {
+
+        overlay.className =
+            "detection-overlay weed";
+    }
+
+
+    if (overlayLabel) {
+
+        overlayLabel.textContent =
+            "WEED " +
+            confidence.toFixed(0) +
+            "%";
+    }
+
+
+    /*
+     * Latest AI event
+     */
+
+    const latest =
+        document.getElementById(
+            "latest-event"
+        );
+
+
+    if (latest) {
+
+        latest.className =
+            "latest-event weed-event";
+
+
+        latest.innerHTML = `
+
+            <span class="event-icon">
+                ⚠
+            </span>
 
             <div>
 
                 <strong>
-                    Waiting for YOLOv8 detection
+                    Weed detected by YOLOv8
                 </strong>
 
                 <p>
-                    Detection events will appear here.
+                    Confidence:
+                    ${confidence.toFixed(1)}%
+                    · Frame:
+                    ${
+                        detection.frame_id ??
+                        detection.frameId ??
+                        "--"
+                    }
                 </p>
 
             </div>
+
         `;
-
-        latestEvent.className =
-            "latest-event clear-event";
     }
+
 }
 
 
 // ============================================================
-// DETECTION API OFFLINE
-// ============================================================
-
-function setDetectionOffline() {
-
-    const detectionChip =
-        document.getElementById(
-            "detection-chip"
-        );
-
-    const detectionHeadline =
-        document.getElementById(
-            "detection-headline"
-        );
-
-    const detectionDescription =
-        document.getElementById(
-            "detection-description"
-        );
-
-
-    if (detectionChip) {
-
-        detectionChip.textContent =
-            "OFFLINE";
-
-        detectionChip.className =
-            "panel-chip stream-chip";
-    }
-
-
-    if (detectionHeadline) {
-
-        detectionHeadline.textContent =
-            "Detection API Offline";
-    }
-
-
-    if (detectionDescription) {
-
-        detectionDescription.textContent =
-            "Camera stream can still operate independently.";
-    }
-}
-
-
-// ============================================================
-// SYSTEM STATUS
-// ============================================================
-
-function updateSystemStatus() {
-
-    const badge =
-        document.getElementById(
-            "sys-badge"
-        );
-
-
-    if (!badge) {
-        return;
-    }
-
-
-    if (cameraConnected) {
-
-        badge.textContent =
-            "● System Online";
-
-        badge.className =
-            "sys-badge online";
-
-    } else {
-
-        badge.textContent =
-            "● Camera Offline";
-
-        badge.className =
-            "sys-badge refreshing";
-    }
-}
-
-
-// ============================================================
-// INITIALIZATION
+// INITIALIZE
 // ============================================================
 
 function initializeCameraPage() {
 
     console.log(
-        "================================"
+        "======================================"
     );
 
+
     console.log(
-        "WEEDGUARD CAMERA FEED"
+        "WEEDGUARD CAMERA PAGE"
     );
+
 
     console.log(
         "ESP32:",
         ESP32_CAMERA_IP
     );
 
+
     console.log(
         "STREAM:",
         ESP32_STREAM_URL
     );
 
+
     console.log(
-        "================================"
+        "======================================"
     );
 
 
-    // ----------------------------------------
-    // Clock
-    // ----------------------------------------
+    /*
+     * Clock
+     */
 
-    tickCameraClock();
+    updateClock();
 
 
     if (clockTimer) {
@@ -884,21 +1073,21 @@ function initializeCameraPage() {
 
     clockTimer =
         setInterval(
-            tickCameraClock,
+            updateClock,
             1000
         );
 
 
-    // ----------------------------------------
-    // Start camera
-    // ----------------------------------------
+    /*
+     * Camera
+     */
 
-    refreshCameraFeed();
+    startCameraStream();
 
 
-    // ----------------------------------------
-    // Detection
-    // ----------------------------------------
+    /*
+     * YOLO
+     */
 
     loadDetectionStatus();
 
@@ -917,18 +1106,6 @@ function initializeCameraPage() {
             DETECTION_POLL_MS
         );
 
-
-    // ----------------------------------------
-    // System status
-    // ----------------------------------------
-
-    updateSystemStatus();
-
-
-    setInterval(
-        updateSystemStatus,
-        1000
-    );
 }
 
 
@@ -946,7 +1123,9 @@ if (
         initializeCameraPage
     );
 
-} else {
+}
+else {
 
     initializeCameraPage();
+
 }

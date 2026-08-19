@@ -12,6 +12,7 @@
 
     <title>Camera Feed - WeedGuard</title>
 
+
     <!-- Existing project CSS -->
     <link
         rel="stylesheet"
@@ -23,115 +24,113 @@
         href="/css/camera-feed.css"
     >
 
-    <!-- Google Font -->
-    <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
-        rel="stylesheet"
-    >
 
     <style>
 
         /* =====================================================
-           CAMERA STREAM
+           PAGE LAYOUT
+           ===================================================== */
+
+        .camera-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 2fr)
+                minmax(320px, 1fr);
+
+            gap: 20px;
+
+            align-items: start;
+        }
+
+
+        .camera-bottom-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                minmax(0, 2fr)
+                minmax(320px, 1fr);
+
+            gap: 20px;
+
+            margin-top: 20px;
+        }
+
+
+        /* =====================================================
+           CAMERA FRAME
            ===================================================== */
 
         .camera-frame {
+
             position: relative;
+
             width: 100%;
-            height: 440px;
-            background: #050909;
+
+            /*
+             * ESP32 stream = 640 x 480
+             * Aspect ratio = 4:3
+             */
+
+            aspect-ratio: 4 / 3;
+
+            background: #000;
+
             border-radius: 12px;
+
             overflow: hidden;
         }
 
+
+        /* =====================================================
+           IMPORTANT:
+           ESP32 MJPEG STREAM
+
+           DO NOT USE IFRAME.
+
+           Use IMG.
+           ===================================================== */
+
         #camera-stream {
-            display: block !important;
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: contain !important;
-            background: #000;
-            border: none;
-        }
 
-
-        /* =====================================================
-           CAMERA PLACEHOLDER
-           ===================================================== */
-
-        #camera-placeholder {
-            display: none !important;
-        }
-
-
-        /* =====================================================
-           STREAM STATUS
-           ===================================================== */
-
-        .stream-chip {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .stream-chip.live {
-            background: #d8f5df;
-            color: #176b38;
-        }
-
-        .stream-chip.error {
-            background: #ffdede;
-            color: #a30000;
-        }
-
-
-        /* =====================================================
-           CONNECTION MESSAGE
-           ===================================================== */
-
-        #camera-error {
             position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%);
 
-            display: none;
+            top: 0;
+            left: 0;
 
-            padding: 20px 25px;
+            width: 100%;
+            height: 100%;
 
-            background: rgba(0,0,0,0.85);
-            color: white;
-
-            border-radius: 12px;
-
-            text-align: center;
-
-            z-index: 20;
-        }
-
-        #camera-error strong {
             display: block;
-            margin-bottom: 8px;
-            font-size: 18px;
-        }
 
-        #camera-error span {
-            font-size: 13px;
-            color: #ccc;
+            background: #000;
+
+            /*
+             * Keep camera aspect ratio.
+             */
+            object-fit: contain;
+
+            object-position: center;
         }
 
 
         /* =====================================================
-           DETECTION OVERLAY
+           CAMERA OVERLAY
            ===================================================== */
 
         .detection-overlay {
+
             position: absolute;
 
             top: 15px;
             left: 15px;
 
-            z-index: 10;
+            z-index: 20;
 
             display: flex;
+
             align-items: center;
 
             gap: 8px;
@@ -140,73 +139,452 @@
 
             border-radius: 20px;
 
+            color: white;
+
             font-size: 12px;
+
             font-weight: 700;
-        }
-
-        .detection-overlay.clear {
-            background: #246b4a;
-            color: white;
-        }
-
-        .detection-overlay.weed {
-            background: #c62828;
-            color: white;
-        }
-
-        .detection-overlay.offline {
-            background: #555;
-            color: white;
-        }
-
-        .overlay-dot {
-            width: 8px;
-            height: 8px;
-
-            border-radius: 50%;
-
-            background: #fff;
-        }
-
-
-        /* =====================================================
-           STREAM INFO
-           ===================================================== */
-
-        .stream-info {
-            position: absolute;
-
-            left: 12px;
-            right: 12px;
-            bottom: 10px;
-
-            z-index: 10;
-
-            display: flex;
-            justify-content: space-between;
-
-            color: white;
-
-            font-family: "Space Mono", monospace;
-
-            font-size: 11px;
 
             pointer-events: none;
         }
 
 
+        .detection-overlay.clear {
+
+            background: #26734d;
+        }
+
+
+        .detection-overlay.weed {
+
+            background: #c62828;
+        }
+
+
+        .detection-overlay.offline {
+
+            background: #555;
+        }
+
+
+        .overlay-dot {
+
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: white;
+        }
+
+
         /* =====================================================
-           CAMERA GRID
+           CAMERA INFO
            ===================================================== */
 
-        .camera-grid {
+        .stream-info {
+
+            position: absolute;
+
+            left: 15px;
+            right: 15px;
+            bottom: 12px;
+
+            z-index: 20;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            color: white;
+
+            font-family: monospace;
+
+            font-size: 11px;
+
+            pointer-events: none;
+
+            text-shadow:
+                0 1px 3px #000;
+        }
+
+
+        /* =====================================================
+           CAMERA ERROR
+           ===================================================== */
+
+        #camera-error {
+
+            position: absolute;
+
+            top: 50%;
+            left: 50%;
+
+            transform:
+                translate(-50%, -50%);
+
+            z-index: 30;
+
+            display: none;
+
+            width: 80%;
+
+            max-width: 400px;
+
+            padding: 20px;
+
+            background:
+                rgba(0, 0, 0, 0.9);
+
+            color: white;
+
+            border-radius: 12px;
+
+            text-align: center;
+        }
+
+
+        #camera-error strong {
+
+            display: block;
+
+            margin-bottom: 8px;
+
+            font-size: 18px;
+        }
+
+
+        #camera-error small {
+
+            color: #ccc;
+        }
+
+
+        /* =====================================================
+           DETECTION STATE
+           ===================================================== */
+
+        .detection-state {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 16px;
+
+            padding: 18px;
+
+            margin-bottom: 16px;
+
+            border-radius: 12px;
+        }
+
+
+        .detection-state.clear {
+
+            background: #effaf3;
+
+            border: 1px solid #bde5ca;
+        }
+
+
+        .detection-state.weed {
+
+            background: #fff1f1;
+
+            border: 1px solid #efb4b4;
+        }
+
+
+        .detection-icon {
+
+            width: 48px;
+            height: 48px;
+
+            flex-shrink: 0;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #d8f2df;
+
+            font-size: 25px;
+        }
+
+
+        .detection-state.weed
+        .detection-icon {
+
+            background: #ffd8d8;
+        }
+
+
+        .detection-state h2 {
+
+            margin: 0 0 6px;
+
+            font-size: 19px;
+        }
+
+
+        .detection-state p {
+
+            margin: 0;
+
+            color: #68737d;
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           DETECTION STATS
+           ===================================================== */
+
+        .detection-stats {
+
             display: grid;
 
             grid-template-columns:
-                minmax(0, 2fr)
-                minmax(300px, 1fr);
+                1fr 1fr;
 
-            gap: 20px;
+            gap: 10px;
+        }
+
+
+        .stat-box {
+
+            padding: 14px;
+
+            border:
+                1px solid #e2e7eb;
+
+            border-radius: 9px;
+
+            background: #fafbfc;
+        }
+
+
+        .stat-label {
+
+            display: block;
+
+            margin-bottom: 6px;
+
+            color: #82909d;
+
+            font-size: 10px;
+
+            text-transform: uppercase;
+
+            letter-spacing: .5px;
+        }
+
+
+        .stat-box strong {
+
+            font-size: 15px;
+        }
+
+
+        /* =====================================================
+           CONFIDENCE
+           ===================================================== */
+
+        .confidence-wrap {
+
+            margin-top: 18px;
+        }
+
+
+        .confidence-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            margin-bottom: 7px;
+
+            color: #68737d;
+
+            font-size: 12px;
+        }
+
+
+        .confidence-bar {
+
+            width: 100%;
+
+            height: 8px;
+
+            background: #e7ecef;
+
+            border-radius: 10px;
+
+            overflow: hidden;
+        }
+
+
+        .confidence-fill {
+
+            width: 0%;
+
+            height: 100%;
+
+            background: #26734d;
+
+            border-radius: 10px;
+
+            transition:
+                width .3s ease;
+        }
+
+
+        /* =====================================================
+           PIPELINE
+           ===================================================== */
+
+        .pipeline {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+
+            overflow-x: auto;
+        }
+
+
+        .pipeline-step {
+
+            flex: 1;
+
+            min-width: 130px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+
+            padding: 12px;
+
+            border:
+                1px solid #e0e6e9;
+
+            border-radius: 10px;
+        }
+
+
+        .pipeline-step.active {
+
+            border-color: #b8dfc7;
+        }
+
+
+        .pipeline-step > span {
+
+            width: 25px;
+            height: 25px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #d9f2e1;
+
+            color: #26734d;
+
+            font-size: 12px;
+
+            font-weight: 700;
+        }
+
+
+        .pipeline-step strong {
+
+            display: block;
+
+            font-size: 12px;
+        }
+
+
+        .pipeline-step small {
+
+            display: block;
+
+            margin-top: 3px;
+
+            color: #87939c;
+
+            font-size: 9px;
+        }
+
+
+        .pipeline-arrow {
+
+            color: #98a3aa;
+
+            font-size: 20px;
+        }
+
+
+        /* =====================================================
+           LATEST EVENT
+           ===================================================== */
+
+        .latest-event {
+
+            display: flex;
+
+            gap: 12px;
+
+            padding: 16px;
+
+            border-left:
+                4px solid #62c48b;
+
+            border-radius: 8px;
+
+            background: #effaf3;
+        }
+
+
+        .latest-event.weed-event {
+
+            border-left-color: #d32f2f;
+
+            background: #fff1f1;
+        }
+
+
+        .event-icon {
+
+            font-size: 18px;
+        }
+
+
+        .latest-event strong {
+
+            font-size: 13px;
+        }
+
+
+        .latest-event p {
+
+            margin: 5px 0 0;
+
+            color: #73808a;
+
+            font-size: 11px;
         }
 
 
@@ -214,16 +592,39 @@
            MOBILE
            ===================================================== */
 
-        @media (max-width: 900px) {
+        @media (max-width: 1000px) {
 
-            .camera-grid {
+            .camera-grid,
+            .camera-bottom-grid {
+
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        @media (max-width: 600px) {
+
+            .detection-stats {
+
                 grid-template-columns: 1fr;
             }
 
-            .camera-frame {
-                height: 350px;
+
+            .pipeline {
+
+                flex-direction: column;
+
+                align-items: stretch;
             }
 
+
+            .pipeline-arrow {
+
+                text-align: center;
+
+                transform:
+                    rotate(90deg);
+            }
         }
 
     </style>
@@ -233,6 +634,10 @@
 
 <body>
 
+
+<!-- =========================================================
+     MAIN LAYOUT
+     ========================================================= -->
 
 <div class="layout">
 
@@ -265,9 +670,8 @@
         </div>
 
 
-        <!-- NAVIGATION -->
-
         <nav class="sidebar-nav">
+
 
             <p class="nav-section-label">
                 MAIN
@@ -385,23 +789,29 @@
 
             </a>
 
+
         </nav>
 
 
-        <!-- DEVICE STATUS -->
+        <!-- =================================================
+             DEVICE
+             ================================================= -->
 
         <div class="sidebar-device">
+
 
             <div
                 class="device-dot"
                 id="device-dot"
             ></div>
 
+
             <div>
 
                 <p class="device-name">
                     ESP32-S3 Camera
                 </p>
+
 
                 <p
                     class="device-status"
@@ -412,7 +822,9 @@
 
             </div>
 
+
         </div>
+
 
     </aside>
 
@@ -426,7 +838,7 @@
 
 
         <!-- =================================================
-             TOPBAR
+             TOP BAR
              ================================================= -->
 
         <header class="topbar">
@@ -438,8 +850,9 @@
                     Camera Feed
                 </h1>
 
+
                 <p class="topbar-sub">
-                    Live T-SIMCAM stream · YOLOv8 weed detection
+                    Live ESP32-S3 OV5640 stream · YOLOv8 weed detection
                 </p>
 
             </div>
@@ -452,15 +865,15 @@
                     class="topbar-time"
                     id="clock"
                 >
-                    --:--:-- --
+                    --:--:--
                 </div>
 
 
                 <span
-                    class="sys-badge online"
+                    class="sys-badge refreshing"
                     id="sys-badge"
                 >
-                    ● Checking...
+                    ● Connecting
                 </span>
 
 
@@ -471,7 +884,9 @@
                     ↻ Refresh
                 </button>
 
+
             </div>
+
 
         </header>
 
@@ -492,7 +907,7 @@
 
 
                 <!-- =================================================
-                     LIVE CAMERA
+                     CAMERA
                      ================================================= -->
 
                 <section class="panel camera-panel">
@@ -507,7 +922,7 @@
 
 
                         <span
-                            class="panel-chip stream-chip"
+                            class="panel-chip clear-chip"
                             id="stream-chip"
                         >
                             CONNECTING
@@ -529,22 +944,45 @@
 
 
                         <!-- =================================================
-                             DIRECT ESP32 MJPEG STREAM
+                             THIS IS THE IMPORTANT PART
 
-                             IMPORTANT:
-                             DO NOT CHANGE THIS TO
-                             /api/detection/stream
+                             ESP32 MJPEG STREAM
                              ================================================= -->
 
                         <img
                             id="camera-stream"
-                            class="camera-stream"
-                            src="http://10.128.75.113:81/stream"
-                            alt="Live ESP32-S3 OV5640 Camera"
+                            src="http://10.128.75.113/stream"
+                            alt="ESP32-S3 OV5640 Live Camera"
                         >
 
 
-                        <!-- ERROR MESSAGE -->
+                        <!-- =================================================
+                             DETECTION OVERLAY
+                             ================================================= -->
+
+                        <div
+                            class="detection-overlay clear"
+                            id="detection-overlay"
+                        >
+
+                            <span
+                                class="overlay-dot"
+                            ></span>
+
+
+                            <span
+                                id="overlay-label"
+                            >
+                                CLEAR
+                            </span>
+
+                        </div>
+
+
+
+                        <!-- =================================================
+                             ERROR
+                             ================================================= -->
 
                         <div
                             id="camera-error"
@@ -554,40 +992,31 @@
                                 Camera Stream Unavailable
                             </strong>
 
-                            <span>
+
+                            <small>
                                 Check ESP32 Wi-Fi and camera server.
-                            </span>
+                            </small>
 
                         </div>
 
 
-                        <!-- DETECTION OVERLAY -->
 
-                        <div
-                            class="detection-overlay clear"
-                            id="detection-overlay"
-                        >
-
-                            <span class="overlay-dot"></span>
-
-                            <span id="overlay-label">
-                                CLEAR
-                            </span>
-
-                        </div>
-
-
-                        <!-- STREAM INFORMATION -->
+                        <!-- =================================================
+                             BOTTOM INFO
+                             ================================================= -->
 
                         <div class="stream-info">
 
+
                             <span id="frame-state">
-                                LIVE
+                                ● LIVE
                             </span>
 
-                            <span id="stream-url">
+
+                            <span>
                                 ESP32 · 10.128.75.113
                             </span>
+
 
                         </div>
 
@@ -600,17 +1029,19 @@
 
 
                 <!-- =================================================
-                     DETECTION STATUS
+                     DETECTION
                      ================================================= -->
 
-                <section class="panel detection-panel">
+                <section class="panel">
 
 
                     <div class="panel-header">
 
+
                         <p class="panel-title">
                             Detection Status
                         </p>
+
 
                         <span
                             class="panel-chip clear-chip"
@@ -618,6 +1049,7 @@
                         >
                             CLEAR
                         </span>
+
 
                     </div>
 
@@ -639,13 +1071,20 @@
 
                         <div>
 
-                            <h2 id="detection-headline">
+
+                            <h2
+                                id="detection-headline"
+                            >
                                 No Weed Detected
                             </h2>
 
-                            <p id="detection-description">
+
+                            <p
+                                id="detection-description"
+                            >
                                 YOLOv8 is monitoring the camera feed.
                             </p>
+
 
                         </div>
 
@@ -655,7 +1094,7 @@
 
 
                     <!-- =================================================
-                         DETECTION STATS
+                         STATS
                          ================================================= -->
 
                     <div class="detection-stats">
@@ -667,11 +1106,15 @@
                                 Confidence
                             </span>
 
-                            <strong id="confidence-value">
+
+                            <strong
+                                id="confidence-value"
+                            >
                                 --
                             </strong>
 
                         </div>
+
 
 
                         <div class="stat-box">
@@ -680,11 +1123,15 @@
                                 Last Detection
                             </span>
 
-                            <strong id="detection-time">
+
+                            <strong
+                                id="detection-time"
+                            >
                                 --
                             </strong>
 
                         </div>
+
 
 
                         <div class="stat-box">
@@ -693,11 +1140,15 @@
                                 Frame ID
                             </span>
 
-                            <strong id="frame-id">
+
+                            <strong
+                                id="frame-id"
+                            >
                                 --
                             </strong>
 
                         </div>
+
 
 
                         <div class="stat-box">
@@ -706,7 +1157,8 @@
                                 Model
                             </span>
 
-                            <strong id="model-version">
+
+                            <strong>
                                 YOLOv8
                             </strong>
 
@@ -726,24 +1178,30 @@
 
                         <div class="confidence-header">
 
+
                             <span>
                                 Detection confidence
                             </span>
 
-                            <span id="confidence-percent">
+
+                            <span
+                                id="confidence-percent"
+                            >
                                 0%
                             </span>
+
 
                         </div>
 
 
                         <div class="confidence-bar">
 
+
                             <div
                                 class="confidence-fill"
                                 id="confidence-fill"
-                                style="width:0%"
                             ></div>
+
 
                         </div>
 
@@ -759,14 +1217,14 @@
 
 
             <!-- =================================================
-                 BOTTOM SECTION
+                 PIPELINE + EVENT
                  ================================================= -->
 
             <div class="camera-bottom-grid">
 
 
                 <!-- =================================================
-                     AI PIPELINE
+                     PIPELINE
                      ================================================= -->
 
                 <section class="panel">
@@ -774,15 +1232,19 @@
 
                     <div class="panel-header">
 
+
                         <p class="panel-title">
                             AI Pipeline
                         </p>
+
 
                         <span class="panel-chip clear-chip">
                             PHASE 5
                         </span>
 
+
                     </div>
+
 
 
                     <div class="pipeline">
@@ -790,9 +1252,11 @@
 
                         <div class="pipeline-step active">
 
+
                             <span>
                                 1
                             </span>
+
 
                             <div>
 
@@ -800,11 +1264,13 @@
                                     Camera
                                 </strong>
 
+
                                 <small>
-                                    T-SIMCAM / OV5640
+                                    ESP32-S3 / OV5640
                                 </small>
 
                             </div>
+
 
                         </div>
 
@@ -814,11 +1280,14 @@
                         </div>
 
 
+
                         <div class="pipeline-step active">
+
 
                             <span>
                                 2
                             </span>
+
 
                             <div>
 
@@ -826,11 +1295,13 @@
                                     YOLOv8
                                 </strong>
 
+
                                 <small>
                                     Live inference
                                 </small>
 
                             </div>
+
 
                         </div>
 
@@ -840,14 +1311,14 @@
                         </div>
 
 
-                        <div
-                            class="pipeline-step"
-                            id="backend-step"
-                        >
+
+                        <div class="pipeline-step">
+
 
                             <span>
                                 3
                             </span>
+
 
                             <div>
 
@@ -855,11 +1326,13 @@
                                     Backend
                                 </strong>
 
+
                                 <small>
                                     Detection API
                                 </small>
 
                             </div>
+
 
                         </div>
 
@@ -869,14 +1342,14 @@
                         </div>
 
 
-                        <div
-                            class="pipeline-step"
-                            id="cutter-step"
-                        >
+
+                        <div class="pipeline-step">
+
 
                             <span>
                                 4
                             </span>
+
 
                             <div>
 
@@ -884,11 +1357,13 @@
                                     Cutter
                                 </strong>
 
+
                                 <small>
                                     ESP32 trigger
                                 </small>
 
                             </div>
+
 
                         </div>
 
@@ -901,10 +1376,10 @@
 
 
                 <!-- =================================================
-                     LATEST AI EVENT
+                     LATEST EVENT
                      ================================================= -->
 
-                <section class="panel activity-panel">
+                <section class="panel">
 
 
                     <div class="panel-header">
@@ -915,10 +1390,7 @@
                         </p>
 
 
-                        <span
-                            class="panel-chip clear-chip"
-                            id="event-source"
-                        >
+                        <span class="panel-chip clear-chip">
                             AI-VISION
                         </span>
 
@@ -926,9 +1398,10 @@
                     </div>
 
 
+
                     <div
+                        class="latest-event"
                         id="latest-event"
-                        class="latest-event clear-event"
                     >
 
 
@@ -939,14 +1412,16 @@
 
                         <div>
 
+
                             <strong>
                                 Waiting for a YOLOv8 detection
                             </strong>
 
+
                             <p>
-                                Detection events from the vision
-                                pipeline will appear here.
+                                Detection events will appear here.
                             </p>
+
 
                         </div>
 
@@ -962,966 +1437,26 @@
 
         </div>
 
+
     </div>
+
 
 </div>
 
 
 
 <!-- =========================================================
-     JAVASCRIPT
+     PROJECT API
      ========================================================= -->
 
 <script src="/js/api.js"></script>
 
 
-<script>
-
-    /* =========================================================
-       ESP32 CAMERA CONFIGURATION
-       ========================================================= */
-
-    const ESP32_CAMERA_IP = "10.128.75.113";
-
-    const ESP32_STREAM_URL =
-        "http://" +
-        ESP32_CAMERA_IP +
-        ":81/stream";
-
-
-    /* =========================================================
-       CAMERA ELEMENTS
-       ========================================================= */
-
-    const camera =
-        document.getElementById("camera-stream");
-
-    const streamChip =
-        document.getElementById("stream-chip");
-
-    const cameraError =
-        document.getElementById("camera-error");
-
-    const frameState =
-        document.getElementById("frame-state");
-
-    const streamUrl =
-        document.getElementById("stream-url");
-
-    const deviceDot =
-        document.getElementById("device-dot");
-
-    const deviceStatus =
-        document.getElementById("device-status-text");
-
-    const sysBadge =
-        document.getElementById("sys-badge");
-
-
-    /* =========================================================
-       CAMERA CONNECTED
-       ========================================================= */
-
-    function cameraConnected()
-    {
-
-        console.log(
-            "================================="
-        );
-
-        console.log(
-            "ESP32 CAMERA CONNECTED"
-        );
-
-        console.log(
-            ESP32_STREAM_URL
-        );
-
-        console.log(
-            "================================="
-        );
-
-
-        if (streamChip)
-        {
-
-            streamChip.textContent =
-                "LIVE";
-
-            streamChip.className =
-                "panel-chip stream-chip live";
-
-        }
-
-
-        if (cameraError)
-        {
-
-            cameraError.style.display =
-                "none";
-
-        }
-
-
-        if (frameState)
-        {
-
-            frameState.textContent =
-                "● LIVE STREAM";
-
-        }
-
-
-        if (streamUrl)
-        {
-
-            streamUrl.textContent =
-                "ESP32 · " +
-                ESP32_CAMERA_IP;
-
-        }
-
-
-        if (deviceDot)
-        {
-
-            deviceDot.style.background =
-                "var(--green-400)";
-
-        }
-
-
-        if (deviceStatus)
-        {
-
-            deviceStatus.textContent =
-                "Connected · Live";
-
-        }
-
-
-        if (sysBadge)
-        {
-
-            sysBadge.textContent =
-                "● Camera Online";
-
-            sysBadge.className =
-                "sys-badge online";
-
-        }
-
-    }
-
-
-    /* =========================================================
-       CAMERA ERROR
-       ========================================================= */
-
-    function cameraDisconnected()
-    {
-
-        console.error(
-            "ESP32 camera stream unavailable"
-        );
-
-
-        if (streamChip)
-        {
-
-            streamChip.textContent =
-                "OFFLINE";
-
-            streamChip.className =
-                "panel-chip stream-chip error";
-
-        }
-
-
-        if (cameraError)
-        {
-
-            cameraError.style.display =
-                "block";
-
-        }
-
-
-        if (frameState)
-        {
-
-            frameState.textContent =
-                "NO SIGNAL";
-
-        }
-
-
-        if (deviceDot)
-        {
-
-            deviceDot.style.background =
-                "var(--red-600)";
-
-        }
-
-
-        if (deviceStatus)
-        {
-
-            deviceStatus.textContent =
-                "Camera unavailable";
-
-        }
-
-
-        if (sysBadge)
-        {
-
-            sysBadge.textContent =
-                "● Camera Offline";
-
-            sysBadge.className =
-                "sys-badge refreshing";
-
-        }
-
-    }
-
-
-    /* =========================================================
-       CAMERA EVENTS
-       ========================================================= */
-
-    if (camera)
-    {
-
-        camera.addEventListener(
-            "load",
-            cameraConnected
-        );
-
-
-        camera.addEventListener(
-            "error",
-            cameraDisconnected
-        );
-
-    }
-
-
-    /* =========================================================
-       REFRESH CAMERA
-       ========================================================= */
-
-    function refreshCameraFeed()
-    {
-
-        console.log(
-            "Refreshing ESP32 camera..."
-        );
-
-
-        if (!camera)
-        {
-            return;
-        }
-
-
-        if (streamChip)
-        {
-
-            streamChip.textContent =
-                "CONNECTING";
-
-            streamChip.className =
-                "panel-chip stream-chip";
-
-        }
-
-
-        if (frameState)
-        {
-
-            frameState.textContent =
-                "Connecting...";
-
-        }
-
-
-        /*
-         * IMPORTANT:
-         * DIRECT ESP32 STREAM
-         *
-         * Do NOT use:
-         * /api/detection/stream
-         */
-
-        camera.src =
-            ESP32_STREAM_URL +
-            "?t=" +
-            Date.now();
-
-    }
-
-
-    /* =========================================================
-       CLOCK
-       ========================================================= */
-
-    function updateClock()
-    {
-
-        const clock =
-            document.getElementById("clock");
-
-
-        if (!clock)
-        {
-            return;
-        }
-
-
-        clock.textContent =
-            new Date().toLocaleTimeString(
-                "en-IN",
-                {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit"
-                }
-            );
-
-    }
-
-
-    /* =========================================================
-       DETECTION HELPERS
-       ========================================================= */
-
-    function confidencePercent(value)
-    {
-
-        const n =
-            Number(value);
-
-
-        if (!Number.isFinite(n))
-        {
-            return 0;
-        }
-
-
-        return n <= 1
-            ? n * 100
-            : n;
-
-    }
-
-
-    function formatDetectionTime(value)
-    {
-
-        if (!value)
-        {
-            return "--";
-        }
-
-
-        const date =
-            new Date(value);
-
-
-        if (
-            Number.isNaN(
-                date.getTime()
-            )
-        )
-        {
-            return "--";
-        }
-
-
-        return date.toLocaleString(
-            "en-IN",
-            {
-                day: "2-digit",
-                month: "short",
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit"
-            }
-        );
-
-    }
-
-
-    /* =========================================================
-       UPDATE DETECTION UI
-       ========================================================= */
-
-    function updateDetectionUI(detection)
-    {
-
-        if (!detection)
-        {
-
-            setNoWeed();
-
-            return;
-
-        }
-
-
-        const label =
-            String(
-                detection.label ||
-                ""
-            ).toLowerCase();
-
-
-        const confidence =
-            confidencePercent(
-                detection.confidence
-            );
-
-
-        if (
-            label === "weed"
-        )
-        {
-
-            setWeedDetected(
-                detection,
-                confidence
-            );
-
-        }
-        else
-        {
-
-            setNoWeed();
-
-        }
-
-    }
-
-
-    /* =========================================================
-       NO WEED
-       ========================================================= */
-
-    function setNoWeed()
-    {
-
-        const chip =
-            document.getElementById(
-                "detection-chip"
-            );
-
-        const state =
-            document.getElementById(
-                "detection-state"
-            );
-
-        const headline =
-            document.getElementById(
-                "detection-headline"
-            );
-
-        const description =
-            document.getElementById(
-                "detection-description"
-            );
-
-        const icon =
-            document.getElementById(
-                "detection-icon"
-            );
-
-        const overlay =
-            document.getElementById(
-                "detection-overlay"
-            );
-
-        const overlayLabel =
-            document.getElementById(
-                "overlay-label"
-            );
-
-
-        if (chip)
-        {
-
-            chip.textContent =
-                "CLEAR";
-
-            chip.className =
-                "panel-chip clear-chip";
-
-        }
-
-
-        if (state)
-        {
-
-            state.className =
-                "detection-state clear";
-
-        }
-
-
-        if (icon)
-        {
-
-            icon.textContent =
-                "✔";
-
-        }
-
-
-        if (headline)
-        {
-
-            headline.textContent =
-                "No Weed Detected";
-
-        }
-
-
-        if (description)
-        {
-
-            description.textContent =
-                "YOLOv8 is monitoring the camera feed.";
-
-        }
-
-
-        if (overlay)
-        {
-
-            overlay.className =
-                "detection-overlay clear";
-
-        }
-
-
-        if (overlayLabel)
-        {
-
-            overlayLabel.textContent =
-                "CLEAR";
-
-        }
-
-
-        const confidence =
-            document.getElementById(
-                "confidence-value"
-            );
-
-        const confidencePercentEl =
-            document.getElementById(
-                "confidence-percent"
-            );
-
-        const confidenceFill =
-            document.getElementById(
-                "confidence-fill"
-            );
-
-
-        if (confidence)
-        {
-            confidence.textContent =
-                "--";
-        }
-
-
-        if (confidencePercentEl)
-        {
-            confidencePercentEl.textContent =
-                "0%";
-        }
-
-
-        if (confidenceFill)
-        {
-            confidenceFill.style.width =
-                "0%";
-        }
-
-    }
-
-
-    /* =========================================================
-       WEED DETECTED
-       ========================================================= */
-
-    function setWeedDetected(
-        detection,
-        confidence
-    )
-    {
-
-        const chip =
-            document.getElementById(
-                "detection-chip"
-            );
-
-        const state =
-            document.getElementById(
-                "detection-state"
-            );
-
-        const headline =
-            document.getElementById(
-                "detection-headline"
-            );
-
-        const description =
-            document.getElementById(
-                "detection-description"
-            );
-
-        const icon =
-            document.getElementById(
-                "detection-icon"
-            );
-
-        const overlay =
-            document.getElementById(
-                "detection-overlay"
-            );
-
-        const overlayLabel =
-            document.getElementById(
-                "overlay-label"
-            );
-
-
-        if (chip)
-        {
-
-            chip.textContent =
-                "WEED DETECTED";
-
-            chip.className =
-                "panel-chip weed-chip";
-
-        }
-
-
-        if (state)
-        {
-
-            state.className =
-                "detection-state weed";
-
-        }
-
-
-        if (icon)
-        {
-
-            icon.textContent =
-                "⚠";
-
-        }
-
-
-        if (headline)
-        {
-
-            headline.textContent =
-                "Weed Detected!";
-
-        }
-
-
-        if (description)
-        {
-
-            description.textContent =
-                "YOLOv8 detected a weed.";
-
-        }
-
-
-        if (overlay)
-        {
-
-            overlay.className =
-                "detection-overlay weed";
-
-        }
-
-
-        if (overlayLabel)
-        {
-
-            overlayLabel.textContent =
-                "WEED " +
-                confidence.toFixed(0) +
-                "%";
-
-        }
-
-
-        const confidenceValue =
-            document.getElementById(
-                "confidence-value"
-            );
-
-        const confidencePercentEl =
-            document.getElementById(
-                "confidence-percent"
-            );
-
-        const confidenceFill =
-            document.getElementById(
-                "confidence-fill"
-            );
-
-        const detectionTime =
-            document.getElementById(
-                "detection-time"
-            );
-
-        const frameId =
-            document.getElementById(
-                "frame-id"
-            );
-
-
-        if (confidenceValue)
-        {
-
-            confidenceValue.textContent =
-                confidence.toFixed(1) +
-                "%";
-
-        }
-
-
-        if (confidencePercentEl)
-        {
-
-            confidencePercentEl.textContent =
-                confidence.toFixed(1) +
-                "%";
-
-        }
-
-
-        if (confidenceFill)
-        {
-
-            confidenceFill.style.width =
-                confidence +
-                "%";
-
-        }
-
-
-        if (detectionTime)
-        {
-
-            detectionTime.textContent =
-                formatDetectionTime(
-                    detection.timestamp
-                );
-
-        }
-
-
-        if (frameId)
-        {
-
-            frameId.textContent =
-                detection.frame_id ??
-                "--";
-
-        }
-
-
-        const latestEvent =
-            document.getElementById(
-                "latest-event"
-            );
-
-
-        if (latestEvent)
-        {
-
-            latestEvent.className =
-                "latest-event weed-event";
-
-
-            latestEvent.innerHTML = `
-
-                <span class="event-icon">
-                    ⚠
-                </span>
-
-                <div>
-
-                    <strong>
-                        Weed detected by YOLOv8
-                    </strong>
-
-                    <p>
-                        Confidence:
-                        ${confidence.toFixed(1)}%
-                        · Frame:
-                        ${detection.frame_id ?? "--"}
-                        ·
-                        ${formatDetectionTime(
-                            detection.timestamp
-                        )}
-                    </p>
-
-                </div>
-
-            `;
-
-        }
-
-    }
-
-
-    /* =========================================================
-       BACKEND DETECTION
-       ========================================================= */
-
-    async function loadDetectionStatus()
-    {
-
-        /*
-         * Camera does NOT depend on this API.
-         *
-         * Even if backend fails,
-         * camera continues working.
-         */
-
-        try
-        {
-
-            if (
-                typeof getDetectionStatus !==
-                "function"
-            )
-            {
-
-                console.log(
-                    "Detection API not available"
-                );
-
-                return;
-
-            }
-
-
-            const result =
-                await getDetectionStatus();
-
-
-            if (
-                !result ||
-                result.success === false
-            )
-            {
-
-                return;
-
-            }
-
-
-            const detection =
-                result.detection ||
-                null;
-
-
-            updateDetectionUI(
-                detection
-            );
-
-        }
-        catch (error)
-        {
-
-            console.warn(
-                "Detection API unavailable:",
-                error
-            );
-
-        }
-
-    }
-
-
-    /* =========================================================
-       PAGE START
-       ========================================================= */
-
-    document.addEventListener(
-        "DOMContentLoaded",
-        function()
-        {
-
-            console.log(
-                "================================="
-            );
-
-            console.log(
-                "WEEDGUARD CAMERA FEED"
-            );
-
-            console.log(
-                "ESP32 IP:",
-                ESP32_CAMERA_IP
-            );
-
-            console.log(
-                "STREAM:",
-                ESP32_STREAM_URL
-            );
-
-            console.log(
-                "================================="
-            );
-
-
-            /* CLOCK */
-
-            updateClock();
-
-
-            setInterval(
-                updateClock,
-                1000
-            );
-
-
-            /* CAMERA */
-
-            refreshCameraFeed();
-
-
-            /* DETECTION */
-
-            loadDetectionStatus();
-
-
-            setInterval(
-                loadDetectionStatus,
-                2500
-            );
-
-        }
-    );
-
-</script>
+<!-- =========================================================
+     CAMERA JAVASCRIPT
+     ========================================================= -->
+
+<script src="/js/camera-feed.js"></script>
 
 
 </body>
