@@ -6,6 +6,7 @@ const detectionController = require("../controllers/detectionController");
 
 // ==========================================
 // POST /api/detection/weed
+// Receives weed detection from AI/ESP32
 // ==========================================
 router.post(
     "/weed",
@@ -14,6 +15,7 @@ router.post(
 
 // ==========================================
 // GET /api/detection/status
+// Returns latest YOLO detection
 // ==========================================
 router.get(
     "/status",
@@ -22,6 +24,7 @@ router.get(
 
 // ==========================================
 // GET /api/detection/stream
+// Returns live camera stream
 // ==========================================
 router.get(
     "/stream",

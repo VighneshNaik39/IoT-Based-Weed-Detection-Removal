@@ -14,16 +14,11 @@ const DETECTION_COOLDOWN = 4000;
 // ==========================================
 // Latest detection information
 // ==========================================
-let lastDetection = {
-    label: null,
-    confidence: null,
-    timestamp: null,
-    frame_id: null,
-    modelVersion: "YOLOv8"
-};
+let lastDetection = null;
 
 // ==========================================
 // POST /api/detection/weed
+// Receives detection from YOLO / AI system
 // ==========================================
 exports.handleWeedDetection = async (req, res) => {
 
@@ -33,12 +28,13 @@ exports.handleWeedDetection = async (req, res) => {
         label,
         confidence,
         timestamp,
-        frame_id
+        frame_id,
+        modelVersion
     } = req.body;
 
-    // ------------------------------------------
+    // ==========================================
     // Validate required fields
-    // ------------------------------------------
+    // ==========================================
     if (
         !label ||
         confidence === undefined ||
@@ -51,9 +47,9 @@ exports.handleWeedDetection = async (req, res) => {
         });
     }
 
-    // ------------------------------------------
+    // ==========================================
     // Validate label
-    // ------------------------------------------
+    // ==========================================
     if (label !== "weed") {
         return res.status(400).json({
             success: false,
@@ -61,9 +57,9 @@ exports.handleWeedDetection = async (req, res) => {
         });
     }
 
-    // ------------------------------------------
+    // ==========================================
     // Validate confidence
-    // ------------------------------------------
+    // ==========================================
     if (
         typeof confidence !== "number" ||
         confidence < 0 ||
@@ -75,15 +71,19 @@ exports.handleWeedDetection = async (req, res) => {
         });
     }
 
-    // ------------------------------------------
-    // 4-second cooldown
-    // ------------------------------------------
+    // ==========================================
+    // Detection cooldown
+    // Prevent duplicate detections
+    // ==========================================
     const currentTime = Date.now();
 
     if (
         currentTime - lastDetectionTime <
         DETECTION_COOLDOWN
     ) {
+
+        console.log("⏳ Detection ignored due to cooldown");
+
         return res.status(429).json({
             success: false,
             message: "Detection ignored due to cooldown"
@@ -92,71 +92,132 @@ exports.handleWeedDetection = async (req, res) => {
 
     lastDetectionTime = currentTime;
 
-    // ------------------------------------------
+    // ==========================================
+    // Normalize timestamp
+    // ==========================================
+    const detectionTimestamp =
+        new Date(timestamp);
+
+    if (Number.isNaN(detectionTimestamp.getTime())) {
+        return res.status(400).json({
+            success: false,
+            message: "Invalid timestamp"
+        });
+    }
+
+    const isoTimestamp =
+        detectionTimestamp.toISOString();
+
+    // ==========================================
     // Store latest detection
-    // ------------------------------------------
+    // ==========================================
     lastDetection = {
-        label: label,
+        label: "weed",
         confidence: confidence,
-        timestamp: timestamp,
+        timestamp: isoTimestamp,
         frame_id: frame_id,
-        modelVersion: "YOLOv8"
+        modelVersion: modelVersion || "YOLOv8"
     };
 
-    // ------------------------------------------
+    // ==========================================
     // Save detection to logs.json
-    // ------------------------------------------
+    // ==========================================
     const logFile = path.join(
         __dirname,
         "../data/logs.json"
     );
 
     const logEntry = {
-        timestamp: timestamp,
+        time: isoTimestamp,
         status: "Weed detected",
+        moisture: null,
         confidence: confidence,
         frame_id: frame_id,
+        modelVersion: modelVersion || "YOLOv8",
         source: "ai-vision"
     };
 
     let logs = [];
 
-    if (fs.existsSync(logFile)) {
+    try {
 
-        const data = fs.readFileSync(
-            logFile,
-            "utf8"
+        if (fs.existsSync(logFile)) {
+
+            const data = fs.readFileSync(
+                logFile,
+                "utf8"
+            );
+
+            logs = data
+                ? JSON.parse(data)
+                : [];
+
+            if (!Array.isArray(logs)) {
+                logs = [];
+            }
+        }
+
+    } catch (error) {
+
+        console.error(
+            "❌ Failed to read logs.json:",
+            error.message
         );
 
-        logs = data ? JSON.parse(data) : [];
+        logs = [];
     }
 
-    logs.push(logEntry);
+    logs.unshift(logEntry);
 
-    fs.writeFileSync(
-        logFile,
-        JSON.stringify(logs, null, 2)
-    );
+    // Keep maximum 100 logs
+    if (logs.length > 100) {
+        logs = logs.slice(0, 100);
+    }
 
-    // ------------------------------------------
+    try {
+
+        fs.writeFileSync(
+            logFile,
+            JSON.stringify(logs, null, 2)
+        );
+
+        console.log(
+            "📝 AI detection saved to logs.json"
+        );
+
+    } catch (error) {
+
+        console.error(
+            "❌ Failed to write logs.json:",
+            error.message
+        );
+    }
+
+    // ==========================================
     // Update current session
-    // ------------------------------------------
-    sessionService.recordDetection({
-        weed: true,
-        moisture: null
-    });
+    // ==========================================
+    try {
 
-    console.log(
-        "📊 AI detection added to current session"
-    );
+        sessionService.recordDetection({
+            weed: true,
+            moisture: null
+        });
 
-    console.log(
-        "📝 AI detection saved to logs.json"
-    );
+        console.log(
+            "📊 AI detection added to current session"
+        );
 
-    // ------------------------------------------
-    // Trigger cutter through ESP32 service
-    // ------------------------------------------
+    } catch (error) {
+
+        console.error(
+            "❌ Session update failed:",
+            error.message
+        );
+    }
+
+    // ==========================================
+    // Trigger cutter
+    // ==========================================
     try {
 
         const cutterResponse =
@@ -175,12 +236,11 @@ exports.handleWeedDetection = async (req, res) => {
             "❌ Failed to activate cutter:",
             error.message
         );
-
     }
 
-    // ------------------------------------------
+    // ==========================================
     // Console information
-    // ------------------------------------------
+    // ==========================================
     console.log(
         "✅ Weed detection accepted"
     );
@@ -195,18 +255,25 @@ exports.handleWeedDetection = async (req, res) => {
         frame_id
     );
 
-    // ------------------------------------------
-    // Send response
-    // ------------------------------------------
+    console.log(
+        "Model:",
+        modelVersion || "YOLOv8"
+    );
+
+    // ==========================================
+    // Response
+    // ==========================================
     return res.json({
         success: true,
         message: "Weed detection logged successfully",
-        data: logEntry
+        detection: lastDetection
     });
 };
 
+
 // ==========================================
 // GET /api/detection/status
+// Returns latest YOLO detection
 // ==========================================
 exports.getDetectionStatus = (req, res) => {
 
@@ -214,16 +281,17 @@ exports.getDetectionStatus = (req, res) => {
         success: true,
         detection: lastDetection
     });
-
 };
+
 
 // ==========================================
 // GET /api/detection/stream
 //
-// Proxies the live T-SIMCAM/MJPEG stream
+// Proxies the live ESP32-S3-CAM/MJPEG stream
 // to the frontend.
 //
-// CAMERA_STREAM_URL should be defined in .env
+// .env:
+// CAMERA_STREAM_URL=http://ESP32_CAMERA_IP/stream
 // ==========================================
 exports.getDetectionStream = async (req, res) => {
 
@@ -232,16 +300,16 @@ exports.getDetectionStream = async (req, res) => {
     const cameraStreamUrl =
         process.env.CAMERA_STREAM_URL;
 
-    // ------------------------------------------
-    // Check camera URL configuration
-    // ------------------------------------------
+    // ==========================================
+    // Check camera URL
+    // ==========================================
     if (!cameraStreamUrl) {
 
         return res.status(503).json({
             success: false,
-            message: "Camera stream URL is not configured"
+            message:
+                "Camera stream URL is not configured"
         });
-
     }
 
     try {
@@ -259,9 +327,9 @@ exports.getDetectionStream = async (req, res) => {
             }
         );
 
-        // --------------------------------------
-        // Forward camera content type
-        // --------------------------------------
+        // ==========================================
+        // Forward content type
+        // ==========================================
         if (response.headers["content-type"]) {
 
             res.setHeader(
@@ -271,17 +339,15 @@ exports.getDetectionStream = async (req, res) => {
 
         } else {
 
-            // Default MJPEG content type
             res.setHeader(
                 "Content-Type",
                 "multipart/x-mixed-replace"
             );
-
         }
 
-        // --------------------------------------
+        // ==========================================
         // Prevent caching
-        // --------------------------------------
+        // ==========================================
         res.setHeader(
             "Cache-Control",
             "no-cache, no-store, must-revalidate"
@@ -297,14 +363,14 @@ exports.getDetectionStream = async (req, res) => {
             "keep-alive"
         );
 
-        // --------------------------------------
-        // Pipe camera stream to frontend
-        // --------------------------------------
+        // ==========================================
+        // Pipe camera stream
+        // ==========================================
         response.data.pipe(res);
 
-        // --------------------------------------
-        // Handle camera stream errors
-        // --------------------------------------
+        // ==========================================
+        // Camera stream error
+        // ==========================================
         response.data.on(
             "error",
             (error) => {
@@ -325,25 +391,29 @@ exports.getDetectionStream = async (req, res) => {
                 } else {
 
                     res.end();
-
                 }
             }
         );
 
-        // --------------------------------------
-        // Client disconnected
-        // --------------------------------------
-        req.on("close", () => {
+        // ==========================================
+        // Frontend disconnected
+        // ==========================================
+        req.on(
+            "close",
+            () => {
 
-            console.log(
-                "📴 Camera stream client disconnected"
-            );
+                console.log(
+                    "📴 Camera stream client disconnected"
+                );
 
-            if (response.data.destroy) {
-                response.data.destroy();
+                if (
+                    response.data &&
+                    typeof response.data.destroy === "function"
+                ) {
+                    response.data.destroy();
+                }
             }
-
-        });
+        );
 
     } catch (error) {
 
@@ -359,8 +429,6 @@ exports.getDetectionStream = async (req, res) => {
                 message:
                     "Unable to connect to camera stream"
             });
-
         }
-
     }
 };

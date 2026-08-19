@@ -1,138 +1,1259 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Field Map - WeedGuard</title>
-  <link rel="stylesheet" href="/css/style.css"/>
-  <link rel="stylesheet" href="/css/field-map.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Field Map - WeedGuard</title>
+
+    <!-- Main styles -->
+    <link
+        rel="stylesheet"
+        href="/css/style.css"
+    >
+
+    <!-- Field Map styles -->
+    <link
+        rel="stylesheet"
+        href="/css/field-map.css"
+    >
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet"
+    >
+
+    <style>
+
+        /* =====================================================
+           LIVE CAMERA - FIELD MAP
+        ===================================================== */
+
+        .field-camera-panel {
+            margin-bottom: 20px;
+        }
+
+        .field-camera-frame {
+            position: relative;
+            width: 100%;
+            height: 420px;
+
+            background: #07100c;
+
+            border-radius: 14px;
+
+            overflow: hidden;
+
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        #field-camera-stream {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: contain;
+
+            background: #07100c;
+        }
+
+        .field-camera-placeholder {
+            position: absolute;
+
+            inset: 0;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 10px;
+
+            color: #ffffff;
+
+            background: #07100c;
+
+            text-align: center;
+
+            pointer-events: none;
+        }
+
+        .field-camera-placeholder.hidden {
+            display: none;
+        }
+
+        .field-camera-icon {
+            font-size: 42px;
+        }
+
+        .field-camera-placeholder strong {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .field-camera-placeholder span {
+            font-size: 13px;
+            opacity: 0.7;
+        }
+
+        .field-camera-overlay {
+            position: absolute;
+
+            top: 14px;
+            left: 14px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            padding: 8px 13px;
+
+            border-radius: 20px;
+
+            background: rgba(18, 91, 61, 0.9);
+
+            color: white;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 0.5px;
+
+            z-index: 5;
+        }
+
+        .overlay-dot {
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #9ff2c4;
+
+            box-shadow:
+                0 0 8px rgba(159, 242, 196, 0.8);
+        }
+
+        .field-camera-bottom {
+            position: absolute;
+
+            left: 0;
+            right: 0;
+            bottom: 0;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            padding: 10px 14px;
+
+            background: linear-gradient(
+                transparent,
+                rgba(0, 0, 0, 0.75)
+            );
+
+            color: white;
+
+            font-family: "Space Mono", monospace;
+
+            font-size: 11px;
+
+            z-index: 5;
+        }
+
+        .camera-live-text {
+            color: #b7ffd4;
+        }
+
+        .camera-endpoint-text {
+            opacity: 0.75;
+        }
+
+        /* =====================================================
+           RESPONSIVE CAMERA
+        ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .field-camera-frame {
+                height: 320px;
+            }
+
+        }
+
+        @media (max-width: 600px) {
+
+            .field-camera-frame {
+                height: 240px;
+            }
+
+            .field-camera-bottom {
+                font-size: 9px;
+            }
+
+        }
+
+    </style>
+
 </head>
+
+
 <body>
 
 <div class="layout">
 
-  <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-icon">🌿</div>
-      <div>
-        <p class="brand-name">WeedGuard</p>
-        <p class="brand-sub">IoT Detection System</p>
-      </div>
-    </div>
 
-    <nav class="sidebar-nav">
-      <p class="nav-section-label">MAIN</p>
-      <a href="/index.html" class="nav-item"><span class="nav-item-icon">⊞</span> Dashboard</a>
-      <a href="/pages/logs.html" class="nav-item"><span class="nav-item-icon">📋</span> Activity Logs</a>
-      <a href="/pages/field-map.html" class="nav-item active"><span class="nav-item-icon">🗺</span> Field Map</a>
-      <a href="/pages/analytics.html" class="nav-item"><span class="nav-item-icon">📊</span> Analytics</a>
+    <!-- =====================================================
+         SIDEBAR
+    ===================================================== -->
 
-      <p class="nav-section-label" style="margin-top:24px">SYSTEM</p>
-      <a href="/pages/robot-control.html" class="nav-item"><span class="nav-item-icon">🤖</span> Robot Control</a>
-      <a href="/pages/settings.html" class="nav-item"><span class="nav-item-icon">⚙</span> Settings</a>
-      <a href="/pages/alerts.html" class="nav-item">
-        <span class="nav-item-icon">🔔</span> Alerts
-        <span class="nav-badge" id="alert-badge">0</span>
-      </a>
-    </nav>
+    <aside class="sidebar">
 
-    <div class="sidebar-device">
-      <div class="device-dot" id="device-dot"></div>
-      <div>
-        <p class="device-name">ESP32 Module</p>
-        <p class="device-status" id="device-status-text">Connecting...</p>
-      </div>
-    </div>
-  </aside>
+        <div class="sidebar-brand">
 
-  <div class="main">
-
-    <header class="topbar">
-      <div>
-        <h1 class="topbar-title">Field Map</h1>
-        <p class="topbar-sub">Zone layout & robot position · <span id="last-updated">--</span></p>
-      </div>
-      <div class="topbar-right">
-        <div class="topbar-time" id="clock">--:--:-- --</div>
-        <span class="sys-badge online" id="sys-badge">● Checking...</span>
-      </div>
-    </header>
-
-    <div class="content">
-
-      <div class="panel map-note">
-        <span class="map-note-icon">ℹ</span>
-        <p>
-          This is a zone-level layout, not GPS tracking — the robot doesn't carry a positioning
-          sensor yet. The highlighted zone below reflects the robot's <strong>current movement
-          command</strong> from Robot Control, and zone color reflects the <strong>last detection
-          result</strong> from the dashboard. Precise GPS/vision-based positioning is planned for
-          Phase 5.
-        </p>
-      </div>
-
-      <div class="rc-grid">
-
-        <div class="panel">
-          <div class="panel-header">
-            <p class="panel-title">Field Layout — Station Alpha</p>
-            <span class="panel-chip" id="field-chip">CLEAR</span>
-          </div>
-
-          <div class="field-grid" id="field-grid">
-            <div class="field-zone" id="fz-a" data-zone="a">
-              <span class="field-zone-label">Zone A</span>
-              <span class="field-zone-status" id="fz-a-status">--</span>
+            <div class="brand-icon">
+                🌿
             </div>
-            <div class="field-zone" id="fz-b" data-zone="b">
-              <span class="field-zone-label">Zone B</span>
-              <span class="field-zone-status" id="fz-b-status">--</span>
-            </div>
-            <div class="field-zone" id="fz-c" data-zone="c">
-              <span class="field-zone-label">Zone C</span>
-              <span class="field-zone-status" id="fz-c-status">--</span>
-            </div>
-            <div class="field-zone" id="fz-d" data-zone="d">
-              <span class="field-zone-label">Zone D</span>
-              <span class="field-zone-status" id="fz-d-status">--</span>
-            </div>
-            <div class="field-robot" id="field-robot" title="Robot">🤖</div>
-          </div>
 
-          <div class="field-legend">
-            <span><i class="dot safe"></i> Clear</span>
-            <span><i class="dot danger"></i> Weed detected</span>
-            <span><i class="dot active"></i> Robot here</span>
-          </div>
+            <div>
+
+                <p class="brand-name">
+                    WeedGuard
+                </p>
+
+                <p class="brand-sub">
+                    IoT Detection System
+                </p>
+
+            </div>
+
         </div>
 
-        <div class="rc-side">
-          <div class="panel">
-            <div class="panel-header"><p class="panel-title">Robot Position Info</p></div>
-            <ul class="status-list">
-              <li><span class="status-label">Current Command</span><span class="status-value" id="pos-command">--</span></li>
-              <li><span class="status-label">Mode</span><span class="status-value" id="pos-mode">--</span></li>
-              <li><span class="status-label">Obstacle</span><span class="status-value" id="pos-obstacle">--</span></li>
-              <li><span class="status-label">Distance</span><span class="status-value" id="pos-distance">-- cm</span></li>
-            </ul>
-          </div>
 
-          <div class="panel">
-            <div class="panel-header"><p class="panel-title">Field Summary</p></div>
-            <ul class="status-list">
-              <li><span class="status-label">Zones monitored</span><span class="status-value">4</span></li>
-              <li><span class="status-label">Zones clear</span><span class="status-value ok" id="sum-clear">--</span></li>
-              <li><span class="status-label">Zones flagged</span><span class="status-value warn" id="sum-flagged">--</span></li>
-            </ul>
-          </div>
+        <nav class="sidebar-nav">
+
+            <p class="nav-section-label">
+                MAIN
+            </p>
+
+
+            <a
+                href="/index.html"
+                class="nav-item"
+            >
+
+                <span class="nav-item-icon">
+                    ⊞
+                </span>
+
+                Dashboard
+
+            </a>
+
+
+            <a
+                href="/pages/logs.html"
+                class="nav-item"
+            >
+
+                <span class="nav-item-icon">
+                    📋
+                </span>
+
+                Activity Logs
+
+            </a>
+
+
+            <a
+                href="/pages/field-map.html"
+                class="nav-item active"
+            >
+
+                <span class="nav-item-icon">
+                    🗺
+                </span>
+
+                Field Map
+
+            </a>
+
+
+            <a
+                href="/pages/analytics.html"
+                class="nav-item"
+            >
+
+                <span class="nav-item-icon">
+                    📊
+                </span>
+
+                Analytics
+
+            </a>
+
+
+            <p
+                class="nav-section-label"
+                style="margin-top:24px"
+            >
+                SYSTEM
+            </p>
+
+
+            <a
+                href="/pages/camera-feed.html"
+                class="nav-item"
+            >
+
+                <span class="nav-item-icon">
+                    📹
+                </span>
+
+                Camera Feed
+
+            </a>
+
+
+            <a
+                href="/pages/robot-control.html"
+                class="nav-item"
+            >
+
+                <span class="nav-item-icon">
+                    🤖
+                </span>
+
+                Robot Control
+
+            </a>
+
+
+            <a
+                href="/pages/settings.html"
+                class="nav-item"
+            >
+
+                <span class="nav-item-icon">
+                    ⚙
+                </span>
+
+                Settings
+
+            </a>
+
+
+            <a
+                href="/pages/alerts.html"
+                class="nav-item"
+            >
+
+                <span class="nav-item-icon">
+                    🔔
+                </span>
+
+                Alerts
+
+                <span
+                    class="nav-badge"
+                    id="alert-badge"
+                >
+                    0
+                </span>
+
+            </a>
+
+        </nav>
+
+
+        <!-- =================================================
+             DEVICE STATUS
+        ================================================== -->
+
+        <div class="sidebar-device">
+
+            <div
+                class="device-dot"
+                id="device-dot"
+            ></div>
+
+            <div>
+
+                <p class="device-name">
+                    ESP32 + NEO-6M
+                </p>
+
+                <p
+                    class="device-status"
+                    id="device-status-text"
+                >
+                    Checking GPS...
+                </p>
+
+            </div>
+
         </div>
 
-      </div>
+    </aside>
+
+
+    <!-- =====================================================
+         MAIN
+    ===================================================== -->
+
+    <div class="main">
+
+
+        <!-- =================================================
+             TOPBAR
+        ================================================== -->
+
+        <header class="topbar">
+
+            <div>
+
+                <h1 class="topbar-title">
+                    Field Map
+                </h1>
+
+                <p class="topbar-sub">
+
+                    Zone layout & live robot GPS ·
+
+                    <span id="last-updated">
+                        --
+                    </span>
+
+                </p>
+
+            </div>
+
+
+            <div class="topbar-right">
+
+                <div
+                    class="topbar-time"
+                    id="clock"
+                >
+                    --:--:-- --
+                </div>
+
+                <span
+                    class="sys-badge online"
+                    id="sys-badge"
+                >
+                    ● Checking...
+                </span>
+
+            </div>
+
+        </header>
+
+
+        <!-- =================================================
+             CONTENT
+        ================================================== -->
+
+        <div class="content">
+
+
+            <!-- =================================================
+                 GPS INFORMATION NOTE
+            ================================================== -->
+
+            <div class="panel map-note">
+
+                <span class="map-note-icon">
+                    📍
+                </span>
+
+                <p>
+
+                    Live GPS tracking is enabled using the
+                    <strong>NEO-6M GPS</strong>.
+
+                    The robot position is received from
+                    the ESP32 and updated automatically.
+
+                    GPS coordinates, satellite count and
+                    GPS fix status are shown below.
+
+                </p>
+
+            </div>
+
+
+            <!-- =================================================
+                 LIVE GPS PANEL
+            ================================================== -->
+
+            <div class="panel gps-panel">
+
+                <div class="panel-header">
+
+                    <p class="panel-title">
+                        📍 Live Robot GPS
+                    </p>
+
+                    <span
+                        class="panel-chip clear-chip"
+                        id="gps-chip"
+                    >
+                        GPS
+                    </span>
+
+                </div>
+
+
+                <div
+                    id="gps-status"
+                    class="gps-status"
+                >
+                    🟠 Waiting for GPS fix...
+                </div>
+
+
+                <div class="gps-grid">
+
+
+                    <!-- LATITUDE -->
+
+                    <div class="gps-item">
+
+                        <span class="gps-label">
+                            Latitude
+                        </span>
+
+                        <strong
+                            id="gps-latitude"
+                            class="gps-value"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- LONGITUDE -->
+
+                    <div class="gps-item">
+
+                        <span class="gps-label">
+                            Longitude
+                        </span>
+
+                        <strong
+                            id="gps-longitude"
+                            class="gps-value"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- SATELLITES -->
+
+                    <div class="gps-item">
+
+                        <span class="gps-label">
+                            Satellites
+                        </span>
+
+                        <strong
+                            id="gps-satellites"
+                            class="gps-value"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- HDOP -->
+
+                    <div class="gps-item">
+
+                        <span class="gps-label">
+                            HDOP
+                        </span>
+
+                        <strong
+                            id="gps-hdop"
+                            class="gps-value"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <a
+                    id="gps-map-link"
+                    class="gps-map-link"
+                    href="#"
+                    target="_blank"
+                    rel="noopener"
+                    style="display:none;"
+                >
+                    📍 Open Robot Location in Google Maps
+                </a>
+
+            </div>
+
+
+            <!-- =================================================
+                 LIVE ROBOT CAMERA
+            ================================================== -->
+
+            <div class="panel field-camera-panel">
+
+                <div class="panel-header">
+
+                    <p class="panel-title">
+                        📹 Live Robot Camera
+                    </p>
+
+                    <span
+                        class="panel-chip clear-chip"
+                        id="field-camera-chip"
+                    >
+                        CONNECTING
+                    </span>
+
+                </div>
+
+
+                <div class="field-camera-frame">
+
+                    <!-- CAMERA STREAM -->
+
+                    <img
+                        id="field-camera-stream"
+                        src="/api/detection/stream"
+                        alt="Live T-SIMCAM / OV5640 Camera"
+                    >
+
+
+                    <!-- CAMERA PLACEHOLDER -->
+
+                    <div
+                        id="field-camera-placeholder"
+                        class="field-camera-placeholder"
+                    >
+
+                        <div class="field-camera-icon">
+                            📹
+                        </div>
+
+                        <strong>
+                            Waiting for camera stream
+                        </strong>
+
+                        <span>
+                            T-SIMCAM / OV5640 camera connection
+                        </span>
+
+                    </div>
+
+
+                    <!-- LIVE BADGE -->
+
+                    <div class="field-camera-overlay">
+
+                        <span class="overlay-dot"></span>
+
+                        <span>
+                            LIVE CAMERA
+                        </span>
+
+                    </div>
+
+
+                    <!-- BOTTOM INFORMATION -->
+
+                    <div class="field-camera-bottom">
+
+                        <span class="camera-live-text">
+                            ● T-SIMCAM LIVE
+                        </span>
+
+                        <span class="camera-endpoint-text">
+                            /api/detection/stream
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 FIELD MAP + ROBOT INFORMATION
+            ================================================== -->
+
+            <div class="rc-grid">
+
+
+                <!-- =================================================
+                     FIELD LAYOUT
+                ================================================== -->
+
+                <div class="panel">
+
+                    <div class="panel-header">
+
+                        <p class="panel-title">
+                            Field Layout — Station Alpha
+                        </p>
+
+                        <span
+                            class="panel-chip"
+                            id="field-chip"
+                        >
+                            CLEAR
+                        </span>
+
+                    </div>
+
+
+                    <!-- FIELD GRID -->
+
+                    <div
+                        class="field-grid"
+                        id="field-grid"
+                    >
+
+
+                        <!-- ZONE A -->
+
+                        <div
+                            class="field-zone"
+                            id="fz-a"
+                            data-zone="a"
+                        >
+
+                            <span class="field-zone-label">
+                                Zone A
+                            </span>
+
+                            <span
+                                class="field-zone-status"
+                                id="fz-a-status"
+                            >
+                                --
+                            </span>
+
+                        </div>
+
+
+                        <!-- ZONE B -->
+
+                        <div
+                            class="field-zone"
+                            id="fz-b"
+                            data-zone="b"
+                        >
+
+                            <span class="field-zone-label">
+                                Zone B
+                            </span>
+
+                            <span
+                                class="field-zone-status"
+                                id="fz-b-status"
+                            >
+                                --
+                            </span>
+
+                        </div>
+
+
+                        <!-- ZONE C -->
+
+                        <div
+                            class="field-zone"
+                            id="fz-c"
+                            data-zone="c"
+                        >
+
+                            <span class="field-zone-label">
+                                Zone C
+                            </span>
+
+                            <span
+                                class="field-zone-status"
+                                id="fz-c-status"
+                            >
+                                --
+                            </span>
+
+                        </div>
+
+
+                        <!-- ZONE D -->
+
+                        <div
+                            class="field-zone"
+                            id="fz-d"
+                            data-zone="d"
+                        >
+
+                            <span class="field-zone-label">
+                                Zone D
+                            </span>
+
+                            <span
+                                class="field-zone-status"
+                                id="fz-d-status"
+                            >
+                                --
+                            </span>
+
+                        </div>
+
+
+                        <!-- ROBOT -->
+
+                        <div
+                            class="field-robot"
+                            id="field-robot"
+                            title="Robot"
+                        >
+                            🤖
+                        </div>
+
+                    </div>
+
+
+                    <!-- LEGEND -->
+
+                    <div class="field-legend">
+
+                        <span>
+                            <i class="dot safe"></i>
+                            Clear
+                        </span>
+
+                        <span>
+                            <i class="dot danger"></i>
+                            Weed detected
+                        </span>
+
+                        <span>
+                            <i class="dot active"></i>
+                            Robot here
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- =================================================
+                     SIDE INFORMATION
+                ================================================== -->
+
+                <div class="rc-side">
+
+
+                    <!-- ROBOT POSITION -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <p class="panel-title">
+                                Robot Position Info
+                            </p>
+
+                        </div>
+
+
+                        <ul class="status-list">
+
+                            <li>
+
+                                <span class="status-label">
+                                    Current Command
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="pos-command"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Mode
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="pos-mode"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Obstacle
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="pos-obstacle"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Distance
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="pos-distance"
+                                >
+                                    -- cm
+                                </span>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+
+                    <!-- FIELD SUMMARY -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <p class="panel-title">
+                                Field Summary
+                            </p>
+
+                        </div>
+
+
+                        <ul class="status-list">
+
+                            <li>
+
+                                <span class="status-label">
+                                    Zones monitored
+                                </span>
+
+                                <span class="status-value">
+                                    4
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Zones clear
+                                </span>
+
+                                <span
+                                    class="status-value ok"
+                                    id="sum-clear"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Zones flagged
+                                </span>
+
+                                <span
+                                    class="status-value warn"
+                                    id="sum-flagged"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+
+                    <!-- GPS QUICK STATUS -->
+
+                    <div class="panel">
+
+                        <div class="panel-header">
+
+                            <p class="panel-title">
+                                GPS Status
+                            </p>
+
+                        </div>
+
+
+                        <ul class="status-list">
+
+                            <li>
+
+                                <span class="status-label">
+                                    GPS Fix
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="gps-fix"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Satellites
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="gps-satellites-side"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Latitude
+                                </span>
+
+                                <span
+                                    class="status-value mono"
+                                    id="gps-latitude-side"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Longitude
+                                </span>
+
+                                <span
+                                    class="status-value mono"
+                                    id="gps-longitude-side"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+                        </ul>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
     </div>
-  </div>
+
 </div>
 
+
+<!-- =====================================================
+     JAVASCRIPT
+===================================================== -->
+
+<script src="/js/api.js"></script>
+
 <script src="/js/field-map.js"></script>
+
+
+<!-- =====================================================
+     FIELD MAP CAMERA CONTROL
+===================================================== -->
+
+<script>
+
+(function () {
+
+    const STREAM_URL = "/api/detection/stream";
+
+    const camera =
+        document.getElementById(
+            "field-camera-stream"
+        );
+
+    const placeholder =
+        document.getElementById(
+            "field-camera-placeholder"
+        );
+
+    const chip =
+        document.getElementById(
+            "field-camera-chip"
+        );
+
+
+    if (!camera) {
+
+        console.error(
+            "Field Map: camera element not found"
+        );
+
+        return;
+
+    }
+
+
+    /* ==========================================
+       CAMERA CONNECTED
+    ========================================== */
+
+    function cameraConnected() {
+
+        console.log(
+            "Field Map: camera stream connected"
+        );
+
+
+        if (placeholder) {
+
+            placeholder.classList.add(
+                "hidden"
+            );
+
+        }
+
+
+        if (chip) {
+
+            chip.textContent =
+                "LIVE";
+
+            chip.className =
+                "panel-chip clear-chip";
+
+        }
+
+    }
+
+
+    /* ==========================================
+       CAMERA ERROR
+    ========================================== */
+
+    function cameraError() {
+
+        console.warn(
+            "Field Map: camera stream unavailable"
+        );
+
+
+        if (placeholder) {
+
+            placeholder.classList.remove(
+                "hidden"
+            );
+
+        }
+
+
+        if (chip) {
+
+            chip.textContent =
+                "OFFLINE";
+
+            chip.className =
+                "panel-chip weed-chip";
+
+        }
+
+    }
+
+
+    /* ==========================================
+       CAMERA EVENTS
+    ========================================== */
+
+    camera.addEventListener(
+        "load",
+        cameraConnected
+    );
+
+
+    camera.addEventListener(
+        "error",
+        cameraError
+    );
+
+
+    /* ==========================================
+       START CAMERA
+    ========================================== */
+
+    camera.src =
+        STREAM_URL;
+
+
+})();
+
+</script>
+
+
 </body>
+
 </html>

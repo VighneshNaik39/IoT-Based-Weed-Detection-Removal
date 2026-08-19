@@ -1,9 +1,9 @@
 [
   {
     "sessionNumber": 1,
-    "startTime": "2026-08-19T09:02:20.127Z",
-    "endTime": "2026-08-19T09:04:28.658Z",
-    "durationMs": 128532,
+    "startTime": "2026-08-19T09:13:50.535Z",
+    "endTime": "2026-08-19T09:16:20.647Z",
+    "durationMs": 150112,
     "totalDetections": 0,
     "executions": 0,
     "avgMoisture": null,
@@ -11,9 +11,9 @@
   },
   {
     "sessionNumber": 2,
-    "startTime": "2026-08-19T09:04:43.605Z",
-    "endTime": "2026-08-19T09:05:10.295Z",
-    "durationMs": 26690,
+    "startTime": "2026-08-19T09:16:23.177Z",
+    "endTime": "2026-08-19T09:16:51.344Z",
+    "durationMs": 28167,
     "totalDetections": 0,
     "executions": 0,
     "avgMoisture": null,

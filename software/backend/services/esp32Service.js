@@ -18,21 +18,16 @@ const api = axios.create({
 // ESP32: GET /ping
 // ==========================================
 async function ping() {
-
     const response = await api.get("/ping");
-
     return response.data;
 }
 
 // ==========================================
 // Robot status
 // ESP32: GET /status
-// No API key required
 // ==========================================
 async function status() {
-
     const response = await api.get("/status");
-
     return response.data;
 }
 
@@ -41,7 +36,6 @@ async function status() {
 // ESP32: GET /move?dir=forward
 // ==========================================
 async function move(direction) {
-
     const response = await api.get(
         `/move?dir=${encodeURIComponent(direction)}`
     );
@@ -54,9 +48,7 @@ async function move(direction) {
 // ESP32: GET /stop
 // ==========================================
 async function stop() {
-
     const response = await api.get("/stop");
-
     return response.data;
 }
 
@@ -65,7 +57,6 @@ async function stop() {
 // ESP32: GET /cutter?state=on|off
 // ==========================================
 async function relay(state) {
-
     const response = await api.get(
         `/cutter?state=${encodeURIComponent(state)}`
     );
@@ -78,7 +69,6 @@ async function relay(state) {
 // ESP32: GET /mode?state=manual|auto
 // ==========================================
 async function mode(mode) {
-
     const response = await api.get(
         `/mode?state=${encodeURIComponent(mode)}`
     );
@@ -105,6 +95,17 @@ async function setSpeed(speed) {
 }
 
 // ==========================================
+// NEO-6M GPS
+// ESP32: GET /gps
+// ==========================================
+async function getGPS() {
+
+    const response = await api.get("/gps");
+
+    return response.data;
+}
+
+// ==========================================
 // EXPORT
 // ==========================================
 module.exports = {
@@ -114,5 +115,6 @@ module.exports = {
     stop,
     relay,
     mode,
-    setSpeed
+    setSpeed,
+    getGPS
 };
