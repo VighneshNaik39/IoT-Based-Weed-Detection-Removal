@@ -1,17 +1,22 @@
 // ==============================
 // ROBOT CONTROL PAGE
 // Talks to:
-//   GET  /api/robot/status  -> { mode, command, distanceCm, obstacle, cutter, connected }
+//   GET  /api/robot/status  -> { mode, command, distanceCm, obstacle, cutter, speed, connected }
 //   POST /api/robot/mode    -> { mode: "manual" | "autonomous" }
 //   POST /api/move          -> { command: "forward" | "backward" | "left" | "right" }
 //   POST /api/stop
 //   POST /api/cutter        -> { state: true | false }
+//   POST /api/speed         -> { value: 0-255 }
 //   GET  /api/status        -> dashboard weed/battery status (for battery + link badge)
 // ==============================
 const BASE_URL = "";
 
 let currentMode = "manual";      // tracked locally so we can disable D-pad instantly
 let robotReachable = false;
+
+let currentSpeed = 180;          // tracked locally, matches ESP32 firmware default
+let isDraggingSpeed = false;     // prevents status poll from fighting the slider mid-drag
+let speedDebounceTimer = null;
 
 // ------------------------------
 // CLOCK (same pattern as dashboard)
@@ -137,6 +142,67 @@ function applyCutterUI(on) {
 }
 
 // ------------------------------
+// SPEED
+// ------------------------------
+async function sendSpeed(value) {
+  try {
+    const res = await fetch(`${BASE_URL}/api/speed`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ value: Number(value) })
+    });
+    if (!res.ok) throw new Error("Speed command rejected");
+  } catch (err) {
+    console.warn("Speed command failed:", err.message);
+    flashUnreachable();
+  }
+}
+
+function applySpeedUI(value) {
+  currentSpeed = Number(value);
+
+  const slider = document.getElementById("speed-slider");
+  const valueEl = document.getElementById("speed-value");
+  const stSpeed = document.getElementById("st-speed");
+
+  slider.value = currentSpeed;
+  valueEl.textContent = currentSpeed;
+  if (stSpeed) stSpeed.textContent = currentSpeed;
+
+  const pct = (currentSpeed / 255) * 100;
+  slider.style.background =
+    `linear-gradient(to right, var(--green-600) 0%, var(--green-600) ${pct}%, var(--gray-200) ${pct}%, var(--gray-200) 100%)`;
+
+  document.querySelectorAll(".speed-preset-btn").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.speed) === currentSpeed);
+  });
+}
+
+const speedSlider = document.getElementById("speed-slider");
+
+speedSlider.addEventListener("input", (e) => {
+  isDraggingSpeed = true;
+  applySpeedUI(e.target.value);
+
+  clearTimeout(speedDebounceTimer);
+  speedDebounceTimer = setTimeout(() => {
+    sendSpeed(e.target.value);
+  }, 150); // avoid flooding the ESP32 while the slider is being dragged
+});
+
+speedSlider.addEventListener("change", () => {
+  isDraggingSpeed = false;
+});
+
+document.querySelectorAll(".speed-preset-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const value = btn.dataset.speed;
+    applySpeedUI(value);
+    sendSpeed(value);
+  });
+});
+
+// ------------------------------
 // LIVE STATUS POLLING
 // ------------------------------
 async function loadRobotStatus() {
@@ -164,6 +230,12 @@ async function loadRobotStatus() {
     obsEl.className = "status-value " + (data.obstacle ? "warn" : "ok");
 
     applyCutterUI(!!data.cutter);
+
+    // Keep the slider in sync with the ESP32's reported speed, but not
+    // while the user is actively dragging it (would fight their input).
+    if (data.speed != null && !isDraggingSpeed && Number(data.speed) !== currentSpeed) {
+      applySpeedUI(data.speed);
+    }
 
   } catch (err) {
     robotReachable = false;
@@ -211,6 +283,12 @@ function setLinkUI(reachable) {
 
   // Movement/cutter/mode only make sense to send when the ESP32 is reachable.
   setDpadEnabled(reachable && currentMode === "manual");
+
+  const slider = document.getElementById("speed-slider");
+  if (slider) slider.disabled = !reachable;
+  document.querySelectorAll(".speed-preset-btn").forEach(btn => {
+    btn.disabled = !reachable;
+  });
 }
 
 function flashUnreachable() {
@@ -221,6 +299,8 @@ function flashUnreachable() {
 // ------------------------------
 // BOOT + POLLING LOOP
 // ------------------------------
+applySpeedUI(currentSpeed); // paint the slider's initial gradient/label on load
+
 loadRobotStatus();
 loadWeedStatusForBattery();
 

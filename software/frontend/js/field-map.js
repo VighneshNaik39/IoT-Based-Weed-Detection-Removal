@@ -961,17 +961,108 @@ async function loadGPSLocation() {
     }
 
 }
+// =====================================================
+// LIVE CAMERA
+// =====================================================
 
+const FIELD_CAMERA_URL = "/api/detection/stream";
+
+let fieldCameraReconnectTimer = null;
+
+function initFieldCamera() {
+
+    const camera = document.getElementById("field-camera-stream");
+    const placeholder = document.getElementById(
+        "field-camera-placeholder"
+    );
+
+    const chip = document.getElementById(
+        "field-camera-chip"
+    );
+
+    if (!camera) {
+        console.warn("Field Map: camera element not found");
+        return;
+    }
+
+    function cameraConnected() {
+
+        if (placeholder) {
+            placeholder.classList.add("hidden");
+        }
+
+        if (chip) {
+            chip.textContent = "LIVE";
+
+            chip.className =
+                "panel-chip clear-chip";
+        }
+
+        console.log(
+            "Field Map: camera stream connected"
+        );
+    }
+
+    function cameraDisconnected() {
+
+        if (placeholder) {
+            placeholder.classList.remove("hidden");
+        }
+
+        if (chip) {
+            chip.textContent = "OFFLINE";
+
+            chip.className =
+                "panel-chip weed-chip";
+        }
+
+        console.warn(
+            "Field Map: camera stream disconnected"
+        );
+
+        scheduleCameraReconnect();
+    }
+
+    function scheduleCameraReconnect() {
+
+        if (fieldCameraReconnectTimer) {
+            return;
+        }
+
+        fieldCameraReconnectTimer =
+            setTimeout(() => {
+
+                fieldCameraReconnectTimer = null;
+
+                camera.src =
+                    FIELD_CAMERA_URL +
+                    "?t=" +
+                    Date.now();
+
+            }, 3000);
+    }
+
+    camera.onload = cameraConnected;
+
+    camera.onerror = cameraDisconnected;
+
+    // Initial stream
+    camera.src =
+        FIELD_CAMERA_URL +
+        "?t=" +
+        Date.now();
+}
 
 // =====================================================
 // INITIAL LOAD
 // =====================================================
-
 loadWeedStatus();
 
 loadRobotPosition();
 
 loadGPSLocation();
+
+initFieldCamera();
 
 
 // =====================================================

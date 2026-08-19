@@ -1,0 +1,98 @@
+/* ==========================================
+   FIELD MAP - LIVE CAMERA
+========================================== */
+
+.field-camera-panel {
+    margin-bottom: 20px;
+}
+
+.field-camera-frame {
+    position: relative;
+    width: 100%;
+    height: 420px;
+    background: #07100c;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#field-camera-stream {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #07100c;
+}
+
+.field-camera-placeholder {
+    position: absolute;
+    inset: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 10px;
+
+    color: #ffffff;
+    background: #07100c;
+
+    text-align: center;
+
+    pointer-events: none;
+}
+
+.field-camera-placeholder.hidden {
+    display: none;
+}
+
+.field-camera-icon {
+    font-size: 42px;
+}
+
+.field-camera-placeholder strong {
+    font-size: 18px;
+}
+
+.field-camera-placeholder span {
+    font-size: 13px;
+    opacity: 0.65;
+}
+
+.field-camera-overlay {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    padding: 8px 13px;
+
+    border-radius: 20px;
+
+    background: rgba(18, 91, 61, 0.9);
+    color: white;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 0.5px;
+}
+
+.overlay-dot {
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #9ff2c4;
+
+    box-shadow: 0 0 8px rgba(159, 242, 196, 0.8);
+}
+
+.field-camera-panel .panel-header {
+    margin-bottom: 14px;
+}
