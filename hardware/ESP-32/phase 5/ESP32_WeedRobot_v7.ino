@@ -73,7 +73,7 @@ const char* password = "987654321";
 // Must match ESP32_API_KEY in backend .env
 // ============================================================
 
-const char* API_KEY = "change-me-before-field-use";
+const char* API_KEY = "weedguard2026robot";
 
 
 // ============================================================
