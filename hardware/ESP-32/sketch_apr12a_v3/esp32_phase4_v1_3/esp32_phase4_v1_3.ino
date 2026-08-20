@@ -1,580 +1,1745 @@
+/*
+  ESP32_WeedRobot_v7_GPS.ino
+
+  Existing v7 robot firmware + NEO-6M GPS
+
+  FEATURES
+  ------------------------------------------
+  - 4WD motor control
+  - L298N x2
+  - PWM speed control
+  - HC-SR04 obstacle avoidance
+  - Cutter relay
+  - Cutter safety interlock
+  - Drive watchdog
+  - Cutter watchdog
+  - API-key authentication
+  - CORS support
+  - Robot control REST API
+  - NEO-6M GPS
+  - GPS REST API
+  - GPS data included in /status
+
+  EXISTING PIN MAPPING
+  ------------------------------------------
+
+  L298N #1
+    ENA1 = 12
+    IN1  = 13
+    IN2  = 14
+    IN3  = 27
+    IN4  = 26
+
+  L298N #2
+    ENA2 = 25
+    IN1B = 32
+    IN2B = 33
+    IN3B = 15
+    IN4B = 2
+
+  Relay
+    RELAY_PIN = 23
+
+  HC-SR04
+    TRIG = 5
+    ECHO = 18
+
+  NEO-6M GPS
+    GPS TX -> ESP32 GPIO 16
+    GPS RX -> ESP32 GPIO 17
+*/
+
+
 // ============================================================
-// IoT Weed Removal Robot — Phase 4 v1.3 ESP32 Firmware
-// Member 3 — ESP32 Developer
-// Implements Parts 1–4 of the Firmware Upgrade Guide
-// No external libraries required
-//
-// FIX APPLIED: Backend IP was inconsistent — serverBase used
-// 192.168.48.135 while pushStatus() hardcoded 192.168.218.135.
-// Both now use a single backendIP/backendPort pair so they can
-// never drift out of sync again.
+// LIBRARIES
 // ============================================================
 
 #include <WiFi.h>
 #include <WebServer.h>
+#include <ArduinoJson.h>
+#include <TinyGPSPlus.h>
+
 
 // ============================================================
-// Wi-Fi CONFIG — update these if network changes
+// WIFI
 // ============================================================
-const char* ssid       = "rcb";
-const char* password   = "987654321";
 
-// ⚠️ UPDATE THIS to your backend machine's actual current IP.
-// Run `ipconfig` (Windows) on the backend machine and copy the
-// IPv4 Address of the active Wi-Fi adapter. Both must be on the
-// SAME subnet as the ESP32 (check the ESP32 IP printed on boot).
-const char* backendIP   = "10.15.101.135";
-const int   backendPort = 5000;
+const char* ssid     = "rcb";
+const char* password = "987654321";
+
+ 
+// ============================================================
+// API KEY
+// Must match ESP32_API_KEY in backend .env
+// ============================================================
+
+const char* API_KEY = "change-me-before-field-use";
+
+
+// ============================================================
+// MOTOR PINS
+// ============================================================
+
+#define ENA1 12
+#define IN1  13
+#define IN2  14
+#define IN3  27
+#define IN4  26
+
+#define ENA2 25
+#define IN1B 32
+#define IN2B 33
+#define IN3B 15
+#define IN4B 2
+
+
+// ============================================================
+// RELAY
+// ============================================================
+
+#define RELAY_PIN 23
+
+
+// ============================================================
+// ULTRASONIC
+// ============================================================
+
+#define TRIG_PIN 5
+#define ECHO_PIN 18
+
+
+// ============================================================
+// NEO-6M GPS
+// ============================================================
+
+#define GPS_RX_PIN 16
+#define GPS_TX_PIN 17
+
+TinyGPSPlus gps;
+
+HardwareSerial GPSSerial(2);
+
+
+// ============================================================
+// GPS STATE
+// ============================================================
+
+bool gpsFix = false;
+
+double gpsLatitude = 0.0;
+double gpsLongitude = 0.0;
+double gpsAltitude = 0.0;
+
+uint32_t gpsSatellites = 0;
+
+double gpsHDOP = 0.0;
+
+unsigned long gpsLastValidMs = 0;
+
+const unsigned long GPS_FIX_TIMEOUT_MS = 5000;
+
+
+// ============================================================
+// PWM
+// ============================================================
+
+#define PWM_FREQ      5000
+#define PWM_RES_BITS  8
+#define PWM_MAX       255
+
+
+// ============================================================
+// OBSTACLE AVOIDANCE
+// ============================================================
+
+#define OBSTACLE_THRESHOLD_CM 20
+
+#define REVERSE_MS 600
+#define TURN_MS    500
+
+#define SENSOR_POLL_MS 150
+#define SENSOR_TIMEOUT_US 30000
+
+
+// ============================================================
+// WATCHDOGS
+// ============================================================
+
+#define WATCHDOG_TIMEOUT_MS 2000
+
+#define CUTTER_WATCHDOG_TIMEOUT_MS 800
+
+
+// ============================================================
+// ROBOT STATE
+// ============================================================
+
+int currentSpeed = 180;
+
+String currentDir = "stop";
+
+bool cutterOn = false;
+
+float lastDistanceCm = -1;
+
+String currentMode = "manual";
+
+
+// ============================================================
+// COMMAND TIMERS
+// ============================================================
+
+unsigned long lastCommandMs = 0;
+
+unsigned long lastCutterCommandMs = 0;
+
+bool watchdogTripped = false;
+
+bool cutterWatchdogTripped = false;
+
+
+// ============================================================
+// OBSTACLE STATE
+// ============================================================
+
+enum AvoidState {
+  AV_IDLE,
+  AV_REVERSING,
+  AV_TURNING
+};
+
+AvoidState avoidState = AV_IDLE;
+
+unsigned long avoidStateStartMs = 0;
+
+unsigned long lastSensorPollMs = 0;
+
+
+// ============================================================
+// WEB SERVER
+// ============================================================
 
 WebServer server(80);
 
-// ============================================================
-// PIN DEFINITIONS
-// ============================================================
-
-// L298N #1 — Front motors (M1 L.Front, M2 R.Front)
-// ENA jumper REMOVED — GPIO12 controls speed via PWM
-// ENB jumper STAYS ON
-#define ENA1  12
-#define IN1   13   // M1 L.Front direction A
-#define IN2   14   // M1 L.Front direction B
-#define IN3   27   // M2 R.Front direction A
-#define IN4   26   // M2 R.Front direction B
-
-// L298N #2 — Rear motors (M3 L.Rear, M4 R.Rear)
-// ENA jumper REMOVED — GPIO25 controls speed via PWM
-// ENB jumper STAYS ON
-#define ENA2  25
-#define IN1B  32   // M3 L.Rear direction A
-#define IN2B  33   // M3 L.Rear direction B
-#define IN3B  15   // M4 R.Rear direction A
-#define IN4B  2    // M4 R.Rear direction B
-
-// Relay — RS775 Cutter Motor
-// HIGH = relay closes = cutter ON
-// LOW  = relay open   = cutter OFF
-#define RELAY_PIN 23
-
-// HC-SR04 — Obstacle Detection
-#define TRIG_PIN  5
-#define ECHO_PIN  18
 
 // ============================================================
-// TUNABLE CONSTANTS
+// CORS
 // ============================================================
-#define MOTOR_SPEED        200    // PWM 0-255 (tune if motors too fast/slow)
-#define OBSTACLE_CM        25     // Stop if obstacle closer than this (cm)
-#define STATUS_INTERVAL    3000   // ms — how often to push status to backend
-#define OBSTACLE_INTERVAL  100    // ms — how often to check HC-SR04
 
-// --- Part 1: Autonomous timing constants ---
-#define BACKUP_TIME_MS     800    // ms to reverse when obstacle detected
-#define TURN_TIME_MS       600    // ms to turn when avoiding obstacle
+void setCorsHeaders() {
 
-// ============================================================
-// RUNTIME STATE
-// ============================================================
-String        currentCmd      = "stop";
-bool          cutterOn        = false;
-bool          obstacleBlocked = false;
-unsigned long lastStatus      = 0;
-unsigned long lastObstacle    = 0;
+  server.sendHeader(
+    "Access-Control-Allow-Origin",
+    "*"
+  );
 
-// --- Part 1: Autonomous mode globals ---
-bool autonomousMode = false;   // false = Manual, true = Autonomous
-bool turnLeftNext   = true;    // alternates turn direction for better coverage
+  server.sendHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, OPTIONS"
+  );
 
-// --- Phase 4 Demo: Simulated weed detection ---
-// Temporary stand-in for Phase 5 YOLO/camera detection.
-// Set demoWeedMode = false to disable without deleting any code.
-// Replace checkFakeWeed() trigger with backend YOLO command in Phase 5.
-bool          demoWeedMode  = true;
-unsigned long lastWeedCheck = 0;
-#define WEED_INTERVAL  8000   // ms — how often to look for a fake weed
-#define WEED_CUT_MS    3000   // ms — cutter runs for this long per weed
-
-// ============================================================
-// MOTOR HELPERS
-// ============================================================
-void motorsStop() {
-  digitalWrite(IN1,  LOW); digitalWrite(IN2,  LOW);
-  digitalWrite(IN3,  LOW); digitalWrite(IN4,  LOW);
-  digitalWrite(IN1B, LOW); digitalWrite(IN2B, LOW);
-  digitalWrite(IN3B, LOW); digitalWrite(IN4B, LOW);
+  server.sendHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, X-API-Key"
+  );
 }
 
-// Left side  = IN1/IN2 (L.Front) + IN1B/IN2B (L.Rear)
-// Right side = IN3/IN4 (R.Front) + IN3B/IN4B (R.Rear)
-void setLeft(bool fwd) {
-  digitalWrite(IN1,  fwd ? HIGH : LOW);
-  digitalWrite(IN2,  fwd ? LOW  : HIGH);
-  digitalWrite(IN1B, fwd ? HIGH : LOW);
-  digitalWrite(IN2B, fwd ? LOW  : HIGH);
-}
-
-void setRight(bool fwd) {
-  digitalWrite(IN3,  fwd ? HIGH : LOW);
-  digitalWrite(IN4,  fwd ? LOW  : HIGH);
-  digitalWrite(IN3B, fwd ? HIGH : LOW);
-  digitalWrite(IN4B, fwd ? LOW  : HIGH);
-}
-
-void moveForward()  { setLeft(true);  setRight(true);  }
-void moveBackward() { setLeft(false); setRight(false); }
-void turnLeft()     { setLeft(false); setRight(true);  }  // pivot left
-void turnRight()    { setLeft(true);  setRight(false); }  // pivot right
 
 // ============================================================
-// Part 1 + Part 3: applyCommand()
-// Manual movement is blocked while autonomous mode is active.
+// API AUTHENTICATION
 // ============================================================
-void applyCommand(String cmd) {
-  // Part 3: Block manual movement in autonomous mode
-  if (autonomousMode && cmd != "stop") {
-    Serial.println("⚠️  Auto mode active — manual movement ignored");
-    return;
+
+bool requireAuth() {
+
+  setCorsHeaders();
+
+  String provided =
+    server.header("X-API-Key");
+
+  if (
+    provided.length() == 0 &&
+    server.hasArg("key")
+  ) {
+
+    provided =
+      server.arg("key");
   }
 
-  // Block forward if obstacle detected
-  if (obstacleBlocked && cmd == "forward") {
-    Serial.println("⛔ Obstacle blocking — ignoring forward");
-    motorsStop();
-    return;
+  if (
+    provided == API_KEY
+  ) {
+
+    return true;
   }
 
-  if      (cmd == "forward")  moveForward();
-  else if (cmd == "backward") moveBackward();
-  else if (cmd == "left")     turnLeft();
-  else if (cmd == "right")    turnRight();
-  else                        motorsStop();
+  server.send(
+    401,
+    "application/json",
+    "{\"error\":\"missing or invalid API key\"}"
+  );
+
+  return false;
 }
 
+
 // ============================================================
-// CUTTER CONTROL
+// MOTOR SPEED
 // ============================================================
+
+void applySpeed() {
+
+  ledcWrite(
+    ENA1,
+    currentSpeed
+  );
+
+  ledcWrite(
+    ENA2,
+    currentSpeed
+  );
+}
+
+
+// ============================================================
+// STOP MOTORS
+// ============================================================
+
+void stopMotors() {
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, LOW);
+
+  digitalWrite(IN1B, LOW);
+  digitalWrite(IN2B, LOW);
+
+  digitalWrite(IN3B, LOW);
+  digitalWrite(IN4B, LOW);
+
+  ledcWrite(
+    ENA1,
+    0
+  );
+
+  ledcWrite(
+    ENA2,
+    0
+  );
+}
+
+
+// ============================================================
+// FORWARD
+// ============================================================
+
+void driveForward() {
+
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  digitalWrite(IN1B, HIGH);
+  digitalWrite(IN2B, LOW);
+
+  digitalWrite(IN3B, HIGH);
+  digitalWrite(IN4B, LOW);
+
+  applySpeed();
+}
+
+
+// ============================================================
+// BACKWARD
+// ============================================================
+
+void driveBackward() {
+
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  digitalWrite(IN1B, LOW);
+  digitalWrite(IN2B, HIGH);
+
+  digitalWrite(IN3B, LOW);
+  digitalWrite(IN4B, HIGH);
+
+  applySpeed();
+}
+
+
+// ============================================================
+// TURN LEFT
+// ============================================================
+
+void turnLeft() {
+
+  // Left side backward
+  digitalWrite(IN1, LOW);
+  digitalWrite(IN2, HIGH);
+
+  digitalWrite(IN1B, LOW);
+  digitalWrite(IN2B, HIGH);
+
+  // Right side forward
+  digitalWrite(IN3, HIGH);
+  digitalWrite(IN4, LOW);
+
+  digitalWrite(IN3B, HIGH);
+  digitalWrite(IN4B, LOW);
+
+  applySpeed();
+}
+
+
+// ============================================================
+// TURN RIGHT
+// ============================================================
+
+void turnRight() {
+
+  // Left side forward
+  digitalWrite(IN1, HIGH);
+  digitalWrite(IN2, LOW);
+
+  digitalWrite(IN1B, HIGH);
+  digitalWrite(IN2B, LOW);
+
+  // Right side backward
+  digitalWrite(IN3, LOW);
+  digitalWrite(IN4, HIGH);
+
+  digitalWrite(IN3B, LOW);
+  digitalWrite(IN4B, HIGH);
+
+  applySpeed();
+}
+
+
+// ============================================================
+// CUTTER
+// ============================================================
+
 void setCutter(bool on) {
+
   cutterOn = on;
-  digitalWrite(RELAY_PIN, on ? HIGH : LOW);
-  Serial.println(on ? "🔪 Cutter ON" : "⏹  Cutter OFF");
+
+  digitalWrite(
+    RELAY_PIN,
+    on ? HIGH : LOW
+  );
+
+  if (on) {
+
+    lastCutterCommandMs =
+      millis();
+
+    cutterWatchdogTripped =
+      false;
+  }
 }
 
+
 // ============================================================
-// HC-SR04 — DISTANCE
+// COMMAND TIMER
 // ============================================================
-float getDistanceCm() {
-  digitalWrite(TRIG_PIN, LOW);
+
+void noteCommandReceived() {
+
+  lastCommandMs =
+    millis();
+
+  watchdogTripped =
+    false;
+}
+
+
+// ============================================================
+// ULTRASONIC DISTANCE
+// ============================================================
+
+float readDistanceCm() {
+
+  digitalWrite(
+    TRIG_PIN,
+    LOW
+  );
+
   delayMicroseconds(2);
-  digitalWrite(TRIG_PIN, HIGH);
+
+  digitalWrite(
+    TRIG_PIN,
+    HIGH
+  );
+
   delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
-  long dur = pulseIn(ECHO_PIN, HIGH, 30000);
-  if (dur == 0) return 999.0;
-  return dur * 0.034 / 2.0;
-}
 
-// ============================================================
-// Part 1 + Part 3: avoidObstacle()
-// Stop → Reverse → Turn (alternating L/R) → Continue forward.
-// Part 3: Improved — re-checks distance after backup before turning.
-// Part 4: Optional random turns via randomSeed().
-// ============================================================
-void avoidObstacle() {
-  Serial.println("🚧 OBSTACLE DETECTED — Starting avoidance sequence");
+  digitalWrite(
+    TRIG_PIN,
+    LOW
+  );
 
-  // Step 1: Stop
-  motorsStop();
-  delay(200);
+  long duration =
+    pulseIn(
+      ECHO_PIN,
+      HIGH,
+      SENSOR_TIMEOUT_US
+    );
 
-  // Step 2: Reverse
-  Serial.println("⬅️  Reversing...");
-  moveBackward();
-  delay(BACKUP_TIME_MS);
-  motorsStop();
-  delay(150);
+  if (
+    duration == 0
+  ) {
 
-  // Part 3 safety: re-check distance before turning
-  float distAfterBackup = getDistanceCm();
-  Serial.printf("   Distance after backup: %.1f cm\n", distAfterBackup);
-
-  // Step 3: Turn (alternating direction for better coverage)
-  if (turnLeftNext) {
-    Serial.println("↩️  Turning LEFT");
-    turnLeft();
-  } else {
-    Serial.println("↪️  Turning RIGHT");
-    turnRight();
-  }
-  turnLeftNext = !turnLeftNext;   // alternate for next avoidance
-  delay(TURN_TIME_MS);
-  motorsStop();
-  delay(150);
-
-  // Step 4: Mark obstacle cleared — only continue if still in autonomous mode.
-  // Fix 3: If someone switched to Manual during avoidance, stop here safely.
-  obstacleBlocked = false;
-  if (!autonomousMode) {
-    Serial.println("⚠️  Mode switched to Manual during avoidance — halting");
-    motorsStop();
-    currentCmd = "stop";
-    return;
-  }
-  Serial.println("✅ Avoidance done — continuing forward");
-  currentCmd = "forward";
-  moveForward();
-}
-
-// ============================================================
-// Phase 4 Demo: checkFakeWeed()
-// Simulates weed detection every WEED_INTERVAL ms with a 25% hit rate.
-// Only runs in autonomous + demo mode so it never fires during manual use.
-//
-// --- Phase 5 migration note ---
-// When the YOLO camera backend is ready, delete this function entirely
-// and handle the "weed_detected" event from the backend instead:
-//
-//   if (backendSaysWeedDetected) {
-//     motorsStop();  currentCmd = "stop";
-//     setCutter(true);  delay(WEED_CUT_MS);  setCutter(false);
-//     currentCmd = "forward";  moveForward();
-//   }
-//
-// Everything else in the firmware stays unchanged.
-// ============================================================
-void checkFakeWeed() {
-  if (!autonomousMode || !demoWeedMode) return;
-
-  unsigned long now = millis();
-  if (now - lastWeedCheck < WEED_INTERVAL) return;
-  lastWeedCheck = now;
-
-  // 25% chance of a simulated weed hit
-  if (random(100) >= 25) return;
-
-  Serial.println("🌿 Weed Detected! (simulated)");
-
-  // Stop and cut
-  motorsStop();
-  currentCmd = "stop";
-  setCutter(true);
-  delay(WEED_CUT_MS);
-  setCutter(false);
-  Serial.println("✅ Weed Removed");
-
-  // Guard: user may have switched to Manual during the 3-second cut
-  if (!autonomousMode) {
-    Serial.println("⚠️  Mode switched during cut — staying stopped");
-    currentCmd = "stop";
-    return;
+    return -1;
   }
 
-  // Resume autonomous forward movement
-  currentCmd = "forward";
-  moveForward();
+  return duration / 58.0;
 }
 
-// ============================================================
-// Part 2: checkObstacle()
-// In autonomous mode calls avoidObstacle(); in manual mode
-// it just stops/resumes as before.
-// ============================================================
-void checkObstacle() {
-  float dist = getDistanceCm();
 
-  if (dist < OBSTACLE_CM) {
-    if (!obstacleBlocked) {
-      obstacleBlocked = true;
-      Serial.printf("🚧 OBSTACLE %.1f cm\n", dist);
+// ============================================================
+// OBSTACLE AVOIDANCE
+// ============================================================
 
-      if (autonomousMode) {
-        avoidObstacle();           // Part 2: autonomous avoidance
-      } else {
-        motorsStop();              // Manual: just stop
-        Serial.println("⛔ AUTO STOP — obstacle in manual mode");
-      }
-    }
-  } else {
-    if (obstacleBlocked) {
-      obstacleBlocked = false;
-      Serial.println("✅ Path clear");
-      if (!autonomousMode) {
-        // Fix 2: Resume whatever command the user last sent.
-        // • "forward" → continues moving  ✔
-        // • "stop"    → stays stopped     ✔
-        // • "left"/"right" → resumes turn ⚠ intentional — user had a
-        //   direction held; change currentCmd to "stop" in handleStop()
-        //   if you prefer a clean slate after every obstacle.
-        applyCommand(currentCmd);
-      }
-      // Autonomous mode re-issues forward in loop() via Fix 1 above.
+void updateObstacleAvoidance() {
+
+  unsigned long now =
+    millis();
+
+
+  if (
+    avoidState == AV_IDLE &&
+    now - lastSensorPollMs >= SENSOR_POLL_MS
+  ) {
+
+    lastSensorPollMs =
+      now;
+
+    lastDistanceCm =
+      readDistanceCm();
+
+
+    bool tooClose =
+      (
+        lastDistanceCm > 0 &&
+        lastDistanceCm <
+        OBSTACLE_THRESHOLD_CM
+      );
+
+
+    if (
+      tooClose &&
+      currentDir == "forward"
+    ) {
+
+      avoidState =
+        AV_REVERSING;
+
+      avoidStateStartMs =
+        now;
+
+      driveBackward();
     }
   }
+
+
+  switch (
+    avoidState
+  ) {
+
+    case AV_IDLE:
+
+      break;
+
+
+    case AV_REVERSING:
+
+      if (
+        now - avoidStateStartMs >=
+        REVERSE_MS
+      ) {
+
+        avoidState =
+          AV_TURNING;
+
+        avoidStateStartMs =
+          now;
+
+        turnRight();
+      }
+
+      break;
+
+
+    case AV_TURNING:
+
+      if (
+        now - avoidStateStartMs >=
+        TURN_MS
+      ) {
+
+        avoidState =
+          AV_IDLE;
+
+
+        if (
+          currentDir == "forward"
+        ) {
+
+          driveForward();
+
+        } else if (
+          currentDir == "backward"
+        ) {
+
+          driveBackward();
+
+        } else if (
+          currentDir == "left"
+        ) {
+
+          turnLeft();
+
+        } else if (
+          currentDir == "right"
+        ) {
+
+          turnRight();
+
+        } else {
+
+          stopMotors();
+        }
+      }
+
+      break;
+  }
 }
 
-// ============================================================
-// Part 2: pushStatus()
-// Now includes "mode" and "distanceCm" fields.
-// FIX: now uses backendIP/backendPort consistently instead of
-// a separate hardcoded IP that had drifted out of sync.
-// ============================================================
-void pushStatus() {
-  if (WiFi.status() != WL_CONNECTED) return;
 
-  float dist = getDistanceCm();
+// ============================================================
+// DRIVE WATCHDOG
+// ============================================================
 
-  WiFiClient client;
-  if (!client.connect(backendIP, backendPort)) {
-    Serial.println("❌ pushStatus: could not connect to backend");
+void updateWatchdog() {
+
+  if (
+    currentDir == "stop"
+  ) {
+
     return;
   }
 
-  String modeStr = autonomousMode ? "autonomous" : "manual";
 
-  String body = "{"
-              + String("\"command\":\"")  + currentCmd  + "\","
-              + "\"cutter\":"    + (cutterOn        ? "true" : "false") + ","
-              + "\"obstacle\":"  + (obstacleBlocked ? "true" : "false") + ","
-              + "\"mode\":\""    + modeStr + "\","
-              + "\"distanceCm\":" + String(dist, 1) + ","
-              + "\"connected\":true}";
+  unsigned long now =
+    millis();
 
-  client.println("POST /api/esp32/status HTTP/1.1");
-  client.println("Host: " + String(backendIP) + ":" + String(backendPort));
-  client.println("Content-Type: application/json");
-  client.println("Connection: close");
-  client.println("Content-Length: " + String(body.length()));
-  client.println();
-  client.println(body);
-  client.stop();
-  Serial.println("📤 Status pushed");
-}
 
-// ============================================================
-// JSON HELPER — extract string value from raw JSON body
-// e.g. getValue("{\"command\":\"forward\"}", "command") → "forward"
-// ============================================================
-String getValue(String json, String key) {
-  String search = "\"" + key + "\":\"";
-  int start = json.indexOf(search);
-  if (start == -1) {
-    // Try boolean / number (no quotes)
-    search = "\"" + key + "\":";
-    start = json.indexOf(search);
-    if (start == -1) return "";
-    start += search.length();
-    int end = json.indexOf(",", start);
-    if (end == -1) end = json.indexOf("}", start);
-    return json.substring(start, end);
+  if (
+    now - lastCommandMs >=
+    WATCHDOG_TIMEOUT_MS
+  ) {
+
+    if (
+      !watchdogTripped
+    ) {
+
+      Serial.println(
+        "Drive watchdog: forcing stop."
+      );
+
+      watchdogTripped =
+        true;
+    }
+
+
+    currentDir =
+      "stop";
+
+    avoidState =
+      AV_IDLE;
+
+    stopMotors();
   }
-  start += search.length();
-  int end = json.indexOf("\"", start);
-  return json.substring(start, end);
 }
 
+
 // ============================================================
-// REST HANDLERS
+// CUTTER WATCHDOG
 // ============================================================
 
-// POST /move   body: {"command":"forward"}
-// Part 3: Rejects movement commands if in autonomous mode.
-void handleMove() {
-  String body = server.arg("plain");
-  String cmd  = getValue(body, "command");
-  cmd.toLowerCase();
-  cmd.trim();
+void updateCutterWatchdog() {
 
-  if (cmd.length() == 0) {
-    server.send(400, "application/json", "{\"error\":\"missing command\"}");
+  if (
+    !cutterOn
+  ) {
+
     return;
   }
 
-  // Part 3: Reject if autonomous
-  if (autonomousMode) {
-    server.send(409, "application/json",
-      "{\"error\":\"switch to manual mode first\",\"mode\":\"autonomous\"}");
-    Serial.println("⚠️  /move rejected — autonomous mode active");
-    return;
+
+  unsigned long now =
+    millis();
+
+
+  if (
+    now - lastCutterCommandMs >=
+    CUTTER_WATCHDOG_TIMEOUT_MS
+  ) {
+
+    if (
+      !cutterWatchdogTripped
+    ) {
+
+      Serial.println(
+        "Cutter watchdog: forcing relay OFF."
+      );
+
+      cutterWatchdogTripped =
+        true;
+    }
+
+
+    setCutter(false);
   }
-
-  currentCmd = cmd;
-  applyCommand(cmd);
-
-  Serial.println("🕹  CMD: " + cmd);
-  server.send(200, "application/json",
-    "{\"success\":true,\"command\":\"" + cmd + "\"}");
 }
 
-// POST /stop   (no body needed)
-// Part 3: Works in both modes — always honoured as an emergency stop.
-void handleStop() {
-  currentCmd = "stop";
-  motorsStop();
 
-  // Part 3: Also exit autonomous mode for safety
-  if (autonomousMode) {
-    autonomousMode = false;
-    Serial.println("🛑 EMERGENCY STOP — switched to Manual");
+// ============================================================
+// GPS UPDATE
+// ============================================================
+
+void updateGPS() {
+
+  while (
+    GPSSerial.available() > 0
+  ) {
+
+    char c =
+      GPSSerial.read();
+
+    gps.encode(c);
+  }
+
+
+  // ------------------------------------------
+  // Location
+  // ------------------------------------------
+
+  if (
+    gps.location.isValid()
+  ) {
+
+    gpsFix =
+      true;
+
+    gpsLatitude =
+      gps.location.lat();
+
+    gpsLongitude =
+      gps.location.lng();
+
+    gpsLastValidMs =
+      millis();
+  }
+
+
+  // ------------------------------------------
+  // Altitude
+  // ------------------------------------------
+
+  if (
+    gps.altitude.isValid()
+  ) {
+
+    gpsAltitude =
+      gps.altitude.meters();
+  }
+
+
+  // ------------------------------------------
+  // Satellites
+  // ------------------------------------------
+
+  if (
+    gps.satellites.isValid()
+  ) {
+
+    gpsSatellites =
+      gps.satellites.value();
+  }
+
+
+  // ------------------------------------------
+  // HDOP
+  // ------------------------------------------
+
+  if (
+    gps.hdop.isValid()
+  ) {
+
+    gpsHDOP =
+      gps.hdop.hdop();
+  }
+
+
+  // ------------------------------------------
+  // GPS timeout
+  // ------------------------------------------
+
+  if (
+    gpsFix &&
+    millis() - gpsLastValidMs >
+    GPS_FIX_TIMEOUT_MS
+  ) {
+
+    gpsFix =
+      false;
+  }
+}
+
+
+// ============================================================
+// GPS JSON
+// ============================================================
+
+void addGpsToJson(
+  JsonDocument& d
+) {
+
+  d["gps"]["fix"] =
+    gpsFix;
+
+
+  if (
+    gpsFix
+  ) {
+
+    d["gps"]["latitude"] =
+      gpsLatitude;
+
+    d["gps"]["longitude"] =
+      gpsLongitude;
+
+    d["gps"]["altitude"] =
+      gpsAltitude;
+
   } else {
-    Serial.println("🛑 STOP");
+
+    d["gps"]["latitude"] =
+      nullptr;
+
+    d["gps"]["longitude"] =
+      nullptr;
+
+    d["gps"]["altitude"] =
+      nullptr;
   }
 
-  server.send(200, "application/json",
-    "{\"success\":true,\"command\":\"stop\","
-    "\"mode\":\"manual\"}");
+
+  d["gps"]["satellites"] =
+    gpsSatellites;
+
+  d["gps"]["hdop"] =
+    gpsHDOP;
 }
 
-// POST /cutter   body: {"on":true} or {"on":false}
-void handleCutter() {
-  String body = server.arg("plain");
-  String val  = getValue(body, "on");
-  val.trim();
-  bool on = (val == "true");
-  setCutter(on);
-  server.send(200, "application/json",
-    "{\"success\":true,\"cutter\":" + String(on ? "true" : "false") + "}");
-}
 
-// POST /mode   body: {"mode":"autonomous"} or {"mode":"manual"}
-// Part 2 + Part 4: Switch between Manual and Autonomous modes.
-void handleMode() {
-  String body    = server.arg("plain");
-  String modeVal = getValue(body, "mode");
-  modeVal.toLowerCase();
-  modeVal.trim();
+// ============================================================
+// WIFI
+// ============================================================
 
-  if (modeVal == "autonomous") {
-    autonomousMode = true;
-    currentCmd     = "forward";   // start moving immediately
-    moveForward();
-    Serial.println("🤖 MODE → AUTONOMOUS");
-    server.send(200, "application/json",
-      "{\"success\":true,\"mode\":\"autonomous\"}");
+void connectWiFi() {
 
-  } else if (modeVal == "manual") {
-    autonomousMode = false;
-    currentCmd     = "stop";
-    motorsStop();
-    Serial.println("🕹  MODE → MANUAL");
-    server.send(200, "application/json",
-      "{\"success\":true,\"mode\":\"manual\"}");
+  WiFi.begin(
+    ssid,
+    password
+  );
+
+  Serial.print(
+    "Connecting to WiFi"
+  );
+
+
+  unsigned long start =
+    millis();
+
+  const unsigned long
+    WIFI_TIMEOUT_MS =
+      15000;
+
+
+  while (
+    WiFi.status() != WL_CONNECTED &&
+    millis() - start <
+    WIFI_TIMEOUT_MS
+  ) {
+
+    delay(500);
+
+    Serial.print(".");
+  }
+
+
+  if (
+    WiFi.status() ==
+    WL_CONNECTED
+  ) {
+
+    Serial.println();
+
+    Serial.print(
+      "Connected, IP: "
+    );
+
+    Serial.println(
+      WiFi.localIP()
+    );
 
   } else {
-    server.send(400, "application/json",
-      "{\"error\":\"mode must be 'manual' or 'autonomous'\"}");
+
+    Serial.println();
+
+    Serial.println(
+      "WiFi connect failed, restarting..."
+    );
+
+    delay(1000);
+
+    ESP.restart();
   }
 }
 
-// GET /status   — returns live robot state
-// Fix 4: JSON field order matches the agreed spec:
-//   { "mode", "command", "distanceCm", "obstacle", "cutter", "connected" }
-void handleStatus() {
-  float dist     = getDistanceCm();
-  String modeStr = autonomousMode ? "autonomous" : "manual";
-
-  String res = "{"
-             + String("\"mode\":\"")    + modeStr    + "\","
-             + "\"command\":\""         + currentCmd + "\","
-             + "\"distanceCm\":"        + String(dist, 1) + ","
-             + "\"obstacle\":"          + (obstacleBlocked ? "true" : "false") + ","
-             + "\"cutter\":"            + (cutterOn        ? "true" : "false") + ","
-             + "\"connected\":true}";
-
-  server.send(200, "application/json", res);
-}
 
 // ============================================================
 // SETUP
 // ============================================================
+
 void setup() {
-  Serial.begin(115200);
-  Serial.println("\n🚀 Booting Phase 4 v1.3 Firmware...");
 
-  // Part 4: Seed RNG for optional random turn selection
-  randomSeed(analogRead(0));
+  Serial.begin(
+    115200
+  );
 
-  // Motor pins
-  int motorPins[] = {ENA1, IN1, IN2, IN3, IN4,
-                     ENA2, IN1B, IN2B, IN3B, IN4B};
-  for (int p : motorPins) pinMode(p, OUTPUT);
 
-  // Speed via PWM
-  analogWrite(ENA1, MOTOR_SPEED);
-  analogWrite(ENA2, MOTOR_SPEED);
+  // ==========================================
+  // GPS UART
+  // NEO-6M default baud = 9600
+  // ==========================================
 
-  // Part 4: Safe startup — always begin in Manual mode, motors off
-  autonomousMode = false;
-  currentCmd     = "stop";
-  motorsStop();
-  Serial.println("🕹  Safe startup: Manual mode, motors stopped");
+  GPSSerial.begin(
+    9600,
+    SERIAL_8N1,
+    GPS_RX_PIN,
+    GPS_TX_PIN
+  );
 
-  // Relay
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);   // cutter OFF on boot
 
-  // HC-SR04
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+  Serial.println();
+  Serial.println(
+    "================================="
+  );
 
-  // Wi-Fi
-  WiFi.begin(ssid, password);
-  Serial.print("Connecting to Wi-Fi");
-  int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-    delay(500);
-    Serial.print(".");
-    attempts++;
-  }
+  Serial.println(
+    "ESP32 Weed Robot v7 + NEO-6M GPS"
+  );
 
-  if (WiFi.status() == WL_CONNECTED) {
-    Serial.println("\n✅ Wi-Fi Connected!");
-    Serial.print("📡 ESP32 IP: ");
-    Serial.println(WiFi.localIP());
-    Serial.print("🎯 Backend target: ");
-    Serial.print(backendIP);
-    Serial.print(":");
-    Serial.println(backendPort);
-    Serial.println("👆 Confirm this backend IP matches Member 1's machine");
-  } else {
-    Serial.println("\n❌ Wi-Fi failed — running offline");
-  }
+  Serial.println(
+    "GPS UART initialized"
+  );
 
-  // Register routes
-  server.on("/move",   HTTP_POST, handleMove);
-  server.on("/stop",   HTTP_POST, handleStop);
-  server.on("/cutter", HTTP_POST, handleCutter);
-  server.on("/mode",   HTTP_POST, handleMode);   // Part 2: new endpoint
-  server.on("/status", HTTP_GET,  handleStatus);
+  Serial.println(
+    "================================="
+  );
+
+
+  // ==========================================
+  // MOTOR PINS
+  // ==========================================
+
+  pinMode(
+    IN1,
+    OUTPUT
+  );
+
+  pinMode(
+    IN2,
+    OUTPUT
+  );
+
+  pinMode(
+    IN3,
+    OUTPUT
+  );
+
+  pinMode(
+    IN4,
+    OUTPUT
+  );
+
+  pinMode(
+    IN1B,
+    OUTPUT
+  );
+
+  pinMode(
+    IN2B,
+    OUTPUT
+  );
+
+  pinMode(
+    IN3B,
+    OUTPUT
+  );
+
+  pinMode(
+    IN4B,
+    OUTPUT
+  );
+
+
+  // ==========================================
+  // RELAY
+  // ==========================================
+
+  pinMode(
+    RELAY_PIN,
+    OUTPUT
+  );
+
+
+  // ==========================================
+  // ULTRASONIC
+  // ==========================================
+
+  pinMode(
+    TRIG_PIN,
+    OUTPUT
+  );
+
+  pinMode(
+    ECHO_PIN,
+    INPUT
+  );
+
+
+  // ==========================================
+  // PWM
+  // ==========================================
+
+  ledcAttach(
+    ENA1,
+    PWM_FREQ,
+    PWM_RES_BITS
+  );
+
+  ledcAttach(
+    ENA2,
+    PWM_FREQ,
+    PWM_RES_BITS
+  );
+
+
+  // ==========================================
+  // SAFE START
+  // ==========================================
+
+  stopMotors();
+
+  setCutter(
+    false
+  );
+
+
+  lastCommandMs =
+    millis();
+
+
+  // ==========================================
+  // WIFI
+  // ==========================================
+
+  connectWiFi();
+
+
+  // ==========================================
+  // API KEY HEADER
+  // ==========================================
+
+  const char* headerKeys[] =
+    {
+      "X-API-Key"
+    };
+
+
+  server.collectHeaders(
+    headerKeys,
+    1
+  );
+
+
+  // ============================================================
+  // PING
+  // ============================================================
+
+  server.on(
+    "/ping",
+    HTTP_GET,
+    []() {
+
+      setCorsHeaders();
+
+      server.send(
+        200,
+        "text/plain",
+        "OK"
+      );
+    }
+  );
+
+
+  // ============================================================
+  // STATUS
+  // ============================================================
+
+  server.on(
+    "/status",
+    HTTP_GET,
+    []() {
+
+      setCorsHeaders();
+
+      StaticJsonDocument<768> d;
+
+
+      d["ip"] =
+        WiFi.localIP().toString();
+
+      d["mode"] =
+        currentMode;
+
+      d["speed"] =
+        currentSpeed;
+
+      d["dir"] =
+        currentDir;
+
+      d["cutter"] =
+        cutterOn;
+
+      d["distance_cm"] =
+        lastDistanceCm;
+
+      d["avoiding"] =
+        (
+          avoidState != AV_IDLE
+        );
+
+      d["watchdog_tripped"] =
+        watchdogTripped;
+
+      d["cutter_watchdog_tripped"] =
+        cutterWatchdogTripped;
+
+
+      // GPS
+      addGpsToJson(d);
+
+
+      String response;
+
+      serializeJson(
+        d,
+        response
+      );
+
+
+      server.send(
+        200,
+        "application/json",
+        response
+      );
+    }
+  );
+
+
+  // ============================================================
+  // GPS
+  // GET /gps
+  // ============================================================
+
+  server.on(
+    "/gps",
+    HTTP_GET,
+    []() {
+
+      setCorsHeaders();
+
+      StaticJsonDocument<512> d;
+
+
+      d["fix"] =
+        gpsFix;
+
+
+      if (
+        gpsFix
+      ) {
+
+        d["latitude"] =
+          gpsLatitude;
+
+        d["longitude"] =
+          gpsLongitude;
+
+        d["altitude"] =
+          gpsAltitude;
+
+      } else {
+
+        d["latitude"] =
+          nullptr;
+
+        d["longitude"] =
+          nullptr;
+
+        d["altitude"] =
+          nullptr;
+      }
+
+
+      d["satellites"] =
+        gpsSatellites;
+
+      d["hdop"] =
+        gpsHDOP;
+
+
+      String response;
+
+      serializeJson(
+        d,
+        response
+      );
+
+
+      server.send(
+        200,
+        "application/json",
+        response
+      );
+    }
+  );
+
+
+  // ============================================================
+  // MODE
+  // POST /mode?mode=manual|auto
+  // ============================================================
+
+  server.on(
+    "/mode",
+    HTTP_POST,
+    []() {
+
+      if (
+        !requireAuth()
+      ) {
+
+        return;
+      }
+
+
+      if (
+        server.hasArg("mode")
+      ) {
+
+        String m =
+          server.arg("mode");
+
+
+        if (
+          m == "manual" ||
+          m == "auto"
+        ) {
+
+          currentMode =
+            m;
+
+
+          server.send(
+            200,
+            "application/json",
+            "{\"mode\":\"" +
+            currentMode +
+            "\"}"
+          );
+
+        } else {
+
+          server.send(
+            400,
+            "text/plain",
+            "mode must be 'manual' or 'auto'"
+          );
+        }
+
+      } else {
+
+        server.send(
+          400,
+          "text/plain",
+          "missing 'mode' arg (manual|auto)"
+        );
+      }
+    }
+  );
+
+
+  // ============================================================
+  // SPEED
+  // POST /speed?value=0-255
+  // ============================================================
+
+  server.on(
+    "/speed",
+    HTTP_POST,
+    []() {
+
+      if (
+        !requireAuth()
+      ) {
+
+        return;
+      }
+
+
+      if (
+        server.hasArg("value")
+      ) {
+
+        int v =
+          server.arg(
+            "value"
+          ).toInt();
+
+
+        v =
+          constrain(
+            v,
+            0,
+            PWM_MAX
+          );
+
+
+        currentSpeed =
+          v;
+
+
+        applySpeed();
+
+        noteCommandReceived();
+
+
+        server.send(
+          200,
+          "application/json",
+          "{\"speed\":" +
+          String(currentSpeed) +
+          "}"
+        );
+
+      } else {
+
+        server.send(
+          400,
+          "text/plain",
+          "missing 'value' arg (0-255)"
+        );
+      }
+    }
+  );
+
+
+  // ============================================================
+  // MOVE
+  // POST /move?dir=forward|backward|left|right|stop
+  // ============================================================
+
+  server.on(
+    "/move",
+    HTTP_POST,
+    []() {
+
+      if (
+        !requireAuth()
+      ) {
+
+        return;
+      }
+
+
+      if (
+        server.hasArg("speed")
+      ) {
+
+        int v =
+          server.arg(
+            "speed"
+          ).toInt();
+
+
+        currentSpeed =
+          constrain(
+            v,
+            0,
+            PWM_MAX
+          );
+      }
+
+
+      String dir =
+        server.hasArg("dir")
+          ? server.arg("dir")
+          : "stop";
+
+
+      currentDir =
+        dir;
+
+
+      avoidState =
+        AV_IDLE;
+
+
+      noteCommandReceived();
+
+
+      if (
+        dir == "forward"
+      ) {
+
+        driveForward();
+
+      } else if (
+        dir == "backward"
+      ) {
+
+        driveBackward();
+
+      } else if (
+        dir == "left"
+      ) {
+
+        turnLeft();
+
+      } else if (
+        dir == "right"
+      ) {
+
+        turnRight();
+
+      } else {
+
+        dir =
+          "stop";
+
+        currentDir =
+          "stop";
+
+        stopMotors();
+      }
+
+
+      server.send(
+        200,
+        "application/json",
+        "{\"dir\":\"" +
+        dir +
+        "\",\"speed\":" +
+        String(currentSpeed) +
+        "}"
+      );
+    }
+  );
+
+
+  // ============================================================
+  // STOP
+  // ============================================================
+
+  server.on(
+    "/stop",
+    HTTP_POST,
+    []() {
+
+      if (
+        !requireAuth()
+      ) {
+
+        return;
+      }
+
+
+      currentDir =
+        "stop";
+
+
+      avoidState =
+        AV_IDLE;
+
+
+      stopMotors();
+
+
+      // Always turn cutter OFF
+      setCutter(false);
+
+
+      noteCommandReceived();
+
+
+      server.send(
+        200,
+        "application/json",
+        "{\"dir\":\"stop\",\"cutter\":false}"
+      );
+    }
+  );
+
+
+  // ============================================================
+  // RELAY / CUTTER
+  // POST /relay?state=on|off
+  // ============================================================
+
+  server.on(
+    "/relay",
+    HTTP_POST,
+    []() {
+
+      if (
+        !requireAuth()
+      ) {
+
+        return;
+      }
+
+
+      if (
+        server.hasArg("state")
+      ) {
+
+        String state =
+          server.arg(
+            "state"
+          );
+
+
+        // --------------------------------------
+        // Cutter ON
+        // --------------------------------------
+
+        if (
+          state == "on"
+        ) {
+
+          // Safety interlock
+          if (
+            avoidState != AV_IDLE
+          ) {
+
+            server.send(
+              409,
+              "application/json",
+              "{\"error\":\"cutter blocked: robot mid obstacle-avoidance\",\"avoiding\":true}"
+            );
+
+            return;
+          }
+
+
+          setCutter(
+            true
+          );
+        }
+
+
+        // --------------------------------------
+        // Cutter OFF
+        // --------------------------------------
+
+        else if (
+          state == "off"
+        ) {
+
+          setCutter(
+            false
+          );
+
+        } else {
+
+          server.send(
+            400,
+            "text/plain",
+            "state must be 'on' or 'off'"
+          );
+
+          return;
+        }
+
+
+        noteCommandReceived();
+
+
+        server.send(
+          200,
+          "application/json",
+          String(
+            "{\"cutter\":" 
+          ) +
+          (
+            cutterOn
+              ? "true"
+              : "false"
+          ) +
+          "}"
+        );
+
+      } else {
+
+        server.send(
+          400,
+          "text/plain",
+          "missing 'state' arg (on|off)"
+        );
+      }
+    }
+  );
+
+
+  // ============================================================
+  // OPTIONS / CORS
+  // ============================================================
+
+  server.on(
+    "/move",
+    HTTP_OPTIONS,
+    []() {
+
+      setCorsHeaders();
+
+      server.send(
+        204
+      );
+    }
+  );
+
+
+  server.on(
+    "/stop",
+    HTTP_OPTIONS,
+    []() {
+
+      setCorsHeaders();
+
+      server.send(
+        204
+      );
+    }
+  );
+
+
+  server.on(
+    "/speed",
+    HTTP_OPTIONS,
+    []() {
+
+      setCorsHeaders();
+
+      server.send(
+        204
+      );
+    }
+  );
+
+
+  server.on(
+    "/relay",
+    HTTP_OPTIONS,
+    []() {
+
+      setCorsHeaders();
+
+      server.send(
+        204
+      );
+    }
+  );
+
+
+  server.on(
+    "/mode",
+    HTTP_OPTIONS,
+    []() {
+
+      setCorsHeaders();
+
+      server.send(
+        204
+      );
+    }
+  );
+
+
+  // ============================================================
+  // START SERVER
+  // ============================================================
+
   server.begin();
 
-  Serial.println("🌐 ESP32 web server started on port 80");
-  Serial.println("✅ Phase 4 v1.3 Firmware ready!\n");
+  Serial.println(
+    "HTTP server started"
+  );
+
+  Serial.println(
+    "GPS endpoint: /gps"
+  );
+
+  Serial.println(
+    "Status endpoint: /status"
+  );
 }
+
 
 // ============================================================
 // LOOP
 // ============================================================
+
 void loop() {
+
+  // Handle HTTP requests
   server.handleClient();
 
-  unsigned long now = millis();
 
-  // Obstacle check every 100 ms
-  if (now - lastObstacle >= OBSTACLE_INTERVAL) {
-    lastObstacle = now;
-    checkObstacle();
-    checkFakeWeed();   // Phase 4 demo: simulated weed detection
-  }
+  // Read NEO-6M
+  updateGPS();
 
-  // Part 2: Keep robot moving forward in autonomous mode.
-  // Fix 1: Only issue the command when state actually changes,
-  //         not on every loop iteration.
-  if (autonomousMode && !obstacleBlocked && currentCmd != "forward") {
-    currentCmd = "forward";
-    moveForward();
-  }
 
-  // Push status to backend every 3 s
-  if (now - lastStatus >= STATUS_INTERVAL) {
-    lastStatus = now;
-    pushStatus();
-  }
+  // Obstacle avoidance
+  updateObstacleAvoidance();
+
+
+  // Drive safety
+  updateWatchdog();
+
+
+  // Cutter safety
+  updateCutterWatchdog();
 }

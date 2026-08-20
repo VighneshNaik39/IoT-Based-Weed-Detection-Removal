@@ -67,7 +67,7 @@
 const char* ssid     = "rcb";
 const char* password = "987654321";
 
-
+ 
 // ============================================================
 // API KEY
 // Must match ESP32_API_KEY in backend .env

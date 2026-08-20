@@ -33,10 +33,10 @@ async function status() {
 
 // ==========================================
 // Move robot
-// ESP32: GET /move?dir=forward
+// ESP32 v7: POST /move?dir=forward
 // ==========================================
 async function move(direction) {
-    const response = await api.get(
+    const response = await api.post(
         `/move?dir=${encodeURIComponent(direction)}`
     );
 
@@ -45,20 +45,21 @@ async function move(direction) {
 
 // ==========================================
 // Stop robot
-// ESP32: GET /stop
+// ESP32 v7: POST /stop
 // ==========================================
 async function stop() {
-    const response = await api.get("/stop");
+    const response = await api.post("/stop");
     return response.data;
 }
 
 // ==========================================
 // Cutter / Relay
-// ESP32: GET /cutter?state=on|off
+// ESP32 v7: POST /relay?state=on|off
+// (older firmware used GET /cutter — v7 renamed the path)
 // ==========================================
 async function relay(state) {
-    const response = await api.get(
-        `/cutter?state=${encodeURIComponent(state)}`
+    const response = await api.post(
+        `/relay?state=${encodeURIComponent(state)}`
     );
 
     return response.data;
@@ -66,11 +67,12 @@ async function relay(state) {
 
 // ==========================================
 // Robot mode
-// ESP32: GET /mode?state=manual|auto
+// ESP32 v7: POST /mode?mode=manual|auto
+// (older firmware used the 'state' param name — v7 renamed it to 'mode')
 // ==========================================
-async function mode(mode) {
-    const response = await api.get(
-        `/mode?state=${encodeURIComponent(mode)}`
+async function mode(newMode) {
+    const response = await api.post(
+        `/mode?mode=${encodeURIComponent(newMode)}`
     );
 
     return response.data;
@@ -78,7 +80,7 @@ async function mode(mode) {
 
 // ==========================================
 // Set robot speed
-// ESP32: GET /speed?value=0-255
+// ESP32 v7: POST /speed?value=0-255
 // ==========================================
 async function setSpeed(speed) {
 
@@ -87,7 +89,7 @@ async function setSpeed(speed) {
         Math.min(255, Number(speed))
     );
 
-    const response = await api.get(
+    const response = await api.post(
         `/speed?value=${value}`
     );
 
