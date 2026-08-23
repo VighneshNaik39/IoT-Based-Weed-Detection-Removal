@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WeedGuard — wiring reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12151A; --panel:#1A1E25; --card:#20242C; --card2:#252A33;
+    --border:#333944; --border-soft:#282D36;
+    --text:#E8EAED; --text-dim:#9BA1AC; --text-faint:#5F6672;
+    --copper:#E8A33D; --copper-dim:#8A6B33;
+    --sig:#55C6D8; --gnd:#8B909A; --pwr:#E8734A; --mot:#A98CF2;
+    --ok:#6FCF97; --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:15px;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:80px;
+  }
+  h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;}
+  a{color:var(--copper);}
+
+  /* header */
+  header{
+    max-width:1560px; margin:0 auto;
+    padding:44px 48px 28px;
+    border-bottom:1px solid var(--border-soft);
+    display:flex; flex-wrap:wrap; gap:20px 40px; align-items:flex-end; justify-content:space-between;
+  }
+  .brand-eyebrow{font-size:12.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--copper); margin:0 0 8px;}
+  header h1{font-size:32px; font-weight:600; margin:0; color:var(--text);}
+  header p{margin:8px 0 0; color:var(--text-dim); font-size:15px; max-width:600px; line-height:1.65;}
+  .legend{display:flex; flex-wrap:wrap; gap:16px 26px; align-items:center;}
+  .legend-item{display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text-dim);}
+  .swatch{width:18px; height:0; border-top-width:3px; border-top-style:solid; display:inline-block;}
+  .swatch.dash{border-top-style:dashed;}
+  .swatch.dot-sw{width:9px; height:9px; border-radius:50%; border:none;}
+
+  /* layout */
+  main{max-width:1560px; margin:0 auto; padding:48px 48px 8px; display:flex; gap:44px; align-items:flex-start;}
+  .stage-wrap{flex:1 1 auto; min-width:0; overflow-x:auto;}
+  .stage{position:relative; display:flex; gap:76px; align-items:flex-start; min-width:900px; padding:6px;}
+  .col{display:flex; flex-direction:column; gap:26px; flex:1 1 0; min-width:0;}
+  .col.esp32col{flex:0 0 310px;}
+  .col.modulescol{flex:0 0 380px;}
+  .col.outputscol{flex:0 0 230px; align-self:center;}
+  svg.wires{position:absolute; top:0; left:0; pointer-events:none; overflow:visible;}
+  svg.wires path{pointer-events:stroke; cursor:pointer;}
+
+  /* cards */
+  .card{
+    background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); overflow:hidden;
+    transition:border-color .15s, box-shadow .15s, opacity .2s;
+  }
+  .card.dim{opacity:.28;}
+  .card.active{border-color:var(--copper); box-shadow:0 0 0 1px var(--copper), 0 0 18px -4px rgba(232,163,61,.5);}
+  .card-head{
+    padding:18px 22px; cursor:pointer; user-select:none;
+    background:var(--card2); border-bottom:1px solid var(--border-soft);
+    display:flex; flex-direction:column; gap:4px;
+  }
+  .card-head:hover{background:#2A2F39;}
+  .card-head .name{font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:18px; color:var(--text);}
+  .card-head .sub{font-size:13px; color:var(--text-dim);}
+  .esp-head{background:linear-gradient(180deg,#242A34,#1E232B);}
+  .esp-head .name{color:var(--copper);}
+
+  .pin-list{display:flex; flex-direction:column;}
+  .pin-row{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:13px 22px; border-bottom:1px solid var(--border-soft);
+    cursor:pointer; transition:background .12s, opacity .2s;
+  }
+  .pin-row:last-child{border-bottom:none;}
+  .pin-row:hover{background:#262B34;}
+  .pin-row.dim{opacity:.25;}
+  .pin-row.active{background:#2C2416;}
+  .pin-info{display:flex; flex-direction:column; gap:3px; min-width:0;}
+  .pin-label{font-size:15px; color:var(--text); white-space:nowrap;}
+  .pin-gpio{font-size:12.5px; color:var(--text-dim); white-space:nowrap;}
+  .esp-row .pin-info{align-items:flex-start;}
+  .mod-row .pin-info,.out-row .pin-info{align-items:flex-start;}
+
+  .dot{width:12px; height:12px; border-radius:50%; flex:none; box-shadow:0 0 0 4px var(--card);}
+  .dot-right{order:2;} .dot-left{order:0;}
+  .type-digital{background:var(--sig);} .type-pwm{background:var(--sig);}
+  .type-ground{background:var(--gnd);} .type-power{background:var(--pwr);} .type-motor{background:var(--mot);}
+
+  .out-label{font-size:11.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint); padding:14px 22px 4px;}
+
+  .motor-box{
+    display:flex; align-items:center; gap:14px; padding:16px 20px;
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    cursor:pointer; transition:border-color .15s, opacity .2s;
+  }
+  .motor-box.dim{opacity:.28;}
+  .motor-box.active{border-color:var(--mot); box-shadow:0 0 0 1px var(--mot), 0 0 16px -4px rgba(169,140,242,.55);}
+  .motor-name{font-size:15.5px; color:var(--text); font-family:'Space Grotesk',sans-serif; font-weight:600;}
+  .motor-sub{font-size:12.5px; color:var(--text-dim);}
+
+  /* inspector */
+  aside#inspector{
+    flex:0 0 360px; position:sticky; top:28px;
+    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+    padding:26px 26px 28px; max-height:80vh; overflow:auto;
+  }
+  #inspector h3{margin:0 0 6px; font-size:19px; color:var(--copper);}
+  #inspector .insp-sub{font-size:13px; color:var(--text-dim); margin-bottom:20px;}
+  .insp-table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  .insp-table th{text-align:left; color:var(--text-faint); font-weight:500; font-size:11px; text-transform:uppercase; letter-spacing:.05em; padding:6px 8px; border-bottom:1px solid var(--border-soft);}
+  .insp-table td{padding:11px 8px; border-bottom:1px solid var(--border-soft); vertical-align:top; color:var(--text-dim);}
+  .insp-table td.lbl{color:var(--text); white-space:nowrap;}
+  .badge{display:inline-block; padding:2px 9px; border-radius:20px; font-size:11px; letter-spacing:.03em;}
+  .badge.type-digital,.badge.type-pwm{background:rgba(85,198,216,.15); color:var(--sig);}
+  .badge.type-ground{background:rgba(139,144,154,.18); color:var(--gnd);}
+  .badge.type-power{background:rgba(232,115,74,.16); color:var(--pwr);}
+  .note{font-size:13.5px; color:var(--text-dim); line-height:1.7; margin-top:18px; padding-top:18px; border-top:1px solid var(--border-soft);}
+  .insp-empty p{font-size:14.5px; color:var(--text-dim); line-height:1.75; margin:0 0 18px;}
+  #clearBtn{
+    display:none; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:13px;
+    background:none; border:1px solid var(--border); color:var(--text-dim); padding:9px 16px; border-radius:6px; cursor:pointer;
+  }
+  #clearBtn:hover{border-color:var(--copper); color:var(--copper);}
+  #clearBtn.show{display:inline-block;}
+
+  /* notes + reference table */
+  .notes{max-width:1560px; margin:52px auto 0; padding:28px 34px; background:var(--panel); border:1px solid var(--border-soft); border-radius:var(--radius);}
+  .notes h2{font-size:15px; margin:0 0 16px; color:var(--copper); text-transform:uppercase; letter-spacing:.06em;}
+  .notes ul{margin:0; padding-left:20px; color:var(--text-dim); font-size:14px; line-height:2;}
+  .notes strong{color:var(--text);}
+
+  .reftable-wrap{max-width:1560px; margin:52px auto 0; padding:0 0;}
+  .reftable-wrap h2{font-family:'Space Grotesk',sans-serif; font-size:20px; color:var(--text); margin:0 0 18px;}
+  table.reftable{width:100%; border-collapse:collapse; font-size:14px;}
+  table.reftable th{text-align:left; padding:14px 16px; background:var(--card2); color:var(--text-dim); font-weight:500; font-size:12px; text-transform:uppercase; letter-spacing:.05em; border-bottom:1px solid var(--border);}
+  table.reftable td{padding:13px 16px; border-bottom:1px solid var(--border-soft); color:var(--text-dim);}
+  table.reftable td.comp{color:var(--copper); white-space:nowrap;}
+  table.reftable td.pin{color:var(--text); white-space:nowrap;}
+  table.reftable tr:hover td{background:#1E222A;}
+
+  footer{max-width:1560px; margin:52px auto 0; padding:0 2px; color:var(--text-faint); font-size:12.5px;}
+
+  @media (max-width:1620px){
+    header,main,.notes,.reftable-wrap,footer{max-width:100%;}
+  }
+  @media (max-width:920px){
+    main{flex-direction:column; padding:24px 18px;}
+    header{padding:28px 18px 20px;}
+    aside#inspector{position:static; width:100%; flex:1 1 auto; order:-1; max-height:none;}
+    .stage{min-width:0; flex-wrap:wrap; gap:40px;}
+    .col.esp32col,.col.modulescol,.col.outputscol{flex:1 1 100%;}
+    .notes,.reftable-wrap,footer{margin-left:18px; margin-right:18px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <p class="brand-eyebrow">WeedGuard · ESP32_WeedRobot_v7</p>
+    <h1>Wiring reference</h1>
+    <p>Every module wired to the ESP32, with the exact pin names from the firmware. Click a component, a single pin, or a wire to trace the connection.</p>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><span class="swatch" style="border-color:var(--sig)"></span>Digital signal</div>
+    <div class="legend-item"><span class="swatch dash" style="border-color:var(--sig)"></span>PWM signal</div>
+    <div class="legend-item"><span class="swatch" style="border-color:var(--gnd)"></span>Ground</div>
+    <div class="legend-item"><span class="swatch" style="border-color:var(--pwr)"></span>Power rail</div>
+    <div class="legend-item"><span class="swatch" style="border-color:var(--mot)"></span>Motor output</div>
+  </div>
+</header>
+
+<main>
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <svg class="wires" id="wires"></svg>
+
+      <div class="col esp32col" id="esp32col">
+        <div class="card">
+          <div class="card-head esp-head" id="espHead">
+            <span class="name">ESP32 devkit</span>
+            <span class="sub">Click to clear selection</span>
+          </div>
+          <div class="pin-list" id="espPinList"></div>
+        </div>
+      </div>
+
+      <div class="col modulescol" id="modulescol"></div>
+
+      <div class="col outputscol" id="outputscol"></div>
+    </div>
+  </div>
+
+  <aside id="inspector"></aside>
+</main>
+
+<section class="notes">
+  <h2>Before you power it on</h2>
+  <ul>
+    <li>ESP32 GPIOs are <strong>3.3V logic</strong>. The HC-SR04's ECHO pin idles at 5V — put a voltage divider (e.g. 1kΩ/2kΩ) between ECHO and GPIO18, or use a level shifter.</li>
+    <li><strong>GPIO2</strong> (IN4B) is an ESP32 boot-strapping pin — keep it from floating high during power-up, or flashing/boot can fail intermittently.</li>
+    <li>Both L298N boards run their motors off the <strong>battery's 12V</strong>, not the ESP32 — but their <strong>GND must still be tied</strong> to the ESP32's GND, or the control signals won't read correctly.</li>
+    <li>NEO-6M breakout boards vary by supplier — most accept 5V via an onboard regulator, but check your board's silkscreen before assuming.</li>
+  </ul>
+</section>
+
+<div class="reftable-wrap">
+  <h2>Full connection table</h2>
+  <table class="reftable">
+    <thead><tr><th>Component</th><th>Pin</th><th>Connects to</th><th>Type</th><th>Note</th></tr></thead>
+    <tbody id="reftableBody"></tbody>
+  </table>
+</div>
+
+<footer>Generated from ESP32_WeedRobot_v7_GPS.ino pin mapping · click any node above to trace a connection</footer>
+
+<script>
+const MODULES = [
+  {
+    id:'l298n1', name:'L298N #1', sub:'Front motor driver',
+    pins:[
+      {label:'ENA1', gpio:'GPIO12', type:'pwm', dir:'in', note:'PWM speed control for this driver.'},
+      {label:'IN1',  gpio:'GPIO13', type:'digital', dir:'in', note:'Motor A direction bit.'},
+      {label:'IN2',  gpio:'GPIO14', type:'digital', dir:'in', note:'Motor A direction bit.'},
+      {label:'IN3',  gpio:'GPIO27', type:'digital', dir:'in', note:'Motor B direction bit.'},
+      {label:'IN4',  gpio:'GPIO26', type:'digital', dir:'in', note:'Motor B direction bit.'},
+      {label:'GND',  gpio:'GND', type:'ground', dir:'in', note:'Logic ground — must be common with the ESP32.'}
+    ],
+    outputs:[
+      {label:'OUT1 / OUT2', target:'motorA'},
+      {label:'OUT3 / OUT4', target:'motorB'}
+    ]
+  },
+  {
+    id:'l298n2', name:'L298N #2', sub:'Rear motor driver',
+    pins:[
+      {label:'ENA2', gpio:'GPIO25', type:'pwm', dir:'in', note:'PWM speed control for this driver.'},
+      {label:'IN1B', gpio:'GPIO32', type:'digital', dir:'in', note:'Motor C direction bit.'},
+      {label:'IN2B', gpio:'GPIO33', type:'digital', dir:'in', note:'Motor C direction bit.'},
+      {label:'IN3B', gpio:'GPIO15', type:'digital', dir:'in', note:'Motor D direction bit.'},
+      {label:'IN4B', gpio:'GPIO2',  type:'digital', dir:'in', note:'Motor D direction bit — also a boot-strap pin, see notes below.'},
+      {label:'GND',  gpio:'GND', type:'ground', dir:'in', note:'Logic ground — must be common with the ESP32.'}
+    ],
+    outputs:[
+      {label:'OUT1 / OUT2', target:'motorC'},
+      {label:'OUT3 / OUT4', target:'motorD'}
+    ]
+  },
+  {
+    id:'hcsr04', name:'HC-SR04', sub:'Ultrasonic distance sensor',
+    pins:[
+      {label:'TRIG', gpio:'GPIO5',  type:'digital', dir:'in',  note:'ESP32 sends a 10µs pulse here to fire a ping.'},
+      {label:'ECHO', gpio:'GPIO18', type:'digital', dir:'out', note:'5V pulse back to ESP32, width = distance. Needs a voltage divider — see notes below.'},
+      {label:'VCC',  gpio:'5V',  type:'power', dir:'in', note:''},
+      {label:'GND',  gpio:'GND', type:'ground', dir:'in', note:''}
+    ]
+  },
+  {
+    id:'relay', name:'Relay module', sub:'Cutter blade switch',
+    pins:[
+      {label:'IN',  gpio:'GPIO23', type:'digital', dir:'in', note:'Active HIGH in firmware — relay energizes when this pin goes HIGH.'},
+      {label:'VCC', gpio:'5V',  type:'power', dir:'in', note:''},
+      {label:'GND', gpio:'GND', type:'ground', dir:'in', note:''}
+    ],
+    outputs:[
+      {label:'COM / NO', target:'cutter'}
+    ]
+  },
+  {
+    id:'gps', name:'NEO-6M GPS', sub:'Position module',
+    pins:[
+      {label:'TX', gpio:'GPIO16', type:'digital', dir:'out', note:'GPS TX → ESP32 RX2. NMEA sentences flow this direction.'},
+      {label:'RX', gpio:'GPIO17', type:'digital', dir:'in',  note:'ESP32 TX2 → GPS RX. Unused by the current firmware.'},
+      {label:'VCC', gpio:'5V',  type:'power', dir:'in', note:'Check your board — most NEO-6M breakouts accept 5V.'},
+      {label:'GND', gpio:'GND', type:'ground', dir:'in', note:''}
+    ]
+  }
+];
+
+const ESP_PINS = [
+  {gpio:'GPIO12', label:'ENA1 · PWM'},
+  {gpio:'GPIO13', label:'IN1'},
+  {gpio:'GPIO14', label:'IN2'},
+  {gpio:'GPIO27', label:'IN3'},
+  {gpio:'GPIO26', label:'IN4'},
+  {gpio:'GPIO25', label:'ENA2 · PWM'},
+  {gpio:'GPIO32', label:'IN1B'},
+  {gpio:'GPIO33', label:'IN2B'},
+  {gpio:'GPIO15', label:'IN3B'},
+  {gpio:'GPIO2',  label:'IN4B'},
+  {gpio:'GPIO23', label:'Relay IN'},
+  {gpio:'GPIO5',  label:'HC-SR04 TRIG'},
+  {gpio:'GPIO18', label:'HC-SR04 ECHO'},
+  {gpio:'GPIO16', label:'GPS RX2'},
+  {gpio:'GPIO17', label:'GPS TX2'},
+  {gpio:'GND',    label:'Common ground'},
+  {gpio:'5V',     label:'5V rail'}
+];
+
+const MOTORS = [
+  {id:'motorA', name:'Motor A', sub:'Front left'},
+  {id:'motorB', name:'Motor B', sub:'Front right'},
+  {id:'motorC', name:'Motor C', sub:'Rear left'},
+  {id:'motorD', name:'Motor D', sub:'Rear right'},
+  {id:'cutter', name:'Cutter', sub:'Blade motor'}
+];
+
+const stage = document.getElementById('stage');
+const svg = document.getElementById('wires');
+const espPinList = document.getElementById('espPinList');
+const modulescol = document.getElementById('modulescol');
+const outputscol = document.getElementById('outputscol');
+const inspector = document.getElementById('inspector');
+const reftableBody = document.getElementById('reftableBody');
+
+const espDots = {};      // gpio -> dot element
+const espRows = {};      // gpio -> row element
+const moduleCards = {};  // moduleId -> card element
+const moduleRowDots = {}; // moduleId -> {gpio: {row, dot}}
+const outputRowDots = {}; // moduleId -> [{row, dot, target, label}]
+const motorBoxes = {};   // motorId -> box element
+
+const wires = []; // {type, moduleId, gpio, fromDot, toDot, group:'io'|'output', els:[row,row]}
+
+function makeDot(cls){ const d=document.createElement('span'); d.className='dot '+cls; return d; }
+
+// build ESP32 pin rows
+MODULES.forEach(()=>{}); // noop, keep order stable
+ESP_PINS.forEach(p=>{
+  const row=document.createElement('div');
+  row.className='pin-row esp-row';
+  row.tabIndex=0;
+  const info=document.createElement('div'); info.className='pin-info';
+  const lbl=document.createElement('span'); lbl.className='pin-label'; lbl.textContent=p.label;
+  const gp=document.createElement('span'); gp.className='pin-gpio'; gp.textContent=p.gpio;
+  info.appendChild(lbl); info.appendChild(gp);
+  const dot=makeDot('dot-right '+ (p.gpio==='GND'?'type-ground':p.gpio==='5V'?'type-power':'type-digital'));
+  row.appendChild(info); row.appendChild(dot);
+  espPinList.appendChild(row);
+  espDots[p.gpio]=dot; espRows[p.gpio]=row;
+  row.addEventListener('click',e=>{ e.stopPropagation(); selectPin(p.gpio,null); });
+});
+
+// build module cards
+MODULES.forEach(mod=>{
+  const card=document.createElement('div'); card.className='card';
+  const head=document.createElement('div'); head.className='card-head';
+  const nm=document.createElement('span'); nm.className='name'; nm.textContent=mod.name;
+  const sb=document.createElement('span'); sb.className='sub'; sb.textContent=mod.sub;
+  head.appendChild(nm); head.appendChild(sb);
+  head.addEventListener('click',e=>{ e.stopPropagation(); selectModule(mod.id); });
+  card.appendChild(head);
+
+  const list=document.createElement('div'); list.className='pin-list';
+  moduleRowDots[mod.id]={};
+  mod.pins.forEach(p=>{
+    const row=document.createElement('div'); row.className='pin-row mod-row'; row.tabIndex=0;
+    const dot=makeDot('dot-left type-'+p.type);
+    const info=document.createElement('div'); info.className='pin-info';
+    const lbl=document.createElement('span'); lbl.className='pin-label'; lbl.textContent=p.label;
+    const gp=document.createElement('span'); gp.className='pin-gpio'; gp.textContent=p.gpio.startsWith('GPIO')?('ESP32 '+p.gpio):p.gpio;
+    info.appendChild(lbl); info.appendChild(gp);
+    row.appendChild(dot); row.appendChild(info);
+    list.appendChild(row);
+    moduleRowDots[mod.id][p.gpio]=moduleRowDots[mod.id][p.gpio]||[];
+    moduleRowDots[mod.id][p.gpio].push({row,dot});
+    row.addEventListener('click',e=>{ e.stopPropagation(); selectPin(p.gpio,mod.id); });
+  });
+  card.appendChild(list);
+
+  if(mod.outputs){
+    const lab=document.createElement('div'); lab.className='out-label'; lab.textContent='Outputs';
+    card.appendChild(lab);
+    const olist=document.createElement('div'); olist.className='pin-list';
+    outputRowDots[mod.id]=[];
+    mod.outputs.forEach(o=>{
+      const row=document.createElement('div'); row.className='pin-row out-row'; row.tabIndex=0;
+      const info=document.createElement('div'); info.className='pin-info';
+      const lbl=document.createElement('span'); lbl.className='pin-label'; lbl.textContent=o.label;
+      const gp=document.createElement('span'); gp.className='pin-gpio'; gp.textContent='→ '+MOTORS.find(m=>m.id===o.target).name;
+      info.appendChild(lbl); info.appendChild(gp);
+      const dot=makeDot('dot-right type-motor');
+      row.appendChild(info); row.appendChild(dot);
+      olist.appendChild(row);
+      outputRowDots[mod.id].push({row,dot,target:o.target,label:o.label});
+      row.addEventListener('click',e=>{ e.stopPropagation(); selectOutput(mod.id,o.target); });
+    });
+    card.appendChild(olist);
+  }
+
+  modulescol.appendChild(card);
+  moduleCards[mod.id]=card;
+});
+
+// build motor boxes
+MOTORS.forEach(m=>{
+  const box=document.createElement('div'); box.className='motor-box'; box.tabIndex=0;
+  const dot=makeDot('dot-left type-motor');
+  const info=document.createElement('div');
+  const nm=document.createElement('div'); nm.className='motor-name'; nm.textContent=m.name;
+  const sb=document.createElement('div'); sb.className='motor-sub'; sb.textContent=m.sub;
+  info.appendChild(nm); info.appendChild(sb);
+  box.appendChild(dot); box.appendChild(info);
+  outputscol.appendChild(box);
+  motorBoxes[m.id]=box;
+  box.addEventListener('click',e=>{
+    e.stopPropagation();
+    const owner = MODULES.find(mod=>mod.outputs && mod.outputs.some(o=>o.target===m.id));
+    if(owner) selectOutput(owner.id, m.id);
+  });
+});
+
+document.getElementById('espHead').addEventListener('click',e=>{ e.stopPropagation(); clearSelection(); });
+stage.addEventListener('click', clearSelection);
+
+// build wire list (IO wires: esp <-> module pin)
+MODULES.forEach(mod=>{
+  mod.pins.forEach(p=>{
+    const targets = moduleRowDots[mod.id][p.gpio];
+    if(!espDots[p.gpio] || !targets) return;
+    targets.forEach(t=>{
+      wires.push({group:'io', type:p.type, moduleId:mod.id, gpio:p.gpio,
+        fromDot:espDots[p.gpio], toDot:t.dot, rows:[espRows[p.gpio], t.row]});
+    });
+  });
+  if(mod.outputs){
+    outputRowDots[mod.id].forEach(o=>{
+      wires.push({group:'output', type:'motor', moduleId:mod.id, target:o.target,
+        fromDot:o.dot, toDot:motorBoxes[o.target].querySelector('.dot'), rows:[o.row, motorBoxes[o.target]]});
+    });
+  }
+});
+
+function colorFor(type){ return type==='ground'?'#8B909A':type==='power'?'#E8734A':type==='motor'?'#A98CF2':'#55C6D8'; }
+
+function redrawWires(){
+  const sr = stage.getBoundingClientRect();
+  const w = stage.scrollWidth, h = stage.scrollHeight;
+  svg.setAttribute('width', w); svg.setAttribute('height', h);
+  svg.setAttribute('viewBox','0 0 '+w+' '+h);
+  svg.innerHTML='';
+  wires.forEach(wire=>{
+    const p1=wire.fromDot.getBoundingClientRect(), p2=wire.toDot.getBoundingClientRect();
+    const x1=p1.left+p1.width/2-sr.left, y1=p1.top+p1.height/2-sr.top;
+    const x2=p2.left+p2.width/2-sr.left, y2=p2.top+p2.height/2-sr.top;
+    const mx=(x1+x2)/2;
+    const d='M'+x1+' '+y1+' C '+mx+' '+y1+', '+mx+' '+y2+', '+x2+' '+y2;
+    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',d);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke',colorFor(wire.type));
+    path.setAttribute('stroke-width', wire.active?'2.4':'1.4');
+    path.setAttribute('stroke-linecap','round');
+    path.setAttribute('opacity', wire.dim?'0.1':(wire.active?'1':'0.5'));
+    if(wire.type==='pwm') path.setAttribute('stroke-dasharray','5 4');
+    if(wire.active) path.setAttribute('class','wire-active');
+    path.style.pointerEvents='stroke';
+    path.addEventListener('click', ()=>{ if(wire.group==='io') selectPin(wire.gpio,wire.moduleId); else selectOutput(wire.moduleId,wire.target); });
+    wire.el=path;
+    svg.appendChild(path);
+  });
+}
+
+// ---- selection state ----
+let current=null;
+
+function clearAllVisualState(){
+  document.querySelectorAll('.pin-row,.card,.motor-box').forEach(el=>{el.classList.remove('active','dim');});
+  wires.forEach(w=>{w.active=false; w.dim=false;});
+}
+
+function applyDim(){
+  document.querySelectorAll('.pin-row,.card,.motor-box').forEach(el=>{
+    if(!el.classList.contains('active')) el.classList.add('dim');
+  });
+  wires.forEach(w=>{ if(!w.active) w.dim=true; });
+}
+
+function clearSelection(){
+  current=null;
+  clearAllVisualState();
+  redrawWires();
+  renderInspectorEmpty();
+  document.getElementById('clearBtn') && (document.getElementById('clearBtn').className='');
+}
+
+function selectPin(gpio, moduleId){
+  clearAllVisualState();
+  const relevant = wires.filter(w=> w.group==='io' && w.gpio===gpio && (moduleId?w.moduleId===moduleId:true));
+  relevant.forEach(w=>{w.active=true; w.rows.forEach(r=>r.classList.add('active'));});
+  if(espRows[gpio]) espRows[gpio].classList.add('active');
+  applyDim();
+  redrawWires();
+  current={type:'pin',gpio,moduleId};
+  renderInspectorPin(gpio,moduleId);
+}
+
+function selectModule(moduleId){
+  clearAllVisualState();
+  const relevant = wires.filter(w=>w.moduleId===moduleId);
+  relevant.forEach(w=>{w.active=true; w.rows.forEach(r=>r.classList.add('active'));});
+  moduleCards[moduleId].classList.add('active');
+  applyDim();
+  moduleCards[moduleId].classList.remove('dim');
+  redrawWires();
+  current={type:'module',moduleId};
+  renderInspectorModule(moduleId);
+}
+
+function selectOutput(moduleId,target){
+  clearAllVisualState();
+  const relevant = wires.filter(w=>w.group==='output' && w.moduleId===moduleId && w.target===target);
+  relevant.forEach(w=>{w.active=true; w.rows.forEach(r=>r.classList.add('active'));});
+  motorBoxes[target].classList.add('active');
+  applyDim();
+  redrawWires();
+  current={type:'output',moduleId,target};
+  renderInspectorOutput(moduleId,target);
+}
+
+// ---- inspector rendering ----
+function typeBadge(type){ return '<span class="badge type-'+type+'">'+ (type==='pwm'?'PWM':type==='digital'?'Digital':type==='ground'?'Ground':'Power') +'</span>'; }
+
+function renderInspectorEmpty(){
+  inspector.innerHTML = '<div class="insp-empty">'+
+    '<h3>Wiring inspector</h3>'+
+    '<p>Click any component header to see its full pin table, or click a single pin / wire to trace just that connection.</p>'+
+    '<p>The right-hand column shows how each driver outputs feed the motors and the cutter blade.</p>'+
+    '</div>';
+}
+
+function renderInspectorModule(moduleId){
+  const mod = MODULES.find(m=>m.id===moduleId);
+  let rows = mod.pins.map(p=>
+    '<tr><td class="lbl">'+p.label+'</td><td>'+(p.gpio.startsWith('GPIO')?'ESP32 '+p.gpio:p.gpio)+'</td><td>'+typeBadge(p.type)+'</td></tr>'
+  ).join('');
+  let out = '';
+  if(mod.outputs){
+    out = '<div class="note"><strong>Outputs</strong><br>'+ mod.outputs.map(o=>o.label+' → '+MOTORS.find(m=>m.id===o.target).name).join('<br>') +'</div>';
+  }
+  inspector.innerHTML = '<h3>'+mod.name+'</h3><div class="insp-sub">'+mod.sub+'</div>'+
+    '<table class="insp-table"><thead><tr><th>Pin</th><th>Connects to</th><th>Type</th></tr></thead><tbody>'+rows+'</tbody></table>'+out+
+    '<button id="clearBtn" class="show" onclick="clearSelection()">Clear selection</button>';
+}
+
+function renderInspectorPin(gpio, moduleId){
+  const espLabel = ESP_PINS.find(p=>p.gpio===gpio);
+  let body='';
+  if(moduleId){
+    const mod = MODULES.find(m=>m.id===moduleId);
+    const pin = mod.pins.find(p=>p.gpio===gpio);
+    body = '<table class="insp-table"><tbody>'+
+      '<tr><td class="lbl">Component</td><td>'+mod.name+' — '+pin.label+'</td></tr>'+
+      '<tr><td class="lbl">ESP32 side</td><td>'+gpio+' ('+(espLabel?espLabel.label:'')+')</td></tr>'+
+      '<tr><td class="lbl">Type</td><td>'+typeBadge(pin.type)+'</td></tr>'+
+      '<tr><td class="lbl">Direction</td><td>'+(pin.dir==='out'?mod.name+' → ESP32':'ESP32 → '+mod.name)+'</td></tr>'+
+      '</tbody></table>'+
+      (pin.note?'<div class="note">'+pin.note+'</div>':'');
+    inspector.innerHTML='<h3>'+gpio+'</h3><div class="insp-sub">'+mod.name+' · '+pin.label+'</div>'+body+
+      '<button id="clearBtn" class="show" onclick="clearSelection()">Clear selection</button>';
+  } else {
+    const consumers = MODULES.filter(m=>m.pins.some(p=>p.gpio===gpio));
+    body = '<table class="insp-table"><thead><tr><th>Used by</th><th>Pin</th></tr></thead><tbody>'+
+      consumers.map(m=>{const p=m.pins.find(pp=>pp.gpio===gpio); return '<tr><td class="lbl">'+m.name+'</td><td>'+p.label+'</td></tr>';}).join('')+
+      '</tbody></table>';
+    inspector.innerHTML='<h3>'+gpio+'</h3><div class="insp-sub">'+(espLabel?espLabel.label:'')+'</div>'+body+
+      '<button id="clearBtn" class="show" onclick="clearSelection()">Clear selection</button>';
+  }
+}
+
+function renderInspectorOutput(moduleId,target){
+  const mod = MODULES.find(m=>m.id===moduleId);
+  const out = mod.outputs.find(o=>o.target===target);
+  const motor = MOTORS.find(m=>m.id===target);
+  inspector.innerHTML = '<h3>'+motor.name+'</h3><div class="insp-sub">'+motor.sub+'</div>'+
+    '<table class="insp-table"><tbody>'+
+    '<tr><td class="lbl">Driven by</td><td>'+mod.name+'</td></tr>'+
+    '<tr><td class="lbl">Terminals</td><td>'+out.label+'</td></tr>'+
+    '<tr><td class="lbl">Type</td><td>'+typeBadge('motor')+'</td></tr>'+
+    '</tbody></table>'+
+    '<div class="note">High-current motor leads — wire directly between the driver output screw terminals and the motor. These never touch the ESP32 directly.</div>'+
+    '<button id="clearBtn" class="show" onclick="clearSelection()">Clear selection</button>';
+}
+
+// ---- static reference table ----
+function buildRefTable(){
+  let rows='';
+  MODULES.forEach(mod=>{
+    mod.pins.forEach(p=>{
+      rows += '<tr><td class="comp">'+mod.name+'</td><td class="pin">'+p.label+'</td><td>'+(p.gpio.startsWith('GPIO')?'ESP32 '+p.gpio:p.gpio)+'</td><td>'+typeBadge(p.type)+'</td><td>'+(p.note||'—')+'</td></tr>';
+    });
+    if(mod.outputs){
+      mod.outputs.forEach(o=>{
+        rows += '<tr><td class="comp">'+mod.name+'</td><td class="pin">'+o.label+'</td><td>'+MOTORS.find(m=>m.id===o.target).name+'</td><td>'+typeBadge('motor')+'</td><td>Direct motor leads, off-board power</td></tr>';
+      });
+    }
+  });
+  reftableBody.innerHTML = rows;
+}
+
+buildRefTable();
+renderInspectorEmpty();
+redrawWires();
+window.addEventListener('resize', ()=>{ requestAnimationFrame(redrawWires); });
+document.fonts && document.fonts.ready.then(redrawWires);
+setTimeout(redrawWires, 150);
+</script>
+</body>
+</html>
