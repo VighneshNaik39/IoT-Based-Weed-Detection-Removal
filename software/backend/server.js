@@ -11,6 +11,7 @@ const logsRoutes = require("./routes/logs");
 const apiContractRoutes = require("./routes/apiContract");
 const detectionRoutes = require("./routes/detection");
 const gpsRoutes = require("./routes/gps");
+const fieldRoutes = require("./routes/field");
 
 // ==========================================
 // SERVICES
@@ -44,6 +45,7 @@ app.use("/api/mode", modeRoutes);
 app.use("/api/cutter", cutterRoutes);
 app.use("/api/detection", detectionRoutes);
 app.use("/api/gps", gpsRoutes);
+app.use("/api/field", fieldRoutes);
 
 // Robot status/mode live under /api/robot
 app.use("/api/robot", robotRoutes);

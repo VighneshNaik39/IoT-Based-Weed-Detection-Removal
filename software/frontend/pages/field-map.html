@@ -254,7 +254,7 @@
 
                 <p class="topbar-sub">
 
-                    Zone layout & live robot GPS ·
+                    To-scale field layout & live robot GPS ·
 
                     <span id="last-updated">
                         --
@@ -455,146 +455,262 @@
                     <div class="panel-header">
 
                         <p class="panel-title">
-                            Field Layout — Station Alpha
+                            Field Layout
                         </p>
 
                         <span
                             class="panel-chip"
                             id="field-chip"
                         >
-                            CLEAR
+                            NOT CONFIGURED
                         </span>
 
                     </div>
 
 
-                    <!-- FIELD GRID -->
+                    <!-- =============================================
+                         FIELD SETUP / CALIBRATION
+                         Shown whenever the field isn't fully
+                         calibrated, or the user hits "Recalibrate".
+                    ============================================== -->
 
                     <div
-                        class="field-grid"
-                        id="field-grid"
+                        class="field-setup"
+                        id="field-setup"
                     >
 
+                        <p class="field-setup-intro">
 
-                        <!-- ZONE A -->
+                            Walk (or drive) the robot to one corner
+                            of the field and tap
+                            <strong>Set Origin</strong>. Then walk it
+                            to the adjacent corner along one edge and
+                            tap <strong>Set Edge</strong>. Type in the
+                            real width/length of that field and save —
+                            the app uses the two GPS points to work out
+                            the field's actual orientation, so the map
+                            doesn't assume it's aligned to true north.
 
-                        <div
-                            class="field-zone"
-                            id="fz-a"
-                            data-zone="a"
-                        >
+                        </p>
 
-                            <span class="field-zone-label">
-                                Zone A
-                            </span>
+
+                        <div class="field-setup-row">
+
+                            <button
+                                class="field-setup-btn"
+                                id="btn-set-origin"
+                                onclick="captureOrigin()"
+                            >
+                                📍 Set Origin (robot is here)
+                            </button>
 
                             <span
-                                class="field-zone-status"
-                                id="fz-a-status"
+                                class="field-setup-status"
+                                id="origin-status"
                             >
-                                --
+                                Not set
                             </span>
 
                         </div>
 
 
-                        <!-- ZONE B -->
+                        <div class="field-setup-manual">
 
-                        <div
-                            class="field-zone"
-                            id="fz-b"
-                            data-zone="b"
-                        >
-
-                            <span class="field-zone-label">
-                                Zone B
+                            <span class="field-setup-manual-label">
+                                No GPS module yet? Type coordinates instead:
                             </span>
 
-                            <span
-                                class="field-zone-status"
-                                id="fz-b-status"
+                            <input
+                                type="number"
+                                id="origin-lat-input"
+                                class="settings-number-input small"
+                                step="0.000001"
+                                placeholder="Latitude"
                             >
-                                --
+
+                            <input
+                                type="number"
+                                id="origin-lng-input"
+                                class="settings-number-input small"
+                                step="0.000001"
+                                placeholder="Longitude"
+                            >
+
+                            <button
+                                class="field-setup-btn"
+                                onclick="saveManualOrigin()"
+                            >
+                                Use these
+                            </button>
+
+                        </div>
+
+
+                        <div class="field-setup-row">
+
+                            <button
+                                class="field-setup-btn"
+                                id="btn-set-edge"
+                                onclick="captureEdge()"
+                            >
+                                📍 Set Edge (robot is here)
+                            </button>
+
+                            <span
+                                class="field-setup-status"
+                                id="edge-status"
+                            >
+                                Not set
                             </span>
 
                         </div>
 
 
-                        <!-- ZONE C -->
+                        <div class="field-setup-manual">
 
-                        <div
-                            class="field-zone"
-                            id="fz-c"
-                            data-zone="c"
-                        >
-
-                            <span class="field-zone-label">
-                                Zone C
+                            <span class="field-setup-manual-label">
+                                No GPS module yet? Type coordinates instead:
                             </span>
 
-                            <span
-                                class="field-zone-status"
-                                id="fz-c-status"
+                            <input
+                                type="number"
+                                id="edge-lat-input"
+                                class="settings-number-input small"
+                                step="0.000001"
+                                placeholder="Latitude"
                             >
-                                --
-                            </span>
+
+                            <input
+                                type="number"
+                                id="edge-lng-input"
+                                class="settings-number-input small"
+                                step="0.000001"
+                                placeholder="Longitude"
+                            >
+
+                            <button
+                                class="field-setup-btn"
+                                onclick="saveManualEdge()"
+                            >
+                                Use these
+                            </button>
 
                         </div>
 
 
-                        <!-- ZONE D -->
+                        <div class="field-setup-dims">
 
-                        <div
-                            class="field-zone"
-                            id="fz-d"
-                            data-zone="d"
-                        >
+                            <label>
+                                Width (m)
+                                <input
+                                    type="number"
+                                    id="field-width-input"
+                                    class="settings-number-input"
+                                    min="0.5"
+                                    step="0.1"
+                                    placeholder="e.g. 12"
+                                >
+                            </label>
 
-                            <span class="field-zone-label">
-                                Zone D
-                            </span>
-
-                            <span
-                                class="field-zone-status"
-                                id="fz-d-status"
-                            >
-                                --
-                            </span>
+                            <label>
+                                Length (m)
+                                <input
+                                    type="number"
+                                    id="field-length-input"
+                                    class="settings-number-input"
+                                    min="0.5"
+                                    step="0.1"
+                                    placeholder="e.g. 8"
+                                >
+                            </label>
 
                         </div>
 
 
-                        <!-- ROBOT -->
+                        <div class="field-setup-row">
 
-                        <div
-                            class="field-robot"
-                            id="field-robot"
-                            title="Robot"
-                        >
-                            🤖
+                            <button
+                                class="field-setup-btn primary"
+                                onclick="saveFieldConfig()"
+                            >
+                                💾 Save Field
+                            </button>
+
+                            <button
+                                class="field-setup-btn"
+                                onclick="flipFieldOrientation()"
+                            >
+                                ↔ Flip Orientation
+                            </button>
+
+                            <button
+                                class="field-setup-btn danger"
+                                onclick="resetFieldConfig()"
+                            >
+                                Reset
+                            </button>
+
                         </div>
 
                     </div>
 
 
-                    <!-- LEGEND -->
+                    <!-- =============================================
+                         TO-SCALE FIELD CANVAS
+                         Shown once origin + edge + dimensions are
+                         all saved. Robot position comes from live GPS
+                         projected onto the calibrated field axes.
+                    ============================================== -->
 
-                    <div class="field-legend">
+                    <div
+                        class="field-canvas-wrap"
+                        id="field-canvas-wrap"
+                        style="display:none;"
+                    >
 
-                        <span>
-                            <i class="dot safe"></i>
-                            Clear
-                        </span>
+                        <button
+                            class="field-recalibrate-link"
+                            onclick="toggleSetup(true)"
+                        >
+                            ⚙ Recalibrate field
+                        </button>
 
-                        <span>
-                            <i class="dot danger"></i>
-                            Weed detected
-                        </span>
+                        <div
+                            class="field-canvas"
+                            id="field-canvas"
+                        >
 
-                        <span>
-                            <i class="dot active"></i>
-                            Robot here
-                        </span>
+                            <div
+                                class="field-robot"
+                                id="field-robot"
+                                title="Robot"
+                            >
+                                🤖
+                            </div>
+
+                        </div>
+
+
+                        <!-- LEGEND -->
+
+                        <div class="field-legend">
+
+                            <span>
+                                <i class="dot safe"></i>
+                                Clear
+                            </span>
+
+                            <span>
+                                <i class="dot danger"></i>
+                                Weed detected
+                            </span>
+
+                            <span>
+                                <i class="dot active"></i>
+                                In bounds
+                            </span>
+
+                        </div>
 
                     </div>
 
@@ -709,25 +825,12 @@
                             <li>
 
                                 <span class="status-label">
-                                    Zones monitored
-                                </span>
-
-                                <span class="status-value">
-                                    4
-                                </span>
-
-                            </li>
-
-
-                            <li>
-
-                                <span class="status-label">
-                                    Zones clear
+                                    Field size
                                 </span>
 
                                 <span
-                                    class="status-value ok"
-                                    id="sum-clear"
+                                    class="status-value"
+                                    id="sum-size"
                                 >
                                     --
                                 </span>
@@ -738,12 +841,44 @@
                             <li>
 
                                 <span class="status-label">
-                                    Zones flagged
+                                    Area
                                 </span>
 
                                 <span
-                                    class="status-value warn"
-                                    id="sum-flagged"
+                                    class="status-value"
+                                    id="sum-area"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Robot from origin
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="sum-distance"
+                                >
+                                    --
+                                </span>
+
+                            </li>
+
+
+                            <li>
+
+                                <span class="status-label">
+                                    Position
+                                </span>
+
+                                <span
+                                    class="status-value"
+                                    id="sum-bounds"
                                 >
                                     --
                                 </span>

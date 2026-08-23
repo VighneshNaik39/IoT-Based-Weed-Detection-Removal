@@ -31,69 +31,169 @@
   gap: 20px;
 }
 
-/* ==============================
-   FIELD GRID — signature element
-============================== */
-.field-grid {
-  position: relative;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 14px;
-  aspect-ratio: 4 / 3;
-  padding: 14px;
-  background: repeating-linear-gradient(
-    45deg,
-    var(--green-50),
-    var(--green-50) 10px,
-    #ecf7ef 10px,
-    #ecf7ef 20px
-  );
-  border-radius: var(--radius-md);
-  border: 1px solid var(--gray-200);
+.panel-chip.neutral-chip {
+  background: var(--gray-100);
+  color: var(--gray-500);
 }
 
-.field-zone {
-  border-radius: var(--radius-md);
-  background: var(--white);
-  border: 2px solid var(--green-200);
+/* ==============================
+   FIELD SETUP / CALIBRATION
+============================== */
+.field-setup {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: border-color 0.3s, background 0.3s;
+  gap: 14px;
 }
 
-.field-zone-label {
-  font-size: 12px;
-  font-weight: 700;
+.field-setup-intro {
+  font-size: 12.5px;
   color: var(--gray-500);
-  letter-spacing: 0.04em;
+  line-height: 1.6;
+  background: var(--green-50);
+  border: 1px solid var(--green-200);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
 }
 
-.field-zone-status {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  background: var(--green-100);
-  color: var(--green-600);
+.field-setup-intro strong {
+  color: var(--gray-700);
 }
 
-.field-zone.danger {
-  border-color: var(--red-600);
-  background: var(--red-100);
+.field-setup-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-.field-zone.danger .field-zone-status {
-  background: var(--red-600);
+
+.field-setup-btn {
+  font-family: var(--font);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+}
+
+.field-setup-btn:hover {
+  border-color: var(--green-400);
+  background: var(--green-50);
+  transform: translateY(-1px);
+}
+
+.field-setup-btn.primary {
+  background: var(--green-600);
+  border-color: var(--green-600);
   color: #fff;
 }
 
-.field-zone.active-zone {
-  border-color: var(--green-600);
-  box-shadow: 0 0 0 3px rgba(45,106,79,0.18);
+.field-setup-btn.primary:hover {
+  background: var(--green-700);
+}
+
+.field-setup-btn.danger {
+  color: var(--red-600);
+  border-color: var(--red-100);
+}
+
+.field-setup-btn.danger:hover {
+  background: var(--red-100);
+  border-color: var(--red-600);
+}
+
+.field-setup-status {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--gray-500);
+}
+
+.field-setup-manual {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: -4px 0 4px 0;
+  padding-left: 2px;
+}
+
+.field-setup-manual-label {
+  font-size: 11px;
+  color: var(--gray-400);
+}
+
+.settings-number-input.small {
+  width: 110px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.field-setup-dims {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.field-setup-dims label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--gray-500);
+  font-weight: 600;
+}
+
+.field-recalibrate-link {
+  font-family: var(--font);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--green-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 0 12px 0;
+}
+
+.field-recalibrate-link:hover {
+  text-decoration: underline;
+}
+
+/* ==============================
+   TO-SCALE FIELD CANVAS
+   Aspect ratio is set inline (JS) once real width/length
+   are known — this is a fallback for before that runs.
+============================== */
+.field-canvas-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-canvas {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent calc(10% - 1px),
+      var(--gray-100) calc(10% - 1px),
+      var(--gray-100) 10%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent calc(10% - 1px),
+      var(--gray-100) calc(10% - 1px),
+      var(--gray-100) 10%
+    ),
+    var(--green-50);
+  border-radius: var(--radius-md);
+  border: 2px solid var(--green-200);
+  overflow: hidden;
 }
 
 .field-robot {
@@ -103,6 +203,29 @@
   transform: translate(-50%, -50%);
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
   pointer-events: none;
+}
+
+.field-robot.danger {
+  filter:
+    drop-shadow(0 2px 4px rgba(0,0,0,0.25))
+    drop-shadow(0 0 8px var(--red-600));
+}
+
+.field-robot.out-of-bounds::after {
+  content: "⚠ outside field";
+  position: absolute;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--red-600);
+  background: #fff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  box-shadow: var(--shadow-sm);
 }
 
 .field-legend {

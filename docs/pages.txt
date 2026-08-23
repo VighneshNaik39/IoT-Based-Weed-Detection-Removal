@@ -1,5 +1,0 @@
-pages : 
-
-dashboard,logs page,settings and control/
-
-server api

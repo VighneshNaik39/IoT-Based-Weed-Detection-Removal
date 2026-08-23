@@ -1,0 +1,14 @@
+{
+  "configured": true,
+  "widthM": 10,
+  "lengthM": 15,
+  "mirrored": false,
+  "origin": {
+    "lat": 0,
+    "lng": 0
+  },
+  "edge": {
+    "lat": 0,
+    "lng": 0
+  }
+}
