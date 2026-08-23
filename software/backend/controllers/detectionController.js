@@ -11,6 +11,10 @@ let lastDetectionTime = 0;
 
 const DETECTION_COOLDOWN = 4000;
 
+// How long the ESP32 should run the cutter for on each confirmed
+// detection. Passed straight through to POST /weed-detected.
+const WEED_CUT_DURATION_MS = 3000;
+
 // ==========================================
 // Latest detection information
 // ==========================================
@@ -216,24 +220,30 @@ exports.handleWeedDetection = async (req, res) => {
     }
 
     // ==========================================
-    // Trigger cutter
+    // Trigger weed-cut sequence
+    // Stops the robot (whatever it was doing), runs the cutter
+    // for a fixed duration, then auto-resumes autonomous
+    // navigation if that's what was interrupted. This calls the
+    // ESP32's dedicated /weed-detected endpoint rather than the
+    // raw /relay toggle, so the robot actually stops to cut
+    // instead of pulsing the blade while still driving.
     // ==========================================
     try {
 
-        const cutterResponse =
-            await esp32Service.relay("on");
+        const cutResponse =
+            await esp32Service.weedDetected(WEED_CUT_DURATION_MS);
 
-        console.log("🔪 Cutter activated");
+        console.log("🔪 Weed-cut sequence triggered");
 
         console.log(
             "ESP32 response:",
-            cutterResponse
+            cutResponse
         );
 
     } catch (error) {
 
         console.error(
-            "❌ Failed to activate cutter:",
+            "❌ Failed to trigger weed-cut sequence:",
             error.message
         );
     }

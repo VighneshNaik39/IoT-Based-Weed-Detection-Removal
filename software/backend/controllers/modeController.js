@@ -1,4 +1,5 @@
 const esp32 = require("../services/esp32Service");
+const fieldService = require("../services/fieldService");
 
 exports.setMode = async (req, res) => {
     try {
@@ -18,11 +19,27 @@ exports.setMode = async (req, res) => {
             });
         }
 
+        if (mode === "autonomous") {
+            const field = fieldService.readField();
+
+            if (!field.configured) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Configure the field before starting autonomous mode"
+                });
+            }
+
+            const waypoints =
+                fieldService.generateAutonomousWaypoints(field);
+
+            await esp32.setAutonomousPlan(waypoints);
+        }
+
         const response = await esp32.mode(mode);
 
         res.json({
             success: true,
-            data: response.data
+            data: response
         });
 
     } catch (err) {

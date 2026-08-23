@@ -67,7 +67,7 @@ async function relay(state) {
 
 // ==========================================
 // Robot mode
-// ESP32 v7: POST /mode?mode=manual|auto
+// ESP32 v8: POST /mode?mode=manual|autonomous
 // (older firmware used the 'state' param name — v7 renamed it to 'mode')
 // ==========================================
 async function mode(newMode) {
@@ -108,6 +108,61 @@ async function getGPS() {
 }
 
 // ==========================================
+// Autonomous waypoint plan
+// ESP32 v8: POST /autonomous/plan
+// ==========================================
+async function setAutonomousPlan(waypoints) {
+    const response = await api.post(
+        "/autonomous/plan",
+        { waypoints }
+    );
+
+    return response.data;
+}
+
+// ==========================================
+// Start autonomous navigation
+// ESP32 v8: POST /autonomous/start
+// ==========================================
+async function startAutonomous() {
+    const response = await api.post("/autonomous/start");
+    return response.data;
+}
+
+// ==========================================
+// Stop autonomous navigation
+// ESP32 v8: POST /autonomous/stop
+// ==========================================
+async function stopAutonomous() {
+    const response = await api.post("/autonomous/stop");
+    return response.data;
+}
+
+// ==========================================
+// Autonomous status
+// ESP32 v8: GET /autonomous/status
+// ==========================================
+async function autonomousStatus() {
+    const response = await api.get("/autonomous/status");
+    return response.data;
+}
+
+// ==========================================
+// Weed detected (laptop YOLO -> ESP32)
+// ESP32 v8: POST /weed-detected?duration=<ms>
+// Stops the robot, cuts for `duration` ms, then auto-resumes
+// autonomous navigation if that's what was interrupted.
+// ==========================================
+async function weedDetected(durationMs) {
+    const query = durationMs
+        ? `?duration=${encodeURIComponent(durationMs)}`
+        : "";
+
+    const response = await api.post(`/weed-detected${query}`);
+    return response.data;
+}
+
+// ==========================================
 // EXPORT
 // ==========================================
 module.exports = {
@@ -118,5 +173,10 @@ module.exports = {
     relay,
     mode,
     setSpeed,
-    getGPS
+    getGPS,
+    setAutonomousPlan,
+    startAutonomous,
+    stopAutonomous,
+    autonomousStatus,
+    weedDetected
 };

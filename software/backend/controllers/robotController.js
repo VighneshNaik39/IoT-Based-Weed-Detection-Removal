@@ -1,4 +1,5 @@
 const esp32 = require("../services/esp32Service");
+const fieldService = require("../services/fieldService");
 
 // ========================================
 // Move Robot
@@ -76,11 +77,48 @@ exports.mode = async (req, res) => {
             });
         }
 
-        const data = await esp32.mode(mode);
+        if (!['manual', 'autonomous'].includes(mode)) {
+            return res.status(400).json({
+                success: false,
+                message: "Mode must be manual or autonomous"
+            });
+        }
+
+        // Autonomous mode is only allowed after the field has been
+        // calibrated. The backend converts that calibration into a
+        // serpentine GPS waypoint plan and sends it to the ESP32.
+        if (mode === 'autonomous') {
+
+            const field = fieldService.readField();
+
+            if (!field.configured) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Configure the field origin, edge, width and length before starting autonomous mode"
+                });
+            }
+
+            const waypoints =
+                fieldService.generateAutonomousWaypoints(field);
+
+            await esp32.setAutonomousPlan(waypoints);
+
+            const data =
+                await esp32.mode('autonomous');
+
+            return res.json({
+                success: true,
+                message: "Autonomous mode started",
+                data,
+                waypointCount: waypoints.length
+            });
+        }
+
+        const data = await esp32.mode('manual');
 
         res.json({
             success: true,
-            message: "Mode changed",
+            message: "Manual mode selected",
             data
         });
 

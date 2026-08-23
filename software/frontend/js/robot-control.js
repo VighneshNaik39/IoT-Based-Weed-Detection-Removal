@@ -33,7 +33,14 @@ async function setMode(mode) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mode })
     });
-    if (!res.ok) throw new Error("Mode change rejected");
+    if (!res.ok) {
+      let message = "Mode change rejected";
+      try {
+        const payload = await res.json();
+        if (payload.message) message = payload.message;
+      } catch (_) {}
+      throw new Error(message);
+    }
     applyModeUI(mode);
   } catch (err) {
     console.warn("Could not switch mode:", err.message);
