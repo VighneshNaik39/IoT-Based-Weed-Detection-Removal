@@ -3,14 +3,23 @@ const esp32 = require("../config/esp32");
 
 // ==========================================
 // ESP32 API CLIENT
+//
+// baseURL is resolved fresh on every request (via mDNS, with
+// the .env IP as fallback) instead of being fixed at startup —
+// so a reboot, WiFi drop, or switch to a different hotspot
+// never leaves this client pointed at a stale IP.
 // ==========================================
 const api = axios.create({
-    baseURL: esp32.baseURL,
     timeout: 10000,
     headers: {
         "Content-Type": "application/json",
         "X-API-Key": esp32.apiKey
     }
+});
+
+api.interceptors.request.use((config) => {
+    config.baseURL = esp32.getBaseURL();
+    return config;
 });
 
 // ==========================================

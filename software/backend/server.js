@@ -18,6 +18,7 @@ const fieldRoutes = require("./routes/field");
 // ==========================================
 const loggerService = require("./services/loggerService");
 const sessionService = require("./services/sessionService");
+const mdnsDiscovery = require("./services/mdnsDiscovery");
 
 // ==========================================
 // MODULES
@@ -112,6 +113,11 @@ let control = {
 function onStartup() {
 
     sessionService.onStartup();
+
+    mdnsDiscovery.startDiscovery([
+        "weedguard-robot",
+        "weedguard-cam"
+    ]);
 
 }
 

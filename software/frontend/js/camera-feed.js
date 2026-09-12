@@ -8,12 +8,17 @@
 // ESP32 CAMERA
 // ============================================================
 
+// No hardcoded camera IP anymore — the backend resolves
+// weedguard-cam.local via mDNS and proxies the stream, so this
+// page keeps working even after the camera's IP changes or the
+// network switches (a browser usually can't resolve .local
+// names on its own, which is why this isn't done directly here).
 const ESP32_CAMERA_IP =
-    "10.128.75.113";
+    "(resolved by backend via mDNS)";
 
 
 const ESP32_STREAM_URL =
-    "http://10.128.75.113/stream";
+    "/api/detection/stream";
 
 
 // ============================================================

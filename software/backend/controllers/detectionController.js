@@ -3,6 +3,12 @@ const sessionService = require("../services/sessionService");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
+const { getIp } = require("../services/mdnsDiscovery");
+
+// Fixed hostname the camera firmware advertises via mDNS
+// (see HOSTNAME in sketch_phase5_vision.ino) — resolved fresh
+// on every stream request instead of read once from .env.
+const CAMERA_HOSTNAME = "weedguard-cam";
 
 // ==========================================
 // Detection cooldown
@@ -307,20 +313,30 @@ exports.getDetectionStream = async (req, res) => {
 
     console.log("📹 Camera stream requested");
 
-    const cameraStreamUrl =
-        process.env.CAMERA_STREAM_URL;
+    // CAMERA_STREAM_URL in .env, if set, is only used as a last
+    // resort — mDNS resolution of weedguard-cam.local is tried
+    // first so this keeps working across network changes without
+    // editing .env.
+    const fallbackIp =
+        process.env.CAMERA_STREAM_URL
+            ? new URL(process.env.CAMERA_STREAM_URL).hostname
+            : null;
+
+    const cameraIp = getIp(CAMERA_HOSTNAME, fallbackIp);
 
     // ==========================================
     // Check camera URL
     // ==========================================
-    if (!cameraStreamUrl) {
+    if (!cameraIp) {
 
         return res.status(503).json({
             success: false,
             message:
-                "Camera stream URL is not configured"
+                "Camera not found on the network yet (mDNS hasn't resolved weedguard-cam.local, and no CAMERA_STREAM_URL fallback is set)"
         });
     }
+
+    const cameraStreamUrl = `http://${cameraIp}/stream`;
 
     try {
 
