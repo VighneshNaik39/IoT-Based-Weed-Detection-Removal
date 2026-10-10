@@ -1,14 +1,14 @@
 {
-  "configured": false,
-  "widthM": null,
-  "lengthM": null,
+  "configured": true,
+  "widthM": 10,
+  "lengthM": 10,
   "mirrored": false,
   "origin": {
-    "lat": null,
-    "lng": null
+    "lat": 12.91543,
+    "lng": 74.828011
   },
   "edge": {
-    "lat": null,
-    "lng": null
+    "lat": 12.91543,
+    "lng": 74.828011
   }
 }

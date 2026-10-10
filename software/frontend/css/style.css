@@ -344,15 +344,7 @@ html, body {
 
 .kpi-bar-fill.amber-fill { background: var(--amber-500); }
 
-/* ==============================
-   MIDDLE ROW
-============================== */
-.mid-row {
-  display: grid;
-  grid-template-columns: 1fr 380px;
-  gap: 20px;
-  align-items: start;
-}
+
 
 /* ==============================
    PANELS (shared)
@@ -882,3 +874,143 @@ html, body {
 }
 
 .session-card-status.stopped { color: var(--red-600); }
+
+
+/* =========================================================
+   FINAL DASHBOARD ALIGNMENT
+   ========================================================= */
+
+/* ---------- MIDDLE SECTION ---------- */
+
+.mid-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 350px !important;
+    gap: 20px !important;
+    align-items: stretch !important;
+}
+
+/* Both middle cards have exactly the same height */
+.mid-row > .status-panel,
+.mid-row > .chart-panel {
+    height: 100% !important;
+    min-height: 245px !important;
+}
+
+/* ---------- FIELD STATUS ---------- */
+
+.status-panel {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.status-panel .status-body {
+    flex: 1 !important;
+}
+
+/* ---------- 7 DAY CHART ---------- */
+
+.chart-panel {
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.chart-panel .panel-title {
+    flex-shrink: 0 !important;
+}
+
+.chart-panel .bar-chart {
+    flex: 1 !important;
+    height: auto !important;
+    min-height: 150px !important;
+
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+
+    padding-top: 20px !important;
+    padding-bottom: 4px !important;
+}
+
+/* Make each bar consistent */
+.chart-panel .bar-wrap {
+    flex: 1 !important;
+    height: 100% !important;
+    min-width: 0 !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+}
+
+/* Don't let bars become too wide */
+.chart-panel .bar {
+    width: 55% !important;
+    min-width: 14px !important;
+    max-width: 34px !important;
+}
+
+/* ---------- BOTTOM SECTION ---------- */
+
+.bot-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 350px !important;
+    gap: 20px !important;
+    align-items: start !important;
+}
+
+/* Activity Log */
+.log-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Device Info */
+.device-panel {
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* ---------- SESSIONS ---------- */
+
+.sessions-row {
+    width: 100% !important;
+    margin-top: 0 !important;
+}
+
+.sessions-grid {
+    width: 100% !important;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1200px) {
+
+    .mid-row {
+        grid-template-columns: minmax(0, 1fr) 320px !important;
+    }
+
+    .bot-row {
+        grid-template-columns: minmax(0, 1fr) 320px !important;
+    }
+}
+
+@media (max-width: 1000px) {
+
+    .mid-row,
+    .bot-row {
+        grid-template-columns: 1fr !important;
+    }
+
+    .mid-row > .status-panel,
+    .mid-row > .chart-panel {
+        min-height: 0 !important;
+        height: auto !important;
+    }
+
+    .chart-panel .bar-chart {
+        min-height: 120px !important;
+    }
+}
