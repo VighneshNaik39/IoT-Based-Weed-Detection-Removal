@@ -1,5 +1,5 @@
 /*
-  ESP32_WeedRobot_v7_GPS.ino
+  WeedGuard_2L298N_Updated.ino
 
   Existing v7 robot firmware + NEO-6M GPS
 
@@ -9,7 +9,7 @@
   - L298N x2
   - PWM speed control
   - HC-SR04 obstacle avoidance
-  - Cutter relay
+  - Cutter relay (SAFETY-LOCKED OFF for initial movement testing)
   - Cutter safety interlock
   - Drive watchdog
   - Cutter watchdog
@@ -65,8 +65,8 @@
 // WIFI
 // ============================================================
 
-const char* ssid     = "meowww";
-const char* password = "capital v";
+const char* ssid     = "ESP32TEST";
+const char* password = "12345678";
 
 // Advertised as http://weedguard-robot.local on whatever network
 // this board joins — no IP to hardcode, works across hotspots.
@@ -78,7 +78,7 @@ const char* HOSTNAME = "weedguard-robot";
 // Must match ESP32_API_KEY in backend .env
 // ============================================================
 
-const char* API_KEY = "weedguard2026robot";
+const char* API_KEY =  "WeedGuardSecretKey2027";
 
 
 // ============================================================
@@ -108,6 +108,10 @@ const char* API_KEY = "weedguard2026robot";
 // true  = ACTIVE-LOW relay (LOW = ON, HIGH = OFF)
 // false = ACTIVE-HIGH relay (HIGH = ON, LOW = OFF)
 #define RELAY_ACTIVE_LOW false
+
+// SAFETY: keep the cutter disabled while testing movement, GPS and sensors.
+// Do not change to true until the blade is guarded and the robot is tested safely.
+#define ENABLE_CUTTER_OUTPUT false
 
 
 // ============================================================
@@ -553,6 +557,13 @@ void turnRight() {
 
 void setCutter(bool on) {
 
+  // Safety lock: requests to turn the cutter ON are ignored in this test build.
+  // OFF is always allowed so the relay is driven to its inactive state.
+  if (on && !ENABLE_CUTTER_OUTPUT) {
+    on = false;
+    Serial.println("SAFETY: cutter output disabled in this firmware build");
+  }
+
   cutterOn = on;
 
   if (RELAY_ACTIVE_LOW) {
@@ -804,7 +815,7 @@ void updateAutonomousNavigation() {
   const AutoWaypoint &target = autoWaypoints[autoWaypointIndex];
 
   autonomousTargetDistanceM =
-    gpsDistanceM(
+   gpsDistanceM(
       gpsLatitude,
       gpsLongitude,
       target.lat,

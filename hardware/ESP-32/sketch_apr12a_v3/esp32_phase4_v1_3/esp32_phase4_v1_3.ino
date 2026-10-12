@@ -64,8 +64,8 @@
 // WIFI
 // ============================================================
 
-const char* ssid     = "rcb";
-const char* password = "987654321";
+const char* ssid     = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
 
  
 // ============================================================

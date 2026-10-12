@@ -1054,12 +1054,19 @@ async function loadRobotPosition() {
 
         if (distanceEl) {
 
-            distanceEl.textContent =
-                (
-                    data.distanceCm != null
-                        ? Number(data.distanceCm).toFixed(1)
-                        : "--"
-                ) + " cm";
+            const distanceValue =
+    data.distanceCm ??
+    data.distance_cm ??
+    data.distance;
+
+distanceEl.textContent =
+    (
+        distanceValue != null &&
+        Number.isFinite(Number(distanceValue)) &&
+        Number(distanceValue) >= 0
+            ? Number(distanceValue).toFixed(1)
+            : "--"
+    ) + " cm";
 
         }
 

@@ -32,6 +32,7 @@
   justify-content: center;
 }
 
+#camera-stream,
 .camera-stream {
   display: block;
   width: 100%;
@@ -362,6 +363,7 @@
   }
 
   .camera-frame,
+  #camera-stream,
   .camera-stream {
     min-height: 380px;
   }
@@ -369,6 +371,7 @@
 
 @media (max-width: 700px) {
   .camera-frame,
+  #camera-stream,
   .camera-stream {
     min-height: 260px;
   }

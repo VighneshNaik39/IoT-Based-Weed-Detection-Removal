@@ -11,9 +11,9 @@
 // ============================================================
 // Wi-Fi CONFIG — update these if network changes
 // ============================================================
-const char* ssid       = "meowww";
-const char* password   = "capital v";
-const char* serverBase = "http://192.168.218.135:5000";
+const char* ssid       = "YOUR_WIFI_SSID";
+const char* password   = "YOUR_WIFI_PASSWORD";
+const char* serverBase = "http://BACKEND_IP_GOES_HERE:5000";
 
 WebServer server(80);
 
@@ -251,7 +251,7 @@ void pushStatus() {
   float dist = getDistanceCm();
 
   WiFiClient client;
-  if (!client.connect("192.168.218.135", 5000)) return;
+  if (!client.connect("BACKEND_IP_GOES_HERE", 5000)) return;
 
   String modeStr = autonomousMode ? "autonomous" : "manual";
 
@@ -264,7 +264,7 @@ void pushStatus() {
               + "\"connected\":true}";
 
   client.println("POST /api/esp32/status HTTP/1.1");
-  client.println("Host: 192.168.218.135:5000");
+  client.println("Host: BACKEND_IP_GOES_HERE:5000");
   client.println("Content-Type: application/json");
   client.println("Connection: close");
   client.println("Content-Length: " + String(body.length()));

@@ -1,6 +1,6 @@
 # dataset/raw/
 
-Drop unlabeled images collected from the T-SIMCAM (or a phone camera,
+Drop unlabeled images collected from the AI-Thinker ESP32-CAM (or a phone camera,
 if that's faster for initial collection) straight into this folder.
 Flat structure is fine -- no subfolders needed here.
 

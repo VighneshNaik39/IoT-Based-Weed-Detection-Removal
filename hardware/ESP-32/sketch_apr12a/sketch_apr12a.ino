@@ -1,9 +1,9 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
 
-const char* ssid = "meowww";
-const char* password = "capital v";
-const char* serverName = "http://192.168.218.135:5000/api/update";
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+const char* serverName = "http://BACKEND_IP_GOES_HERE:5000/api/update";
 
 #define LED_PIN 2
 

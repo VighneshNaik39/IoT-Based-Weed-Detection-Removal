@@ -109,7 +109,7 @@ async function setMode(mode) {
       err.message
     );
 
-    flashUnreachable();
+    alert(`⚠️ Mode change rejected:\n\n${err.message}`);
   }
 }
 
@@ -292,7 +292,7 @@ async function sendMove(command) {
   try {
 
     const res = await fetch(
-      `${BASE_URL}/api/move`,
+      `${BASE_URL}/api/robot/move`,
       {
         method: "POST",
         headers: {
@@ -341,7 +341,7 @@ async function sendStop() {
   try {
 
     const res = await fetch(
-      `${BASE_URL}/api/stop`,
+      `${BASE_URL}/api/robot/stop`,
       {
         method: "POST"
       }
@@ -442,7 +442,7 @@ async function setCutter(state) {
   try {
 
     const res = await fetch(
-      `${BASE_URL}/api/cutter`,
+      `${BASE_URL}/api/robot/cutter`,
       {
         method: "POST",
 
@@ -1155,30 +1155,19 @@ async function loadWeedStatusForBattery() {
       await res.json();
 
     // ========================================================
-    // BATTERY
+    // CUTTER STATUS
     // ========================================================
 
-    const battEl =
+    const cutterStatusEl =
       document.getElementById(
-        "st-battery"
+        "st-cutter-status"
       );
 
-    if (battEl) {
-
-      battEl.textContent =
-        (
-          data.battery ??
-          "--"
-        ) + "%";
-
-      battEl.className =
-        "status-value " +
-        (
-          data.battery != null &&
-          Number(data.battery) < 20
-            ? "warn"
-            : ""
-        );
+    if (cutterStatusEl) {
+      cutterStatusEl.textContent =
+        cutterState ? "Active (Cutting)" : "Ready (GPIO 4)";
+      cutterStatusEl.className =
+        "status-value " + (cutterState ? "warn" : "");
     }
 
     // ========================================================

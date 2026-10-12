@@ -177,7 +177,7 @@ yet set).
     "autoRemove": false,
     "robotSpeed": 200,
     "obstacleThresholdCm": 25,
-    "wifiSSID": "meowww"
+    "wifiSSID": "YOUR_WIFI_SSID"
   }
 }
 ```

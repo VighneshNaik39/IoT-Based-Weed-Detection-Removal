@@ -31,7 +31,11 @@ async function loadLogs() {
                 : "--";
 
             const isWeed = log.status === "Weed detected";
-            const moisture = log.moisture != null ? log.moisture + "%" : "--";
+            const isAi = log.source === "ai-vision";
+            const sourceText = isAi ? (log.modelVersion ? `${log.modelVersion} AI` : "YOLOv8 AI") : "ESP32 Sensor";
+            const metricText = isAi && log.confidence != null
+                ? `Conf: ${(log.confidence * 100).toFixed(0)}%`
+                : (log.moisture != null ? log.moisture + "%" : "--");
             const rowNumber = filtered.length - i;
 
             let row = `
@@ -43,8 +47,8 @@ async function loadLogs() {
                             ${isWeed ? '⚠ Weed Detected' : '✔ Clear'}
                         </span>
                     </td>
-                    <td class="logs-moisture">${moisture}</td>
-                    <td>ESP32 Sensor</td>
+                    <td class="logs-moisture">${metricText}</td>
+                    <td>${sourceText}</td>
                 </tr>`;
             table.innerHTML += row;
         });
@@ -58,9 +62,31 @@ async function loadLogs() {
     }
 }
 
+async function updateDeviceStatus() {
+    try {
+        const response = await fetch(`${BASE_URL}/api/status`);
+        if (!response.ok) throw new Error();
+        const data = await response.json();
+        const dot = document.getElementById("device-dot");
+        const text = document.getElementById("device-status-text");
+        const isConnected = data.esp32Connected === true;
+        if (dot) dot.style.background = isConnected ? "var(--green-400)" : "var(--red-500)";
+        if (text) text.textContent = isConnected ? "Connected" : "Disconnected";
+    } catch {
+        const dot = document.getElementById("device-dot");
+        const text = document.getElementById("device-status-text");
+        if (dot) dot.style.background = "var(--red-500)";
+        if (text) text.textContent = "Disconnected";
+    }
+}
+
 function applyFilter() {
     loadLogs();
 }
 
 loadLogs();
-setInterval(loadLogs, 5000);
+updateDeviceStatus();
+setInterval(() => {
+    loadLogs();
+    updateDeviceStatus();
+}, 5000);

@@ -11,7 +11,7 @@ const DEFAULT_SETTINGS = {
   autoRemove: false,
   robotSpeed: 200,          // PWM 0-255
   obstacleThresholdCm: 25,  // cm
-  wifiSSID: "meowww"
+  wifiSSID: ""
 };
 
 if (!fs.existsSync(settingsFilePath)) {

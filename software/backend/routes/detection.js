@@ -32,3 +32,5 @@ router.get(
 );
 
 module.exports = router;
+// GET /api/detection/capture
+router.get("/capture", detectionController.getDetectionCapture);

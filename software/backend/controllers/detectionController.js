@@ -5,33 +5,27 @@ const path = require("path");
 const axios = require("axios");
 const { getIp } = require("../services/mdnsDiscovery");
 
-// Fixed hostname the camera firmware advertises via mDNS
-// (see HOSTNAME in sketch_phase5_vision.ino) — resolved fresh
-// on every stream request instead of read once from .env.
-const CAMERA_HOSTNAME = "weedguard-cam";
+// Camera configuration
+const CAMERA_HOSTNAME = process.env.CAMERA_HOSTNAME || "weedguard-cam";
+const AUTOMATIC_CUTTING_ENABLED =
+    process.env.ENABLE_AUTOMATIC_CUTTING === "true";
 
-// ==========================================
 // Detection cooldown
-// ==========================================
 let lastDetectionTime = 0;
-
 const DETECTION_COOLDOWN = 4000;
 
-// How long the ESP32 should run the cutter for on each confirmed
-// detection. Passed straight through to POST /weed-detected.
+// Cutter duration
 const WEED_CUT_DURATION_MS = 3000;
 
-// ==========================================
-// Latest detection information
-// ==========================================
+// Latest detection
 let lastDetection = null;
+
 
 // ==========================================
 // POST /api/detection/weed
 // Receives detection from YOLO / AI system
 // ==========================================
 exports.handleWeedDetection = async (req, res) => {
-
     console.log("🌿 Weed detection received");
 
     const {
@@ -42,9 +36,7 @@ exports.handleWeedDetection = async (req, res) => {
         modelVersion
     } = req.body;
 
-    // ==========================================
     // Validate required fields
-    // ==========================================
     if (
         !label ||
         confidence === undefined ||
@@ -57,9 +49,7 @@ exports.handleWeedDetection = async (req, res) => {
         });
     }
 
-    // ==========================================
     // Validate label
-    // ==========================================
     if (label !== "weed") {
         return res.status(400).json({
             success: false,
@@ -67,9 +57,7 @@ exports.handleWeedDetection = async (req, res) => {
         });
     }
 
-    // ==========================================
     // Validate confidence
-    // ==========================================
     if (
         typeof confidence !== "number" ||
         confidence < 0 ||
@@ -81,32 +69,8 @@ exports.handleWeedDetection = async (req, res) => {
         });
     }
 
-    // ==========================================
-    // Detection cooldown
-    // Prevent duplicate detections
-    // ==========================================
-    const currentTime = Date.now();
-
-    if (
-        currentTime - lastDetectionTime <
-        DETECTION_COOLDOWN
-    ) {
-
-        console.log("⏳ Detection ignored due to cooldown");
-
-        return res.status(429).json({
-            success: false,
-            message: "Detection ignored due to cooldown"
-        });
-    }
-
-    lastDetectionTime = currentTime;
-
-    // ==========================================
-    // Normalize timestamp
-    // ==========================================
-    const detectionTimestamp =
-        new Date(timestamp);
+    // Validate timestamp
+    const detectionTimestamp = new Date(timestamp);
 
     if (Number.isNaN(detectionTimestamp.getTime())) {
         return res.status(400).json({
@@ -115,12 +79,21 @@ exports.handleWeedDetection = async (req, res) => {
         });
     }
 
-    const isoTimestamp =
-        detectionTimestamp.toISOString();
+    const isoTimestamp = detectionTimestamp.toISOString();
 
-    // ==========================================
+    // Prevent duplicate detections
+    const currentTime = Date.now();
+
+    if (currentTime - lastDetectionTime < DETECTION_COOLDOWN) {
+        return res.status(429).json({
+            success: false,
+            message: "Detection ignored due to cooldown"
+        });
+    }
+
+    lastDetectionTime = currentTime;
+
     // Store latest detection
-    // ==========================================
     lastDetection = {
         label: "weed",
         confidence: confidence,
@@ -129,9 +102,7 @@ exports.handleWeedDetection = async (req, res) => {
         modelVersion: modelVersion || "YOLOv8"
     };
 
-    // ==========================================
-    // Save detection to logs.json
-    // ==========================================
+    // Detection log file
     const logFile = path.join(
         __dirname,
         "../data/logs.json"
@@ -150,27 +121,21 @@ exports.handleWeedDetection = async (req, res) => {
     let logs = [];
 
     try {
-
         if (fs.existsSync(logFile)) {
-
             const data = fs.readFileSync(
                 logFile,
                 "utf8"
             );
 
-            logs = data
-                ? JSON.parse(data)
-                : [];
+            logs = data ? JSON.parse(data) : [];
 
             if (!Array.isArray(logs)) {
                 logs = [];
             }
         }
-
     } catch (error) {
-
         console.error(
-            "❌ Failed to read logs.json:",
+            "Failed to read logs.json:",
             error.message
         );
 
@@ -185,96 +150,93 @@ exports.handleWeedDetection = async (req, res) => {
     }
 
     try {
-
         fs.writeFileSync(
             logFile,
             JSON.stringify(logs, null, 2)
         );
 
-        console.log(
-            "📝 AI detection saved to logs.json"
-        );
-
+        console.log("AI detection saved to logs.json");
     } catch (error) {
-
         console.error(
-            "❌ Failed to write logs.json:",
+            "Failed to write logs.json:",
             error.message
         );
     }
-
-    // ==========================================
+        // ==========================================
     // Update current session
     // ==========================================
     try {
-
         sessionService.recordDetection({
             weed: true,
             moisture: null
         });
 
-        console.log(
-            "📊 AI detection added to current session"
-        );
-
+        console.log("AI detection added to current session");
     } catch (error) {
-
         console.error(
-            "❌ Session update failed:",
+            "Session update failed:",
             error.message
         );
     }
 
     // ==========================================
-    // Trigger weed-cut sequence
-    // Stops the robot (whatever it was doing), runs the cutter
-    // for a fixed duration, then auto-resumes autonomous
-    // navigation if that's what was interrupted. This calls the
-    // ESP32's dedicated /weed-detected endpoint rather than the
-    // raw /relay toggle, so the robot actually stops to cut
-    // instead of pulsing the blade while still driving.
+    // Automatic cutting safety
     // ==========================================
-    try {
+    let cutterTriggered = false;
 
-        const cutResponse =
-            await esp32Service.weedDetected(WEED_CUT_DURATION_MS);
+    let cutterMessage =
+        "Automatic cutting is disabled; detection was logged only.";
 
-        console.log("🔪 Weed-cut sequence triggered");
+    if (AUTOMATIC_CUTTING_ENABLED) {
+        try {
+            const robotStatus = await esp32Service.status();
 
-        console.log(
-            "ESP32 response:",
-            cutResponse
-        );
+            if (robotStatus.mode !== "autonomous") {
+                cutterMessage =
+                    "Automatic cutting skipped because the robot is not in autonomous mode.";
 
-    } catch (error) {
+            } else if (
+                robotStatus.avoiding ||
+                robotStatus.obstacle
+            ) {
+                cutterMessage =
+                    "Automatic cutting skipped during obstacle avoidance.";
 
-        console.error(
-            "❌ Failed to trigger weed-cut sequence:",
-            error.message
-        );
+            } else {
+                const cutResponse =
+                    await esp32Service.weedDetected(
+                        WEED_CUT_DURATION_MS
+                    );
+
+                cutterTriggered = true;
+
+                cutterMessage =
+                    "ESP32 accepted the weed-cut command.";
+
+                console.log(
+                    "Weed-cut sequence requested:",
+                    cutResponse
+                );
+            }
+        } catch (error) {
+            cutterMessage =
+                "Automatic cutting safety check failed: " +
+                error.message;
+
+            console.error(
+                "Automatic cutting safety check failed:",
+                error.message
+            );
+        }
     }
 
     // ==========================================
-    // Console information
+    // Detection information
     // ==========================================
-    console.log(
-        "✅ Weed detection accepted"
-    );
-
-    console.log(
-        "Confidence:",
-        confidence
-    );
-
-    console.log(
-        "Frame ID:",
-        frame_id
-    );
-
-    console.log(
-        "Model:",
-        modelVersion || "YOLOv8"
-    );
+    console.log("Weed detection accepted");
+    console.log("Confidence:", confidence);
+    console.log("Frame ID:", frame_id);
+    console.log("Model:", modelVersion || "YOLOv8");
 
     // ==========================================
     // Response
@@ -282,7 +244,9 @@ exports.handleWeedDetection = async (req, res) => {
     return res.json({
         success: true,
         message: "Weed detection logged successfully",
-        detection: lastDetection
+        detection: lastDetection,
+        cutterTriggered,
+        cutterMessage
     });
 };
 
@@ -292,169 +256,232 @@ exports.handleWeedDetection = async (req, res) => {
 // Returns latest YOLO detection
 // ==========================================
 exports.getDetectionStatus = (req, res) => {
-
     return res.json({
         success: true,
         detection: lastDetection
     });
 };
-
-
 // ==========================================
-// GET /api/detection/stream
-//
-// Proxies the live ESP32-S3-CAM/MJPEG stream
-// to the frontend.
-//
-// .env:
-// CAMERA_STREAM_URL=http://ESP32_CAMERA_IP/stream
+// SHARED UPSTREAM MJPEG STREAM PROXY
 // ==========================================
-exports.getDetectionStream = async (req, res) => {
+// Multiplexes the single ESP32-CAM MJPEG stream across multiple consumers
+// (browser dashboard, multiple tabs, and Python YOLO detection pipeline)
+// to prevent starving the single-threaded ESP32-CAM stream listener.
 
-    console.log("📹 Camera stream requested");
+let activeUpstreamStream = null;
+let isConnectingUpstream = false;
+let upstreamContentType = "multipart/x-mixed-replace; boundary=frame";
+const activeStreamClients = new Set();
 
-    // CAMERA_STREAM_URL in .env, if set, is only used as a last
-    // resort — mDNS resolution of weedguard-cam.local is tried
-    // first so this keeps working across network changes without
-    // editing .env.
-    const fallbackIp =
-        process.env.CAMERA_STREAM_URL
-            ? new URL(process.env.CAMERA_STREAM_URL).hostname
-            : null;
-
-    const cameraIp = getIp(CAMERA_HOSTNAME, fallbackIp);
-
-    // ==========================================
-    // Check camera URL
-    // ==========================================
-    if (!cameraIp) {
-
-        return res.status(503).json({
-            success: false,
-            message:
-                "Camera not found on the network yet (mDNS hasn't resolved weedguard-cam.local, and no CAMERA_STREAM_URL fallback is set)"
-        });
+function resolveCameraStreamUrl() {
+    if (process.env.CAMERA_STREAM_URL) {
+        try {
+            return new URL(process.env.CAMERA_STREAM_URL).toString();
+        } catch (e) {
+            return process.env.CAMERA_STREAM_URL;
+        }
     }
 
-    const cameraStreamUrl = `http://${cameraIp}/stream`;
+    const discoveredIp = getIp(CAMERA_HOSTNAME, undefined);
+    if (discoveredIp) {
+        return `http://${discoveredIp}:81/stream`;
+    }
+
+    return null;
+}
+
+async function connectSharedUpstream() {
+    if (activeUpstreamStream || isConnectingUpstream || activeStreamClients.size === 0) {
+        return;
+    }
+
+    const cameraStreamUrl = resolveCameraStreamUrl();
+    if (!cameraStreamUrl) {
+        console.error("Camera stream URL could not be resolved");
+        return;
+    }
+
+    isConnectingUpstream = true;
+    console.log("Connecting shared camera stream to:", cameraStreamUrl);
 
     try {
+        const response = await axios.get(cameraStreamUrl, {
+            responseType: "stream",
+            timeout: 8000,
+            headers: {
+                Accept: "multipart/x-mixed-replace, image/jpeg"
+            },
+            validateStatus: status => status >= 200 && status < 300
+        });
+
+        activeUpstreamStream = response.data;
+        isConnectingUpstream = false;
+
+        if (response.headers["content-type"]) {
+            upstreamContentType = response.headers["content-type"];
+        }
+
+        console.log("Shared camera stream connected to ESP32-CAM");
+
+        activeUpstreamStream.on("data", chunk => {
+            for (const clientRes of activeStreamClients) {
+                if (!clientRes.writableEnded && !clientRes.destroyed) {
+                    clientRes.write(chunk);
+                }
+            }
+        });
+
+        const handleUpstreamClose = () => {
+            if (activeUpstreamStream) {
+                activeUpstreamStream.removeAllListeners();
+                activeUpstreamStream = null;
+            }
+            isConnectingUpstream = false;
+            console.log("Shared camera stream upstream closed");
+
+            if (activeStreamClients.size > 0) {
+                setTimeout(connectSharedUpstream, 1000);
+            }
+        };
+
+        activeUpstreamStream.on("end", handleUpstreamClose);
+        activeUpstreamStream.on("error", err => {
+            console.error("Shared camera stream upstream error:", err.message);
+            handleUpstreamClose();
+        });
+
+    } catch (error) {
+        isConnectingUpstream = false;
+        activeUpstreamStream = null;
+        console.error("Failed to connect shared camera stream:", error.message);
+
+        if (activeStreamClients.size > 0) {
+            setTimeout(connectSharedUpstream, 2000);
+        }
+    }
+}
+
+exports.getDetectionStream = (req, res) => {
+    console.log(`Camera stream client connected (total active: ${activeStreamClients.size + 1})`);
+
+    res.status(200);
+    res.setHeader("Content-Type", upstreamContentType);
+    res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("X-Accel-Buffering", "no");
+
+    activeStreamClients.add(res);
+
+    res.on("close", () => {
+        activeStreamClients.delete(res);
+        console.log(`Camera stream client disconnected (remaining: ${activeStreamClients.size})`);
+
+        if (activeStreamClients.size === 0 && activeUpstreamStream) {
+            console.log("All camera stream clients disconnected; closing upstream stream");
+            activeUpstreamStream.destroy();
+            activeUpstreamStream = null;
+        }
+    });
+
+    connectSharedUpstream();
+};
+// ==========================================
+// GET /api/detection/capture
+// Returns a single JPEG image from ESP32-CAM
+// ==========================================
+exports.getDetectionCapture = async (req, res) => {
+    try {
+        let cameraUrl;
+
+        if (process.env.CAMERA_STREAM_URL) {
+            const streamUrl = new URL(
+                process.env.CAMERA_STREAM_URL
+            );
+
+            // The ESP32-CAM serves captures on port 80.
+            streamUrl.port = "80";
+            streamUrl.pathname = "/capture";
+            streamUrl.search = "";
+
+            cameraUrl = streamUrl.toString();
+
+        } else {
+            const discoveredIp = getIp(
+                CAMERA_HOSTNAME,
+                undefined
+            );
+
+            if (!discoveredIp) {
+                return res.status(503).json({
+                    success: false,
+                    message: "Camera not discovered yet"
+                });
+            }
+
+            cameraUrl =
+                `http://${discoveredIp}/capture`;
+        }
 
         console.log(
-            "📡 Connecting to camera:",
-            cameraStreamUrl
+            "Requesting camera capture:",
+            cameraUrl
         );
 
-        const response = await axios.get(
-            cameraStreamUrl,
+        const upstream = await axios.get(
+            cameraUrl,
             {
                 responseType: "stream",
-                timeout: 10000
+                timeout: 8000
             }
         );
 
-        // ==========================================
-        // Forward content type
-        // ==========================================
-        if (response.headers["content-type"]) {
+        res.setHeader(
+            "Content-Type",
+            upstream.headers["content-type"] ||
+            "image/jpeg"
+        );
 
-            res.setHeader(
-                "Content-Type",
-                response.headers["content-type"]
-            );
-
-        } else {
-
-            res.setHeader(
-                "Content-Type",
-                "multipart/x-mixed-replace"
-            );
-        }
-
-        // ==========================================
-        // Prevent caching
-        // ==========================================
         res.setHeader(
             "Cache-Control",
             "no-cache, no-store, must-revalidate"
         );
 
-        res.setHeader(
-            "Pragma",
-            "no-cache"
-        );
+        upstream.data.pipe(res);
 
-        res.setHeader(
-            "Connection",
-            "keep-alive"
-        );
-
-        // ==========================================
-        // Pipe camera stream
-        // ==========================================
-        response.data.pipe(res);
-
-        // ==========================================
-        // Camera stream error
-        // ==========================================
-        response.data.on(
-            "error",
-            (error) => {
-
-                console.error(
-                    "❌ Camera stream error:",
-                    error.message
-                );
-
-                if (!res.headersSent) {
-
-                    res.status(502).json({
-                        success: false,
-                        message:
-                            "Camera stream connection failed"
-                    });
-
-                } else {
-
-                    res.end();
-                }
+        // Clean up if the browser disconnects.
+        res.on("close", () => {
+            if (!upstream.data.destroyed) {
+                upstream.data.destroy();
             }
-        );
+        });
 
-        // ==========================================
-        // Frontend disconnected
-        // ==========================================
-        req.on(
-            "close",
-            () => {
+        upstream.data.on("error", error => {
+            console.error(
+                "Camera capture stream error:",
+                error.message
+            );
 
-                console.log(
-                    "📴 Camera stream client disconnected"
-                );
-
-                if (
-                    response.data &&
-                    typeof response.data.destroy === "function"
-                ) {
-                    response.data.destroy();
-                }
+            if (!res.writableEnded) {
+                res.destroy(error);
             }
-        );
+        });
 
     } catch (error) {
-
         console.error(
-            "❌ Unable to connect to camera:",
+            "Camera capture failed:",
             error.message
         );
 
         if (!res.headersSent) {
-
             return res.status(502).json({
                 success: false,
                 message:
-                    "Unable to connect to camera stream"
+                    `Camera capture failed: ${error.message}`
             });
+        }
+
+        if (!res.writableEnded) {
+            res.end();
         }
     }
 };

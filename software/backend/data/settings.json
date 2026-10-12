@@ -4,5 +4,5 @@
   "autoRemove": false,
   "robotSpeed": 200,
   "obstacleThresholdCm": 25,
-  "wifiSSID": "meowww"
+  "wifiSSID": "ESP32TEST"
 }

@@ -1,7 +1,7 @@
 """
 detect_stream.py -- WeedGuard Phase 5 (Member 3)
 
-Reads the MJPEG stream served by the ESP32-S3 T-SIMCAM, runs YOLOv8
+Reads the MJPEG stream served by the AI-Thinker ESP32-CAM, runs YOLOv8
 inference at roughly 1 FPS, and calls the backend's
 POST /api/detection/weed when a weed is confirmed above the confidence
 threshold.
@@ -10,7 +10,7 @@ The laptop performs the heavy YOLO inference. The ESP32 boards remain
 lightweight.
 
 Flow:
-    ESP32-S3 camera
+    AI-Thinker ESP32-CAM
         -> MJPEG /stream
         -> this Python script
         -> YOLOv8
@@ -19,6 +19,7 @@ Flow:
 """
 
 import argparse
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -42,57 +43,70 @@ def log(msg: str) -> None:
 
 
 class MJPEGStream:
-    """
-    Reads JPEG frames from an HTTP MJPEG stream.
-
-    This avoids OpenCV's VideoCapture because some ESP32-S3
-    MJPEG streams are not handled reliably by OpenCV/FFmpeg.
-    """
+    """Incrementally decode JPEG frames from an HTTP MJPEG response."""
 
     def __init__(self, response):
         self.response = response
-        self.buffer = b""
+        self.buffer = bytearray()
+        # Keep one iterator for the lifetime of the response. Recreating it
+        # for each read can cause unreliable reads with some HTTP streams.
+        self.chunks = response.iter_content(chunk_size=1024, decode_unicode=False)
+        self.closed = False
 
     def read(self):
+        if self.closed:
+            return False, None
+
         try:
-            for chunk in self.response.iter_content(chunk_size=4096):
-                if not chunk:
-                    continue
-
-                self.buffer += chunk
-
-                while True:
-                    start = self.buffer.find(b"\xff\xd8")
-
-                    if start == -1:
-                        if len(self.buffer) > 1024 * 1024:
-                            self.buffer = self.buffer[-65536:]
-                        break
-
+            while True:
+                # Locate a complete JPEG frame (SOI ... EOI).
+                start = self.buffer.find(b"\xff\xd8")
+                if start >= 0:
                     end = self.buffer.find(b"\xff\xd9", start + 2)
+                    if end >= 0:
+                        jpg = bytes(self.buffer[start:end + 2])
+                        del self.buffer[:end + 2]
+                        frame = cv2.imdecode(
+                            np.frombuffer(jpg, dtype=np.uint8),
+                            cv2.IMREAD_COLOR,
+                        )
+                        if frame is not None:
+                            return True, frame
+                        # Ignore malformed JPEG data and continue searching.
+                        continue
 
-                    if end == -1:
-                        if start > 0:
-                            self.buffer = self.buffer[start:]
-                        break
+                    # Discard multipart headers/garbage before the JPEG start.
+                    if start > 0:
+                        del self.buffer[:start]
+                elif len(self.buffer) > 65536:
+                    # Keep a bounded tail if no JPEG start marker was found.
+                    del self.buffer[:-65536]
 
-                    jpg = self.buffer[start:end + 2]
-                    self.buffer = self.buffer[end + 2:]
+                chunk = next(self.chunks, None)
+                if chunk is None:
+                    log("Camera MJPEG stream ended")
+                    self.release()
+                    return False, None
+                if chunk:
+                    self.buffer.extend(chunk)
 
-                    frame = cv2.imdecode(
-                        np.frombuffer(jpg, dtype=np.uint8),
-                        cv2.IMREAD_COLOR,
-                    )
-
-                    if frame is not None:
-                        return True, frame
+                if len(self.buffer) > 4 * 1024 * 1024:
+                    log("MJPEG buffer exceeded 4 MB; resetting buffer")
+                    self.buffer.clear()
 
         except requests.RequestException as exc:
-            log(f"camera stream request failed: {exc}")
-
-        return False, None
+            log(f"Camera stream request failed: {exc}")
+            self.release()
+            return False, None
+        except Exception as exc:
+            log(f"MJPEG frame reader error: {exc}")
+            self.release()
+            return False, None
 
     def release(self):
+        if self.closed:
+            return
+        self.closed = True
         try:
             self.response.close()
         except Exception:
@@ -247,7 +261,20 @@ class Detector:
     # YOLO INFERENCE
     # ------------------------------------------------------------
 
+    def report_scan(self):
+        """Increment the dashboard scan counter without blocking detection."""
+        try:
+            self.session.post(
+                f"{self.args.backend_url}/api/detection/scan",
+                json={"frame_id": self.frame_id, "timestamp": datetime.now(timezone.utc).isoformat()},
+                timeout=0.5,
+            )
+        except requests.RequestException:
+            # Scan reporting is best-effort; it must never stop the detector.
+            pass
+
     def process_frame(self, frame):
+        self.report_scan()
         try:
             results = self.model.predict(
                 source=frame,
@@ -496,13 +523,8 @@ def parse_args():
 
     ap.add_argument(
         "--cam-url",
-        required=True,
-        help=(
-            "MJPEG stream URL served by "
-            "the ESP32-S3 camera. "
-            "Example: "
-            "http://192.168.152.113/stream"
-        ),
+        default=os.getenv("CAMERA_STREAM_URL", "http://localhost:5000/api/detection/stream"),
+        help="Camera MJPEG URL. Defaults to the backend camera proxy; override with --cam-url if needed.",
     )
 
     ap.add_argument(
@@ -516,10 +538,8 @@ def parse_args():
 
     ap.add_argument(
         "--backend-url",
-        default="http://localhost:5000",
-        help=(
-            "Node backend base URL."
-        ),
+        default=os.getenv("BACKEND_URL", "http://localhost:5000").rstrip("/"),
+        help="Node backend base URL.",
     )
 
     ap.add_argument(
@@ -564,10 +584,10 @@ def parse_args():
     ap.add_argument(
         "--safety-check",
         action="store_true",
-        default=True,
+        default=False,
         help=(
-            "Check robot status before "
-            "triggering. Default: ON."
+            "Optionally require a safe robot status before posting a detection. "
+            "The backend independently gates physical cutter activation."
         ),
     )
 
@@ -576,14 +596,14 @@ def parse_args():
         dest="safety_check",
         action="store_false",
         help=(
-            "Disable robot safety check."
+            "Do not require robot status before logging detections (default)."
         ),
     )
 
     ap.add_argument(
         "--timeout",
         type=float,
-        default=5.0,
+        default=20.0,
         help=(
             "HTTP connection/read timeout "
             "in seconds."
@@ -611,10 +631,11 @@ def main():
 
     if not weights_path.exists():
         log(
-            f"ERROR: weights file not found: "
-            f"{weights_path}"
+            f"ERROR: trained weights file not found: {weights_path}\n"
+            "Train a model first: cd software/ai-vision/scripts; "
+            "python train.py --weights yolov8n.pt. "
+            "The base YOLO checkpoint is downloaded by Ultralytics when internet is available."
         )
-
         sys.exit(1)
 
     args.weights = str(

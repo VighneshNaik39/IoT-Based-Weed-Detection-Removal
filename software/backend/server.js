@@ -1,6 +1,31 @@
-// ==========================================
+// ============================================================
+// WEEDGUARD BACKEND
+// ESP32 Robot + ESP32-CAM + Dashboard + Detection
+// ============================================================
+
+// Load environment variables
+require("dotenv").config();
+
+// ============================================================
+// BUILT-IN MODULES
+// ============================================================
+
+const fs = require("fs");
+
+const http = require("http");
+const path = require("path");
+
+// ============================================================
+// EXTERNAL MODULES
+// ============================================================
+
+const express = require("express");
+const cors = require("cors");
+
+// ============================================================
 // ROUTES
-// ==========================================
+// ============================================================
+
 const movementRoutes = require("./routes/movement");
 const modeRoutes = require("./routes/mode");
 const cutterRoutes = require("./routes/cutter");
@@ -13,74 +38,100 @@ const detectionRoutes = require("./routes/detection");
 const gpsRoutes = require("./routes/gps");
 const fieldRoutes = require("./routes/field");
 
-// ==========================================
+// ============================================================
 // SERVICES
-// ==========================================
+// ============================================================
+
 const loggerService = require("./services/loggerService");
 const sessionService = require("./services/sessionService");
+const esp32Service = require("./services/esp32Service");
 const mdnsDiscovery = require("./services/mdnsDiscovery");
 
-// ==========================================
-// MODULES
-// ==========================================
-const express = require("express");
-const cors = require("cors");
+// ============================================================
+// EXPRESS APPLICATION
+// ============================================================
 
-// ==========================================
-// APP
-// ==========================================
 const app = express();
 
-// ==========================================
+// ============================================================
 // MIDDLEWARE
-// ==========================================
+// ============================================================
+
 app.use(cors());
+
 app.use(express.json());
 
-// ==========================================
-// ROUTE MOUNTING
-// ==========================================
-app.use("/api/move", movementRoutes);
-app.use("/api/stop", stopRoutes);
-app.use("/api/mode", modeRoutes);
-app.use("/api/cutter", cutterRoutes);
-app.use("/api/detection", detectionRoutes);
-app.use("/api/gps", gpsRoutes);
-app.use("/api/field", fieldRoutes);
+// ============================================================
+// CONFIGURATION
+// ============================================================
 
-// Robot status/mode live under /api/robot
-app.use("/api/robot", robotRoutes);
+// ESP32-CAM IP address
+// Change this if the camera receives a different IP.
 
-app.use("/api/settings", settingsRoutes);
-app.use("/api/logs", logsRoutes);
-app.use("/api", apiContractRoutes);
+// No hard-coded IP: resolved via CAMERA_STREAM_URL, mDNS (weedguard-cam),
+// or the optional ESP32_CAMERA_IP fallback in .env.
+const { getIp } = require("./services/mdnsDiscovery");
+const detectionController = require("./controllers/detectionController");
 
-// ==========================================
-// FRONTEND
-// ==========================================
-app.use(express.static(__dirname + "/../frontend"));
+const CAMERA_HOSTNAME = process.env.CAMERA_HOSTNAME || "weedguard-cam";
 
-// ==========================================
+function resolveCameraIp() {
+    if (process.env.CAMERA_STREAM_URL) {
+        try {
+            return new URL(process.env.CAMERA_STREAM_URL).hostname;
+        } catch (e) { /* fall through */ }
+    }
+    return getIp(
+        CAMERA_HOSTNAME,
+        (process.env.ESP32_CAMERA_IP || "").trim() || undefined
+    );
+}
+
+// ESP32-CAM MJPEG stream port
+const ESP32_CAMERA_PORT = 81;
+
+// Camera stream endpoint
+const ESP32_CAMERA_STREAM_PATH = "/stream";
+
+// Robot connection timeout
+const ESP32_TIMEOUT_MS = 15000;
+
+// Backend port
+const PORT = Number(process.env.PORT || 5000);
+
+// ============================================================
+// FRONTEND STATIC FILES
+// ============================================================
+
+app.use(
+    express.static(
+        path.join(__dirname, "../frontend")
+    )
+);
+
+// ============================================================
 // LOGGER SERVICE
-// ==========================================
+// ============================================================
+
 const { readLogs, writeLogs } = loggerService;
 
-// ==========================================
-// LIVE STATE
-// ==========================================
+// ============================================================
+// LIVE ROBOT DATA
+// ============================================================
+
 let latestData = {
     status: "No weed detected",
     moisture: null,
+    battery: null,
     time: null
 };
 
 let lastDataReceivedAt = null;
 
-const ESP32_TIMEOUT_MS = 15000;
+// ============================================================
+// ROBOT CONNECTION STATUS
+// ============================================================
 
-// ==========================================
-// CHECK ESP32 CONNECTION
-// ==========================================
 function isESP32Connected() {
 
     if (!lastDataReceivedAt) {
@@ -93,121 +144,245 @@ function isESP32Connected() {
     );
 }
 
-// ==========================================
-// DASHBOARD SESSION STATS
-// ==========================================
+// ============================================================
+// DASHBOARD SESSION STATISTICS
+// ============================================================
+
+function localDateKey() {
+
+    const now = new Date();
+
+    return (
+        `${now.getFullYear()}-` +
+        `${String(now.getMonth() + 1).padStart(2, "0")}-` +
+        `${String(now.getDate()).padStart(2, "0")}`
+    );
+}
+
 let sessionStats = {
     scansToday: 0,
-    weedsDetected: 0,
-    weedsRemoved: 0
+    scanDate: localDateKey()
 };
+
+// ============================================================
+// ROBOT CONTROL STATE
+// ============================================================
 
 let control = {
     autoMode: true,
     removal: false
 };
+// ============================================================
+// ESP32-CAM MJPEG STREAM PROXY
+// ============================================================
 
-// ==========================================
-// 🚀 ON STARTUP
-// ==========================================
-function onStartup() {
+// Same discovery/proxy logic as /api/detection/stream, so the dashboard
+// and the YOLO script always reach the camera the same way.
+app.get("/api/camera/stream", detectionController.getDetectionStream);
 
-    sessionService.onStartup();
+// ============================================================
+// ESP32-CAM STATUS API
+// ============================================================
 
-    mdnsDiscovery.startDiscovery([
-        "weedguard-robot",
-        "weedguard-cam"
-    ]);
+app.get("/api/camera/status", (req, res) => {
+    console.log("Checking ESP32-CAM status...");
 
-}
+    const cameraIp = resolveCameraIp();
 
-// ==========================================
-// 🛑 ON SHUTDOWN
-// ==========================================
-function onShutdown(signal) {
+    if (!cameraIp) {
+        return res.status(503).json({
+            success: false,
+            cameraConnected: false,
+            error: "Camera not discovered yet (mDNS) and no fallback configured"
+        });
+    }
 
-    console.log(
-        `\n🛑 ${signal} received — completing session before exit...`
+    const cameraUrl = `http://${cameraIp}/status`;
+
+    const cameraRequest = http.get(
+        cameraUrl,
+        {
+            timeout: 5000
+        },
+        (cameraResponse) => {
+            let body = "";
+
+            cameraResponse.setEncoding("utf8");
+
+            cameraResponse.on("data", (chunk) => {
+                body += chunk;
+            });
+
+            cameraResponse.on("end", () => {
+                if (cameraResponse.statusCode !== 200) {
+                    return res.status(502).json({
+                        success: false,
+                        cameraConnected: false,
+                        error: `ESP32-CAM returned HTTP ${cameraResponse.statusCode}`
+                    });
+                }
+
+                try {
+                    const cameraData = JSON.parse(body);
+
+                    return res.status(200).json({
+                        success: true,
+                        cameraConnected: true,
+                        camera: cameraData.board || "ESP32-CAM",
+                        ip: cameraData.ip || cameraIp,
+                        streamUrl: "/api/camera/stream"
+                    });
+
+                } catch (error) {
+                    console.error(
+                        "Invalid camera status response:",
+                        error.message
+                    );
+
+                    return res.status(502).json({
+                        success: false,
+                        cameraConnected: false,
+                        error: "Invalid JSON received from ESP32-CAM"
+                    });
+                }
+            });
+        }
     );
 
-    sessionService.completeCurrentSession();
+    cameraRequest.on("error", (error) => {
+        console.error(
+            "ESP32-CAM status request failed:",
+            error.message
+        );
 
-    process.exit(0);
-}
+        if (!res.headersSent) {
+            res.status(502).json({
+                success: false,
+                cameraConnected: false,
+                error: "Cannot connect to ESP32-CAM"
+            });
+        }
+    });
 
-// ==========================================
-// PROCESS SHUTDOWN HANDLERS
-// ==========================================
-process.on(
-    "SIGINT",
-    () => onShutdown("SIGINT")
-);
+    cameraRequest.on("timeout", () => {
+        cameraRequest.destroy(
+            new Error("ESP32-CAM status request timed out")
+        );
+    });
+});
+// ============================================================
+// ROUTE REGISTRATION
+// ============================================================
 
-process.on(
-    "SIGTERM",
-    () => onShutdown("SIGTERM")
-);
+app.use("/api/move", movementRoutes);
+app.use("/api/stop", stopRoutes);
+app.use("/api/mode", modeRoutes);
+app.use("/api/cutter", cutterRoutes);
 
-// ==========================================
-// 🏠 HOME
-// ==========================================
+app.use("/api/detection", detectionRoutes);
+app.use("/api/gps", gpsRoutes);
+app.use("/api/field", fieldRoutes);
+
+app.use("/api/robot", robotRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/logs", logsRoutes);
+
+app.use("/api", apiContractRoutes);
+
+// ============================================================
+// HOME PAGE
+// ============================================================
+
 app.get("/", (req, res) => {
 
     res.sendFile(
-        __dirname + "/../frontend/index.html"
+        path.join(__dirname, "../frontend/index.html")
     );
-
 });
 
-// ==========================================
-// API DATA
-// ==========================================
+// ============================================================
+// BASIC API TEST
+// ============================================================
+
 app.get("/api/data", (req, res) => {
 
     res.json({
-        message: "Hello ESP32 👋",
-        status: "Server running"
+        success: true,
+        message: "WeedGuard backend is running"
     });
-
 });
+// ============================================================
+// ROBOT STATUS
+// ============================================================
 
-// ==========================================
-// 📊 STATUS
-// ==========================================
-app.get("/api/status", (req, res) => {
+app.get("/api/status", async (req, res) => {
 
     const logs = readLogs();
 
+    const newestLog =
+        logs.length > 0 ? logs[0] : null;
+
+    const newestLogTime = newestLog
+        ? Date.parse(
+            newestLog.time ||
+            newestLog.timestamp ||
+            ""
+        )
+        : NaN;
+
+    const newestDetectionIsFresh =
+        newestLog &&
+        newestLog.source === "ai-vision" &&
+        Number.isFinite(newestLogTime) &&
+        Date.now() - newestLogTime < 15000;
+
     const currentData =
-        logs.length > 0
-            ? logs[0]
+        newestDetectionIsFresh
+            ? newestLog
             : latestData;
+
+    let robotConnected = false;
+
+    try {
+
+        await esp32Service.ping();
+
+        robotConnected = true;
+        lastDataReceivedAt = Date.now();
+
+    } catch (error) {
+
+        robotConnected = isESP32Connected();
+    }
+
+    const currentSession =
+        sessionService.getCurrentSession() || {};
 
     res.json({
 
         ...currentData,
 
-        scansToday:
-            sessionStats.scansToday,
+        scansToday: sessionStats.scansToday,
 
         weedsDetected:
-            sessionStats.weedsDetected,
+            currentSession.totalDetections || 0,
 
-        weedsRemoved:
-            sessionStats.weedsRemoved,
+        // Removal is not independently verified.
+        weedsRemoved: 0,
+        removalCountVerified: false,
 
-        battery: 80,
+        battery: latestData.battery ?? null,
 
-        esp32Connected:
-            isESP32Connected()
+        esp32Connected: robotConnected
 
     });
 
 });
 
-// ==========================================
-// 📋 GET SESSIONS
-// ==========================================
+// ============================================================
+// GET RECENT SESSIONS
+// ============================================================
+
 app.get("/api/sessions", (req, res) => {
 
     const sessions =
@@ -217,71 +392,126 @@ app.get("/api/sessions", (req, res) => {
 
 });
 
-// ==========================================
-// 🔥 UPDATE FROM ESP32
-// ==========================================
+// ============================================================
+// RESET ALL SESSIONS & LOGS (RESET TO 0)
+// ============================================================
+
+app.post("/api/sessions/reset", (req, res) => {
+    try {
+        // Start a fresh Session 1 and clear the persisted activity history.
+        sessionService.resetAllSessions();
+        sessionStats.scansToday = 0;
+        sessionStats.scanDate = localDateKey();
+
+        const logFile = path.join(__dirname, "data", "logs.json");
+        fs.writeFileSync(logFile, "[]", "utf8");
+
+        // Do not keep stale sensor/detection values visible after the reset.
+        latestData = {
+            status: "No weed detected",
+            moisture: null,
+            battery: null,
+            time: null
+        };
+        lastDataReceivedAt = null;
+
+        console.log("Sessions and logs successfully reset. New Session 1 is active.");
+        return res.json({
+            success: true,
+            message: "Session history and logs cleared. Counters reset to 0; Session 1 started."
+        });
+    } catch (error) {
+        console.error("Reset error:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Failed to reset sessions: " + error.message
+        });
+    }
+});
+
+// ============================================================
+// RECORD DETECTION SCAN
+// ============================================================
+
+app.post("/api/detection/scan", (req, res) => {
+
+    const today = localDateKey();
+
+    if (sessionStats.scanDate !== today) {
+
+        sessionStats.scansToday = 0;
+        sessionStats.scanDate = today;
+
+    }
+
+    sessionStats.scansToday += 1;
+
+    res.status(202).json({
+
+        success: true,
+
+        scansToday: sessionStats.scansToday
+
+    });
+
+});
+
+// ============================================================
+// RECEIVE DATA FROM ESP32
+// ============================================================
+
 app.post("/api/update", (req, res) => {
 
     const {
         weed,
-        moisture
+        moisture,
+        battery
     } = req.body;
 
-    // ------------------------------------------
-    // Validate weed value
-    // ------------------------------------------
+    // Validate the weed detection value.
     if (typeof weed !== "boolean") {
 
         return res.status(400).json({
-            error: "Invalid or missing 'weed' value"
+
+            success: false,
+
+            error: "Invalid or missing weed value"
+
         });
 
     }
 
-    // ------------------------------------------
-    // ESP32 is connected
-    // ------------------------------------------
+    // Update the last communication time.
     lastDataReceivedAt = Date.now();
 
-    // ------------------------------------------
-    // Create latest data
-    // ------------------------------------------
+    // Prepare current robot data.
     const data = {
 
-        status:
-            weed
-                ? "Weed detected"
-                : "No weed detected",
+        status: weed
+            ? "Weed detected"
+            : "No weed detected",
 
         moisture:
-            moisture ?? null,
+            typeof moisture === "number" &&
+            Number.isFinite(moisture)
+                ? moisture
+                : null,
 
-        time:
-            new Date().toISOString()
+        battery:
+            typeof battery === "number" &&
+            Number.isFinite(battery) &&
+            battery >= 0 &&
+            battery <= 100
+                ? battery
+                : null,
+
+        time: new Date().toISOString()
 
     };
 
     latestData = data;
 
-    // ------------------------------------------
-    // Dashboard statistics
-    // ------------------------------------------
-    sessionStats.scansToday++;
-
-    if (weed) {
-
-        sessionStats.weedsDetected++;
-
-        sessionStats.weedsRemoved =
-            Math.floor(
-                sessionStats.weedsDetected * 0.7
-            );
-
-    }
-
-    // ------------------------------------------
-    // UPDATE SHARED SESSION
-    // ------------------------------------------
+    // Record detection in the current session.
     sessionService.recordDetection({
 
         weed: weed,
@@ -290,9 +520,7 @@ app.post("/api/update", (req, res) => {
 
     });
 
-    // ------------------------------------------
-    // Save ESP32 log
-    // ------------------------------------------
+    // Save the ESP32 log.
     const logs = readLogs();
 
     logs.unshift(data);
@@ -303,23 +531,20 @@ app.post("/api/update", (req, res) => {
 
     writeLogs(logs);
 
-    // ------------------------------------------
-    // Console
-    // ------------------------------------------
-    console.log(
-        "📥 DATA RECEIVED:",
-        data
-    );
+    console.log("📥 DATA RECEIVED:", data);
 
-    return res.json({
+    res.json({
+
         success: true
+
     });
 
 });
 
-// ==========================================
-// ⚙️ CONTROL
-// ==========================================
+// ============================================================
+// UPDATE DASHBOARD CONTROL STATE
+// ============================================================
+
 app.post("/api/control", (req, res) => {
 
     control = req.body;
@@ -330,25 +555,106 @@ app.post("/api/control", (req, res) => {
     );
 
     res.json({
+
         success: true,
+
         control
+
     });
 
 });
+// ============================================================
+// STARTUP
+// ============================================================
 
-// ==========================================
-// 🚀 START SERVER
-// ==========================================
+function onStartup() {
+
+    console.log("======================================");
+    console.log("       WEEDGUARD BACKEND");
+    console.log("======================================");
+
+    console.log("Camera host:", CAMERA_HOSTNAME + ".local (mDNS) or .env fallback");
+
+    sessionService.onStartup();
+
+    mdnsDiscovery.startDiscovery([
+        "weedguard-robot",
+        "weedguard-cam"
+    ]);
+}
+
+// ============================================================
+// SHUTDOWN
+// ============================================================
+
+function onShutdown(signal) {
+
+    console.log(
+        `\n${signal} received. Shutting down WeedGuard...`
+    );
+
+    try {
+        sessionService.completeCurrentSession();
+    } catch (error) {
+        console.error(
+            "Session shutdown error:",
+            error.message
+        );
+    }
+
+    process.exit(0);
+}
+
+// ============================================================
+// PROCESS SIGNAL HANDLERS
+// ============================================================
+
+process.on("SIGINT", () => {
+    onShutdown("SIGINT");
+});
+
+process.on("SIGTERM", () => {
+    onShutdown("SIGTERM");
+});
+
+// ============================================================
+// START EXPRESS SERVER
+// ============================================================
+
 onStartup();
 
-app.listen(
-    5000,
-    "0.0.0.0",
-    () => {
+const server = app.listen(PORT, "0.0.0.0", () => {
 
-        console.log(
-            "🚀 Server running on http://localhost:5000"
+    console.log("--------------------------------------");
+
+    console.log(
+        `Backend running at http://localhost:${PORT}`
+    );
+
+    console.log(
+        `Camera proxy: http://localhost:${PORT}/api/camera/stream`
+    );
+
+    console.log("--------------------------------------");
+
+});
+
+// ============================================================
+// SERVER ERROR HANDLING
+// ============================================================
+
+server.on("error", (error) => {
+
+    console.error(
+        "Backend server error:",
+        error.message
+    );
+
+    if (error.code === "EADDRINUSE") {
+
+        console.error(
+            `Port ${PORT} is already in use.`
         );
 
     }
-);
+});

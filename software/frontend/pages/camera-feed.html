@@ -726,6 +726,14 @@
             </a>
 
 
+            <p
+                class="nav-section-label"
+                style="margin-top:24px"
+            >
+                SYSTEM
+            </p>
+
+
             <a
                 href="/pages/camera-feed.html"
                 class="nav-item active"
@@ -736,14 +744,6 @@
 
                 Camera Feed
             </a>
-
-
-            <p
-                class="nav-section-label"
-                style="margin-top:24px"
-            >
-                SYSTEM
-            </p>
 
 
             <a
@@ -809,7 +809,7 @@
             <div>
 
                 <p class="device-name">
-                    ESP32-S3 Camera
+                    ESP32-CAM Camera
                 </p>
 
 
@@ -852,7 +852,7 @@
 
 
                 <p class="topbar-sub">
-                    Live ESP32-S3 OV5640 stream · YOLOv8 weed detection
+                    Live AI-Thinker ESP32-CAM stream · YOLOv8 weed detection
                 </p>
 
             </div>
@@ -951,8 +951,9 @@
 
                         <img
                             id="camera-stream"
-                            src="http://192.168.152.161/stream"
-                            alt="ESP32-S3 OV5640 Live Camera"
+                            class="camera-stream"
+                            src="/api/camera/stream"
+                            alt="AI-Thinker ESP32-CAM Live Camera"
                         >
 
 
@@ -1014,7 +1015,7 @@
 
 
                             <span>
-                                ESP32 · 192.168.152.161
+                                ESP32 · Backend proxy
                             </span>
 
 
@@ -1266,7 +1267,7 @@
 
 
                                 <small>
-                                    ESP32-S3 / OV5640
+                                    AI-Thinker ESP32-CAM
                                 </small>
 
                             </div>
@@ -1456,7 +1457,7 @@
      CAMERA JAVASCRIPT
      ========================================================= -->
 
-<script src="/js/camera-feed.js"></script>
+<script src="/js/camera-feed.js?v=20261011-fix1"></script>
 
 
 </body>

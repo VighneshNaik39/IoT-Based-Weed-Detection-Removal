@@ -15,7 +15,7 @@
 #     labels/val/*.txt
 #     labels/test/*.txt
 
-path: C:/IoT-Based-Weed-Detection-Removal/software/ai-vision/dataset/labeled         # dataset root, relative to this file
+path: ./labeled
 train: images/train
 val: images/val
 test: images/test

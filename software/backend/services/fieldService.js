@@ -30,12 +30,19 @@ function readField() {
 }
 
 function isConfigured(cfg) {
-  return !!(
+  if (!(
     cfg.widthM > 0 &&
     cfg.lengthM > 0 &&
     cfg.origin && cfg.origin.lat != null && cfg.origin.lng != null &&
     cfg.edge && cfg.edge.lat != null && cfg.edge.lng != null
-  );
+  )) {
+    return false;
+  }
+  const metersPerDegLat = 110574;
+  const metersPerDegLng = 111320 * Math.cos((cfg.origin.lat * Math.PI) / 180);
+  const dx = (cfg.edge.lng - cfg.origin.lng) * metersPerDegLng;
+  const dy = (cfg.edge.lat - cfg.origin.lat) * metersPerDegLat;
+  return Math.hypot(dx, dy) >= 0.5;
 }
 
 function writeField(partial) {

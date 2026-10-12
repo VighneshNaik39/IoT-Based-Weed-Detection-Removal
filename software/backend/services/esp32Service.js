@@ -27,7 +27,7 @@ api.interceptors.request.use((config) => {
 // ESP32: GET /ping
 // ==========================================
 async function ping() {
-    const response = await api.get("/ping");
+    const response = await api.get("/ping", { timeout: 2500 });
     return response.data;
 }
 

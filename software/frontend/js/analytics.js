@@ -109,13 +109,17 @@ function renderSessionTable(sessions) {
       ? new Date(s.startTime).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
       : "--";
 
+    const durationStr = s.durationMs != null
+      ? `${Math.floor(s.durationMs / 60000)}m ${Math.round((s.durationMs % 60000) / 1000)}s`
+      : "--";
+
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${s.sessionNumber}</td>
       <td>${started}</td>
       <td>${s.executions ?? 0}</td>
       <td>${s.totalDetections ?? 0}</td>
-      <td>${s.avgMoisture != null ? s.avgMoisture + "%" : "--"}</td>
+      <td>${durationStr}</td>
       <td><span class="an-badge ${s.completed ? "completed" : "active"}">${s.completed ? "Completed" : "In Progress"}</span></td>
     `;
     body.appendChild(tr);

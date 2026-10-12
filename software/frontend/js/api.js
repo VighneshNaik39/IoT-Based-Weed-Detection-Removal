@@ -11,33 +11,14 @@
 const BASE_URL = "";
 
 
-// ============================================================
-// ESP32 CAMERA
-// ============================================================
-
-// CHANGE THIS TO YOUR ESP32 IP
-//
-// Example:
-// 10.15.101.232
-
-const ESP32_CAMERA_IP = "YOUR_ESP32_IP";
-
-
-// ============================================================
-// CAMERA URL
-// ============================================================
-
+// Camera traffic is proxied by the backend, so the browser never
+// needs a hard-coded ESP32 IP or a cross-origin camera connection.
 function getDetectionStreamUrl() {
-
-    return `http://${ESP32_CAMERA_IP}:81/stream`;
-
+    return "/api/detection/stream";
 }
 
-
 function getCameraCaptureUrl() {
-
-    return `http://${ESP32_CAMERA_IP}/capture`;
-
+    return "/api/detection/capture";
 }
 
 
@@ -271,9 +252,8 @@ async function loadStatusFromBackend() {
 
         // Battery
 
-        const battery =
-            data.battery ?? 80;
-
+        const hasBattery =
+            data.battery != null && Number.isFinite(data.battery);
 
         const batteryEl =
             document.querySelector(
@@ -290,7 +270,7 @@ async function loadStatusFromBackend() {
         if (batteryEl) {
 
             batteryEl.innerText =
-                battery + "%";
+                hasBattery ? data.battery + "%" : "--";
 
         }
 
@@ -298,7 +278,7 @@ async function loadStatusFromBackend() {
         if (batteryBar) {
 
             batteryBar.style.width =
-                battery + "%";
+                hasBattery ? data.battery + "%" : "0%";
 
         }
 

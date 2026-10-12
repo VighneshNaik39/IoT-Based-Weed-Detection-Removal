@@ -1,1 +1,0 @@
-curl.exe http://localhost:5000/api/robot/status

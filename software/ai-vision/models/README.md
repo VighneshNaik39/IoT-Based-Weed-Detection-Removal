@@ -1,25 +1,12 @@
-# models/
+# YOLO model weights
 
-`yolov8_weed.pt` isn't included in this handoff — it can only be
-produced by actually running `train.py` against a real, labeled
-weed/crop dataset collected from your test field/tray, which hasn't
-happened yet.
+The ZIP originally contained Git LFS pointer files in place of the actual `.pt` model weights. Those pointers have been removed because they cannot be loaded by Ultralytics.
 
-## To produce it
+## Create the weed model
 
-1. Collect images into `../dataset/raw/` (see that folder's README).
-2. Label them (LabelImg or similar) into YOLO format.
-3. Split into `../dataset/labeled/images|labels/{train,val,test}` —
-   either export directly in that layout from your labeling tool, or
-   run `../scripts/prepare_dataset.py` on a flat labeled folder.
-4. Run `python ../scripts/train.py`.
+1. Open a terminal in `software/ai-vision/scripts`.
+2. Install dependencies: `python -m pip install -r requirements.txt`.
+3. Ensure `../dataset/annotations.yaml` and the `../dataset/labeled/images/{train,val,test}` plus matching `labels` folders exist.
+4. Train: `python train.py --weights yolov8n.pt --epochs 100 --batch 8 --imgsz 640`.
 
-`train.py` automatically copies the best checkpoint here as
-`yolov8_weed.pt` when training finishes, so `detect_stream.py`'s
-default `--weights` path picks it up with no extra steps.
-
-## Until then
-
-`detect_stream.py` will refuse to start if this file doesn't exist —
-that's intentional, so it fails loudly instead of silently running
-inference with random/untrained weights.
+Ultralytics downloads the official base checkpoint `yolov8n.pt` if it is not present and internet is available. Training then writes the actual trained checkpoint to this folder as `yolov8_weed.pt`. Do not rename a generic COCO model to `yolov8_weed.pt`; it is not a weed-trained model.

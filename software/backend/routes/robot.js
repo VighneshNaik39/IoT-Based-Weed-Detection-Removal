@@ -3,6 +3,7 @@ const router = express.Router();
 
 const robotController = require("../controllers/robotController");
 const statusController = require("../controllers/statusController");
+const cutterController = require("../controllers/cutterController");
 
 // Robot Status
 router.get("/status", statusController.getStatus);
@@ -18,6 +19,9 @@ router.post("/mode", robotController.mode);
 
 // Relay (Cutter)
 router.post("/relay", robotController.relay);
+
+// Cutter Toggle (state: boolean)
+router.post("/cutter", cutterController.setCutter);
 
 // Set Speed (0-100%)
 router.post("/speed", robotController.speed);

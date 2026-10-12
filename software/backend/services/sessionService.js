@@ -357,6 +357,28 @@ function getLatestSessions(limit = 5) {
 }
 
 // ==========================================
+// Reset all sessions
+// ==========================================
+function resetAllSessions() {
+    writeSessions([]);
+    currentSession = {
+        sessionNumber: 1,
+        startTime: new Date().toISOString(),
+        endTime: null,
+        durationMs: 0,
+        totalDetections: 0,
+        executions: 0,
+        avgMoisture: null,
+        completed: false,
+        _moistureSum: 0,
+        _moistureCount: 0
+    };
+    saveCurrentSessionToDisk();
+    console.log("🌿 Sessions reset to Session 1.");
+    return currentSession;
+}
+
+// ==========================================
 // Export
 // ==========================================
 module.exports = {
@@ -374,6 +396,7 @@ module.exports = {
     onStartup,
 
     getCurrentSession,
-    getLatestSessions
+    getLatestSessions,
+    resetAllSessions
 
 };

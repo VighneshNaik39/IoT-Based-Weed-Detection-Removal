@@ -172,21 +172,21 @@
 
         <div class="kpi-card">
 
-          <p class="kpi-label">Soil Moisture</p>
+          <p class="kpi-label">AI Vision Model</p>
 
-          <p class="kpi-value" id="kpi-moisture">--%</p>
+          <p class="kpi-value" id="kpi-model" style="font-size:20px;font-weight:700;color:var(--brand-dark)">YOLOv8</p>
 
-          <div class="kpi-bar"><div class="kpi-bar-fill" id="kpi-moisture-bar" style="width:0%"></div></div>
+          <p class="kpi-delta positive" id="kpi-model-detail">Active (crop & weed)</p>
 
         </div>
 
         <div class="kpi-card">
 
-          <p class="kpi-label">Battery Level</p>
+          <p class="kpi-label">Camera Stream</p>
 
-          <p class="kpi-value amber" id="kpi-battery">80%</p>
+          <p class="kpi-value" id="kpi-camera-status" style="font-size:20px;font-weight:700;color:var(--brand)">● Online</p>
 
-          <div class="kpi-bar"><div class="kpi-bar-fill amber-fill" id="kpi-battery-bar" style="width:80%"></div></div>
+          <p class="kpi-delta positive" id="kpi-camera-detail">AI-Thinker QVGA</p>
 
         </div>
 
@@ -642,9 +642,20 @@
 
 <div class="sessions-row">
 
-  <div class="sessions-header">
+  <div class="sessions-header" style="display:flex;justify-content:space-between;align-items:center;">
 
     <p class="panel-title">Previous 5 Sessions</p>
+
+    <button
+      id="reset-sessions-btn"
+      class="btn-ghost-sm"
+      type="button"
+      onclick="resetAllHistory()"
+      title="Clear session history and logs, then start again at Session 1"
+      style="cursor:pointer;padding:7px 12px;font-size:12px;border:1px solid #dc2626;color:#dc2626;border-radius:8px;font-weight:600;"
+    >
+      ↺ Reset Sessions
+    </button>
 
   </div>
 
@@ -715,15 +726,13 @@
 
   // ==============================
 
-  // CLEAR LOG VIEW (local only)
+  // CLEAR LOG VIEW & SESSIONS
 
   // ==============================
 
-  function clearLocalLogs() {
+  async function clearLocalLogs() {
 
-    document.getElementById('log-list').innerHTML =
-
-      '<li class="log-row"><span class="log-time">--</span><span class="log-zone">--</span><span class="log-msg ok">Log view cleared — backend still running</span></li>';
+    await resetAllHistory();
 
   }
 
@@ -903,39 +912,46 @@
 
 
 
+      const removedEl = document.getElementById("kpi-removed");
+
+      if (removedEl) removedEl.innerText = data.weedsRemoved ?? "0";
+
+
+
       const alertBadge = document.getElementById("alert-badge");
 
       if (alertBadge) alertBadge.innerText = data.weedsDetected ?? "0";
 
 
 
-      const battEl  = document.getElementById("kpi-battery");
+      // Check AI Detection status
+      try {
+        const detRes = await fetch("/api/detection/status");
+        if (detRes.ok) {
+          const detData = await detRes.json();
+          const modelDetail = document.getElementById("kpi-model-detail");
+          if (modelDetail && detData.detection && detData.detection.confidence != null) {
+            modelDetail.innerText = `Last conf: ${(detData.detection.confidence * 100).toFixed(0)}% (Frame #${detData.detection.frame_id})`;
+          }
+        }
+      } catch (_) {}
 
-      const battBar = document.getElementById("kpi-battery-bar");
-
-      if (battEl)  battEl.innerText     = (data.battery ?? 80) + "%";
-
-      if (battBar) battBar.style.width  = (data.battery ?? 80) + "%";
-
-
-
-      // Moisture
-
-      if (data.moisture != null) {
-
-        const kpiM    = document.getElementById("kpi-moisture");
-
-        const kpiMBar = document.getElementById("kpi-moisture-bar");
-
-
-
-        if (kpiM)    kpiM.innerText        = data.moisture + "%";
-
-        if (kpiMBar) kpiMBar.style.width   = data.moisture + "%";
-
-
-
-      }
+      // Check Camera status
+      try {
+        const camRes = await fetch("/api/camera/status");
+        if (camRes.ok) {
+          const camData = await camRes.json();
+          const camStatusEl = document.getElementById("kpi-camera-status");
+          const camDetailEl = document.getElementById("kpi-camera-detail");
+          if (camStatusEl) {
+            camStatusEl.innerText = camData.cameraConnected ? "● Online" : "● Offline";
+            camStatusEl.style.color = camData.cameraConnected ? "var(--brand)" : "var(--danger)";
+          }
+          if (camDetailEl && camData.ip) {
+            camDetailEl.innerText = `${camData.camera || 'ESP32-CAM'} (${camData.ip})`;
+          }
+        }
+      } catch (_) {}
 
 
 
@@ -1162,6 +1178,11 @@
         const time   = new Date(log.time).toLocaleTimeString();
 
         const isWeed = log.status === "Weed detected";
+        const isAi   = log.source === "ai-vision";
+        const sourceLabel = isAi ? "YOLOv8" : (log.source ? log.source.toUpperCase() : "ESP32");
+        const detail = isAi && log.confidence != null
+          ? ` — Conf: ${(log.confidence * 100).toFixed(0)}%`
+          : (log.moisture != null ? ` — Moisture: ${log.moisture}%` : "");
 
         logList.innerHTML += `
 
@@ -1169,11 +1190,11 @@
 
             <span class="log-time">${time}</span>
 
-            <span class="log-zone">ESP32</span>
+            <span class="log-zone">${sourceLabel}</span>
 
             <span class="log-msg ${isWeed ? 'danger' : 'ok'}">
 
-              ${isWeed ? '⚠ Weed detected' : '✔ No weed'} — Moisture: ${log.moisture ?? "--"}%
+              ${isWeed ? '⚠ Weed detected' : '✔ No weed'}${detail}
 
             </span>
 
@@ -1330,6 +1351,46 @@
   }
 
 
+
+  async function resetAllHistory() {
+    const button = document.getElementById("reset-sessions-btn");
+    if (!confirm("Reset all session history and logs? Counters will return to 0 and a fresh Session 1 will start.")) {
+      return;
+    }
+
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Resetting...";
+    }
+
+    try {
+      const res = await fetch("/api/sessions/reset", {
+        method: "POST",
+        headers: { "Accept": "application/json" },
+        cache: "no-store"
+      });
+      const result = await res.json().catch(() => ({}));
+
+      if (!res.ok || result.success === false) {
+        throw new Error(result.message || `Reset failed (HTTP ${res.status})`);
+      }
+
+      await Promise.all([
+        fullRefresh(),
+        loadSessionsFromBackend(),
+        loadLogsFromBackend()
+      ]);
+      alert("Sessions and logs reset. Counters are back to 0 and Session 1 is ready.");
+    } catch (err) {
+      console.error("SESSION RESET ERROR:", err);
+      alert("Could not reset sessions: " + err.message);
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.textContent = "↺ Reset Sessions";
+      }
+    }
+  }
 
   // ==============================
 

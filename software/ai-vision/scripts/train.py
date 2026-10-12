@@ -41,7 +41,7 @@ def main():
                           "laptop RTX 3050 and a 2-class problem; try "
                           "yolov8s.pt if accuracy needs more headroom)")
     ap.add_argument("--epochs", type=int, default=100)
-    ap.add_argument("--batch", type=int, default=16)
+    ap.add_argument("--batch", type=int, default=8)
     ap.add_argument("--imgsz", type=int, default=640)
     ap.add_argument("--optimizer", default="Adam")
     ap.add_argument("--lr0", type=float, default=0.001,
@@ -66,7 +66,40 @@ def main():
             f"dataset/raw/README.md and scripts/prepare_dataset.py."
         )
 
-    print(f"[train] data={data_path}")
+    # Resolve the dataset to an absolute path. Ultralytics versions differ in
+    # how they resolve relative dataset roots, so generate a runtime YAML with
+    # an absolute root to make this portable across Windows/Linux and cwd.
+    try:
+        import yaml
+    except ImportError as exc:
+        raise SystemExit("PyYAML is required. Install requirements.txt first.") from exc
+
+    config = yaml.safe_load(data_path.read_text(encoding="utf-8")) or {}
+    dataset_root = Path(config.get("path", "./labeled"))
+    if not dataset_root.is_absolute():
+        dataset_root = (data_path.parent / dataset_root).resolve()
+
+    for split in ("train", "val"):
+        split_value = config.get(split)
+        if not split_value:
+            raise SystemExit(f"Dataset config is missing '{split}'. Check {data_path}")
+        split_path = Path(split_value)
+        if not split_path.is_absolute():
+            split_path = dataset_root / split_path
+        if not split_path.exists() or not any(
+            p.is_file() and p.suffix.lower() in {".jpg", ".jpeg", ".png"}
+            for p in split_path.iterdir()
+        ):
+            raise SystemExit(f"No images found for {split} split: {split_path}")
+
+    config["path"] = str(dataset_root)
+    runtime_data_path = data_path.with_name("annotations.runtime.yaml")
+    runtime_data_path.write_text(
+        yaml.safe_dump(config, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+    print(f"[train] source data={data_path}")
+    print(f"[train] runtime data={runtime_data_path}")
     print(f"[train] weights={args.weights}  epochs={args.epochs}  "
           f"batch={args.batch}  imgsz={args.imgsz}  "
           f"optimizer={args.optimizer}  lr0={args.lr0}")
@@ -74,7 +107,7 @@ def main():
     model = YOLO(args.weights)
 
     results = model.train(
-        data=str(data_path),
+        data=str(runtime_data_path),
         epochs=args.epochs,
         batch=args.batch,
         imgsz=args.imgsz,
@@ -107,7 +140,7 @@ def main():
     # Quick reminder of what to check against the Phase 5 success
     # criteria (≥85% precision/recall on validation).
     print("\n[train] Validate against the success criteria with:")
-    print(f"  yolo val model={DEFAULT_MODELS_DIR / 'yolov8_weed.pt'} data={data_path}")
+    print(f"  yolo val model={DEFAULT_MODELS_DIR / 'yolov8_weed.pt'} data={runtime_data_path}")
 
 
 if __name__ == "__main__":

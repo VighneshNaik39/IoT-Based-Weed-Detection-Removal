@@ -1,19 +1,17 @@
 require("dotenv").config();
 const { getIp } = require("../services/mdnsDiscovery");
 
-// Fixed hostname the robot firmware advertises via mDNS
-// (see HOSTNAME in the .ino) — never changes, regardless of
-// which network the board is on.
-const HOSTNAME = "weedguard-robot";
-
-// ESP32_IP in .env is now only a fallback, used until mDNS
-// resolves the hostname above (or if this network blocks
-// multicast traffic). It no longer needs to be kept in sync
-// by hand.
-const FALLBACK_IP = process.env.ESP32_IP;
+const HOSTNAME = process.env.ESP32_HOSTNAME || "weedguard-robot";
+const FALLBACK_IP = (process.env.ESP32_IP || "").trim() || undefined;
 
 module.exports = {
     hostname: HOSTNAME,
-    getBaseURL: () => `http://${getIp(HOSTNAME, FALLBACK_IP)}`,
+    getBaseURL: () => {
+        const ip = getIp(HOSTNAME, FALLBACK_IP);
+        if (!ip) {
+            throw new Error("Robot IP is not known yet. Wait for mDNS discovery or set ESP32_IP in software/backend/.env.");
+        }
+        return `http://${ip}`;
+    },
     apiKey: process.env.ESP32_API_KEY || ""
 };
