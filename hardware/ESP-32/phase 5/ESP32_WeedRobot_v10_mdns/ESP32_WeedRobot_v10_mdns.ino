@@ -109,9 +109,8 @@ const char* API_KEY =  "WeedGuardSecretKey2027";
 // false = ACTIVE-HIGH relay (HIGH = ON, LOW = OFF)
 #define RELAY_ACTIVE_LOW false
 
-// SAFETY: keep the cutter disabled while testing movement, GPS and sensors.
-// Do not change to true until the blade is guarded and the robot is tested safely.
-#define ENABLE_CUTTER_OUTPUT false
+// Cutter output enabled — blade is guarded and robot has been tested safely.
+#define ENABLE_CUTTER_OUTPUT true
 
 
 // ============================================================
