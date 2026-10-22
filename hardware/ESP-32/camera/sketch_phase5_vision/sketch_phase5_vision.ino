@@ -320,6 +320,39 @@ static esp_err_t stream_handler(httpd_req_t* req) {
     return result;
 }
 
+// -------------------- FLASH LED CONTROL -----------------
+
+// GPIO 4 is the white flash LED on the AI-Thinker ESP32-CAM.
+// HIGH = ON, LOW = OFF.  We keep it OFF at boot.
+#define FLASH_LED_PIN 4
+static bool flashLedOn = false;
+
+static void setFlashLed(bool on) {
+    flashLedOn = on;
+    digitalWrite(FLASH_LED_PIN, on ? HIGH : LOW);
+}
+
+static esp_err_t led_handler(httpd_req_t* req) {
+    char query[32] = {};
+    if (httpd_req_get_url_query_str(req, query, sizeof(query)) == ESP_OK) {
+        char val[8] = {};
+        if (httpd_query_key_value(query, "state", val, sizeof(val)) == ESP_OK) {
+            if (strcmp(val, "on") == 0) {
+                setFlashLed(true);
+            } else {
+                setFlashLed(false);
+            }
+        }
+    }
+
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_type(req, "application/json");
+
+    char body[64];
+    snprintf(body, sizeof(body), "{\"led\":\"%s\"}", flashLedOn ? "on" : "off");
+    return httpd_resp_send(req, body, HTTPD_RESP_USE_STRLEN);
+}
+
 // ============================================================
 // START HTTP SERVERS
 // ============================================================
@@ -353,10 +386,18 @@ static void startCameraServer() {
         .user_ctx = nullptr
     };
 
+    httpd_uri_t ledUri = {
+        .uri = "/led",
+        .method = HTTP_GET,
+        .handler = led_handler,
+        .user_ctx = nullptr
+    };
+
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(camera_httpd, &indexUri);
         httpd_register_uri_handler(camera_httpd, &statusUri);
         httpd_register_uri_handler(camera_httpd, &captureUri);
+        httpd_register_uri_handler(camera_httpd, &ledUri);
 
         Serial.println("Camera HTTP server started on port 80");
     } else {
@@ -471,6 +512,10 @@ void setup() {
     config.pin_reset = RESET_GPIO_NUM;
 
     config.xclk_freq_hz = 20000000;
+
+    // Flash LED: initialise GPIO 4 as output and keep off at boot.
+    pinMode(FLASH_LED_PIN, OUTPUT);
+    setFlashLed(false);
 
     config.pixel_format = PIXFORMAT_JPEG;
 
