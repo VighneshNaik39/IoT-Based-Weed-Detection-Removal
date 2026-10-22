@@ -270,6 +270,55 @@ app.get("/api/camera/status", (req, res) => {
         );
     });
 });
+
+// ============================================================
+// ESP32-CAM FLASH LED CONTROL API
+// ============================================================
+
+app.get("/api/camera/led", async (req, res) => {
+    const state = req.query.state === "on" ? "on" : "off";
+    const cameraIp = resolveCameraIp();
+
+    if (!cameraIp) {
+        return res.status(503).json({
+            success: false,
+            error: "Camera not discovered yet (mDNS) and no fallback configured"
+        });
+    }
+
+    const ledUrl = `http://${cameraIp}/led?state=${state}`;
+    console.log(`Flash LED request → ${ledUrl}`);
+
+    const ledRequest = http.get(
+        ledUrl,
+        { timeout: 3000 },
+        (ledResponse) => {
+            let body = "";
+            ledResponse.setEncoding("utf8");
+            ledResponse.on("data", (chunk) => { body += chunk; });
+            ledResponse.on("end", () => {
+                try {
+                    const data = JSON.parse(body);
+                    return res.json({ success: true, led: state, data });
+                } catch {
+                    return res.json({ success: true, led: state });
+                }
+            });
+        }
+    );
+
+    ledRequest.on("error", (err) => {
+        console.error("Camera LED request failed:", err.message);
+        if (!res.headersSent) {
+            res.status(502).json({ success: false, error: "Camera LED control failed: " + err.message });
+        }
+    });
+
+    ledRequest.on("timeout", () => {
+        ledRequest.destroy(new Error("Camera LED request timed out"));
+    });
+});
+
 // ============================================================
 // ROUTE REGISTRATION
 // ============================================================

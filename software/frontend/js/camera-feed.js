@@ -771,6 +771,39 @@
 
     window.refreshCameraFeed = refreshCameraFeed;
 
+    // ── Flash LED toggle ─────────────────────────────────────────
+    let flashLedState = false;
+
+    async function toggleFlashLed() {
+        flashLedState = !flashLedState;
+        const state = flashLedState ? "on" : "off";
+        const btn = document.getElementById("btn-flash-led");
+        if (btn) {
+            btn.textContent = `💡 Flash LED: ${state.toUpperCase()}`;
+            btn.style.background = flashLedState ? "#f5a623" : "";
+            btn.style.color      = flashLedState ? "#000"    : "";
+        }
+        try {
+            const resp = await fetch(`/api/camera/led?state=${state}`);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+            console.log("Flash LED:", data);
+        } catch (err) {
+            console.warn("LED toggle failed:", err);
+            // Revert button on failure
+            flashLedState = !flashLedState;
+            const revState = flashLedState ? "on" : "off";
+            if (btn) {
+                btn.textContent = `💡 Flash LED: ${revState.toUpperCase()}`;
+                btn.style.background = flashLedState ? "#f5a623" : "";
+                btn.style.color      = flashLedState ? "#000"    : "";
+            }
+        }
+    }
+
+    window.toggleFlashLed = toggleFlashLed;
+    // ─────────────────────────────────────────────────────────────
+
     console.log(
         "WeedGuard camera-feed.js loaded successfully."
     );
