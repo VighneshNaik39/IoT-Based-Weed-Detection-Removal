@@ -32,3 +32,7 @@ Thumbs.db
 
 # Generated absolute-path YOLO config
 software/ai-vision/dataset/annotations.runtime.yaml
+
+# Runtime data — generated at startup, changes every session
+software/backend/data/logs.json
+software/backend/data/sessions.json
