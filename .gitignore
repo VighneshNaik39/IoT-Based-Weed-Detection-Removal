@@ -36,3 +36,16 @@ software/ai-vision/dataset/annotations.runtime.yaml
 # Runtime data â€” generated at startup, changes every session
 software/backend/data/logs.json
 software/backend/data/sessions.json
+
+# Dataset images — large files, managed locally not via git
+software/ai-vision/dataset/labeled/images/
+software/ai-vision/dataset/labeled/labels/
+software/ai-vision/dataset/test/
+software/ai-vision/dataset/train/
+software/ai-vision/dataset/valid/
+software/ai-vision/dataset_compressed/
+software/ai-vision/dataset/merge_datasets.py
+software/ai-vision/error_analysis/
+software/ai-vision/error_analysis_v2/
+software/ai-vision/merge_datasets.py
+software/ai-vision/dataset/labeled/*.cache
