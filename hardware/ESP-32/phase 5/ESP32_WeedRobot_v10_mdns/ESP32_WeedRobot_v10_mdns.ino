@@ -107,7 +107,7 @@ const char* API_KEY =  "WeedGuardSecretKey2027";
 // Relay module logic
 // true  = ACTIVE-LOW relay (LOW = ON, HIGH = OFF)
 // false = ACTIVE-HIGH relay (HIGH = ON, LOW = OFF)
-#define RELAY_ACTIVE_LOW false
+#define RELAY_ACTIVE_LOW true
 
 // Cutter output enabled — blade is guarded and robot has been tested safely.
 #define ENABLE_CUTTER_OUTPUT true
