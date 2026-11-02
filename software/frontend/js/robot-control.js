@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // ROBOT CONTROL PAGE
 // ============================================================
 //
@@ -97,7 +97,7 @@ async function setMode(mode) {
     // Update UI immediately.
     applyModeUI(mode);
 
-    // Your ESP32 firmware turns the cutter OFF
+        "✂ Cutter OFF";
     // when the operating mode changes.
     //
     // Status polling will confirm the real state.
@@ -355,7 +355,7 @@ async function sendStop() {
     //
     // - stops motors
     // - sets manual mode
-    // - turns cutter OFF
+        "✂ Cutter OFF";
 
     applyModeUI("manual");
     applyCutterUI(false);
@@ -416,13 +416,13 @@ if (stopButton) {
 //
 // OFF
 //   ↓
-// button = "🔪 Cutter ON"
+        "✂ Cutter ON";
 //   ↓
 // click
 //   ↓
 // ON
 //   ↓
-// button = "⏹ Cutter OFF"
+        "✂ Cutter OFF";
 //   ↓
 // click
 //   ↓
@@ -623,12 +623,12 @@ function applyCutterUI(on) {
     if (cutterState) {
 
       button.textContent =
-        "⏹ Cutter OFF";
+        "✂ Cutter OFF";
 
     } else {
 
       button.textContent =
-        "🔪 Cutter ON";
+        "✂ Cutter ON";
     }
 
     button.classList.toggle(
